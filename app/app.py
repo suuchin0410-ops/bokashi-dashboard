@@ -19,13 +19,20 @@ COLORS = ["#c4a882", "#5a3e2b", "#8b7355", "#d4c5a9", "#a0522d", "#deb887", "#8B
 
 
 def _safe_df(df: pd.DataFrame) -> pd.DataFrame:
-    """PyArrow互換のためDataFrame列の型を統一する。"""
+    """PyArrow互換のためDataFrame列の型を統一する。
+
+    全列を明示的にfloat64またはstrに変換し、mixed-type列を排除する。
+    """
     df = df.copy()
     for col in df.columns:
-        if pd.api.types.is_numeric_dtype(df[col]):
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(float)
-        else:
-            df[col] = df[col].astype(str)
+        try:
+            numeric = pd.to_numeric(df[col], errors="coerce")
+            if numeric.notna().sum() > 0:
+                df[col] = numeric.fillna(0).astype("float64")
+            else:
+                df[col] = df[col].fillna("").astype(str)
+        except Exception:
+            df[col] = df[col].fillna("").astype(str)
     return df
 
 
@@ -749,71 +756,78 @@ def main():
         ["日別分析", "時間帯・曜日", "商品分析", "部門別分析", "客層分析", "トレンド分析"]
     )
 
+    def _safe_render(label, func, *args, **kwargs):
+        """レンダリングエラーをキャッチして表示する。"""
+        try:
+            func(*args, **kwargs)
+        except Exception as e:
+            st.error(f"⚠️ {label}の表示中にエラー: {e}")
+
     with tab_daily:
-        render_kpi(df_daily)
+        _safe_render("KPI", render_kpi, df_daily)
         st.divider()
-        render_monthly_summary(df_daily)
-        render_daily_sales(df_daily)
+        _safe_render("月別サマリー", render_monthly_summary, df_daily)
+        _safe_render("日別売上", render_daily_sales, df_daily)
         col_l, col_r = st.columns(2)
         with col_l:
-            render_weekday_analysis(df_daily)
+            _safe_render("曜日別", render_weekday_analysis, df_daily)
         with col_r:
-            render_customer_metrics(df_daily)
+            _safe_render("客数推移", render_customer_metrics, df_daily)
         col_l2, col_r2 = st.columns(2)
         with col_l2:
-            render_profitability(df_daily)
+            _safe_render("粗利", render_profitability, df_daily)
         with col_r2:
-            render_discount_analysis(df_daily)
+            _safe_render("値引き", render_discount_analysis, df_daily)
 
     with tab_hourly:
         if df_hourly.empty:
             st.warning("時間帯別売上データが見つかりません。")
         else:
-            render_hourly_sales(df_hourly)
+            _safe_render("時間帯別売上", render_hourly_sales, df_hourly)
         st.divider()
         if df_weekday.empty:
             st.warning("曜日別売上データが見つかりません。")
         else:
-            render_weekday_from_csv(df_weekday)
+            _safe_render("曜日別売上", render_weekday_from_csv, df_weekday)
 
     with tab_product:
         if df_product.empty:
             st.warning("商品別売上データが見つかりません。")
         else:
-            render_product_ranking(df_product)
+            _safe_render("商品ランキング", render_product_ranking, df_product)
             col_l3, col_r3 = st.columns(2)
             with col_l3:
-                render_category_breakdown(df_product)
+                _safe_render("カテゴリ", render_category_breakdown, df_product)
             with col_r3:
-                render_product_cost(df_product)
+                _safe_render("原価率", render_product_cost, df_product)
 
     with tab_dept:
         if df_department.empty:
             st.warning("部門別売上データが見つかりません。")
         else:
-            render_department_sales(df_department)
-            render_department_profitability(df_department)
+            _safe_render("部門別売上", render_department_sales, df_department)
+            _safe_render("部門別粗利", render_department_profitability, df_department)
 
     with tab_customer:
         if df_customer.empty and df_customer_age.empty and df_customer_nat.empty:
             st.warning("客層別売上データが見つかりません。")
         else:
             if not df_customer.empty:
-                render_customer_segment_kpi(df_customer)
-                render_customer_segment_charts(df_customer)
-                render_customer_segment_monthly(df_customer)
+                _safe_render("新規/リピーター", render_customer_segment_kpi, df_customer)
+                _safe_render("客層チャート", render_customer_segment_charts, df_customer)
+                _safe_render("客層月別", render_customer_segment_monthly, df_customer)
             st.divider()
             if not df_customer_age.empty:
-                render_customer_age(df_customer_age)
+                _safe_render("年代別", render_customer_age, df_customer_age)
             st.divider()
             if not df_customer_nat.empty:
-                render_customer_nationality(df_customer_nat)
+                _safe_render("国籍別", render_customer_nationality, df_customer_nat)
 
     with tab_trend:
         if df_product_all.empty:
             st.warning("商品別売上データが見つかりません。")
         else:
-            render_product_trend(df_product_all, df_daily_all)
+            _safe_render("トレンド", render_product_trend, df_product_all, df_daily_all)
 
 if __name__ == "__main__":
     main()

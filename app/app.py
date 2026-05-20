@@ -16,14 +16,27 @@ CONFIG_DIR = Path(__file__).parent / "config"
 COLORS = ["#c4a882", "#5a3e2b", "#8b7355", "#d4c5a9", "#a0522d", "#deb887", "#8B4513"]
 
 
+def _get_password_hash():
+    """設定ファイルまたはsecretsからパスワードハッシュを取得する。"""
+    for cfg_file in CONFIG_DIR.glob("*.yaml"):
+        with open(cfg_file, encoding="utf-8") as f:
+            cfg = yaml.safe_load(f)
+        h = (cfg.get("auth") or {}).get("password_hash")
+        if h:
+            return h
+    try:
+        return st.secrets["password_hash"]
+    except (FileNotFoundError, KeyError):
+        return None
+
+
 def _check_password() -> bool:
     """パスワード認証。認証済みならTrueを返す。"""
     if st.session_state.get("authenticated"):
         return True
 
-    try:
-        expected_hash = st.secrets["password_hash"]
-    except (FileNotFoundError, KeyError):
+    expected_hash = _get_password_hash()
+    if not expected_hash:
         return True
 
     col_l, col_c, col_r = st.columns([1, 2, 1])

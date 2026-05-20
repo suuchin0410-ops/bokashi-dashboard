@@ -17,12 +17,22 @@ CATEGORY_MAP = {
 
 
 def _read_csvs(sales_dir: Path, prefix: str, add_month: bool = False) -> pd.DataFrame:
-    files = sorted(sales_dir.glob(f"{prefix}_*.csv"))
+    import re
+    pattern = re.compile(rf"^{re.escape(prefix)}_\d{{4}}_\d{{2}}\.csv$")
+    files = sorted(f for f in sales_dir.glob(f"{prefix}_*.csv") if pattern.match(f.name))
     if not files:
         return pd.DataFrame()
     dfs = []
     for f in files:
-        df = pd.read_csv(f, encoding="shift_jis", quotechar='"')
+        for enc in ("shift_jis", "cp932", "utf-8-sig", "utf-8"):
+            try:
+                df = pd.read_csv(f, encoding=enc, quotechar='"', on_bad_lines="skip")
+                break
+            except (UnicodeDecodeError, UnicodeError):
+                continue
+        else:
+            raw = f.read_bytes().decode("shift_jis", errors="replace")
+            df = pd.read_csv(pd.io.common.StringIO(raw), quotechar='"', on_bad_lines="skip")
         if add_month:
             m = f.stem.replace(f"{prefix}_", "")
             df["年月"] = m[:4] + "-" + m[5:]

@@ -7,3 +7,6 @@ build/
 .env
 .streamlit/secrets.toml
 docs/
+data/sales/
+app/config/.notion_token
+.claude/

@@ -3,3 +3,5 @@ pandas>=2.0.0
 pyarrow>=14.0.0
 plotly>=5.18.0
 pyyaml>=6.0
+google-api-python-client>=2.100.0
+google-auth>=2.23.0

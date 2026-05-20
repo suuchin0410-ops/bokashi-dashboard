@@ -18,7 +18,7 @@ from pathlib import Path
 
 SALES_DIR = Path(__file__).parent.parent / "data" / "sales"
 
-DRIVE_SALES_FOLDER_ID = "1Ligr0RnQOo7aPB9iZ2YMS0CefsgGHuBC"
+DRIVE_SALES_FOLDER_ID = ""  # Streamlit Secretsで管理
 
 PREFIX_MAP = {
     "日別売上": "daily",

@@ -41,8 +41,5 @@ menu:
     - name: フォンダンショコラ
       price: 750
 
-auth:
-  password_hash: "3964738cc108ff204fc2ca225295186caa55a50f96aecc4e6569c034ad372704"
-
 data:
   sales_dir: ../data/sales

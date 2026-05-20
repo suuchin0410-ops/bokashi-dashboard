@@ -41,25 +41,18 @@
   ↓
 Google Drive「コンサルティング/bokashi/sales/」に格納
   ↓
-Claude が Google Drive MCP でCSVを取得 → ローカル data/sales/ に同期
+Streamlitアプリが起動時にGoogle Drive APIで直接CSV取得（5分キャッシュ）
   ↓
-Streamlitダッシュボード / HTMLレポート / PDFレポート
+ダッシュボード表示
 ```
 
-**Google Drive フォルダ構成:**
-```
-マイドライブ/コンサルティング/bokashi/ (ID: 13RiWJdT-eic_s2Fom9WxnM-IvEur4etL)
-  ├── sales/          (ID: 1Ligr0RnQOo7aPB9iZ2YMS0CefsgGHuBC) ← CSVはここ
-  ├── meeting-notes/  (ID: 17tjzCgCJl-HorsIjwncpWhKo-xiVRyBf)
-  └── reports/        (ID: 1HyHL2Ar29r1QQcHb2ro89GNBCcVP-N7f)
-```
+**データ更新:**
+ダッシュボードは起動時にGoogle Driveから直接CSVを取得するため、
+駿さんがDriveにCSVを置けばリロードで自動反映される。
+手動同期やgit pushは不要。
 
-**データ更新手順（「更新して」「データ見て」「KPI」等のキーワードで実行）:**
-1. `search_files` で salesフォルダを検索: `parentId = '1Ligr0RnQOo7aPB9iZ2YMS0CefsgGHuBC'`
-2. `app/sync_drive.py` の `get_sync_status(drive_files)` で差分チェック
-3. new/updated があれば `download_file_content` で取得
-4. `save_from_base64(b64, local_name)` でローカルに保存
-5. `record_sync(synced_files)` で同期ログを記録（ダッシュボードのサイドバーに反映）
+**注意:** Google DriveフォルダIDやサービスアカウントキーはStreamlit Secretsで管理。
+リポジトリには含めない。
 
 ## 売上管理の現状
 - **レジ:** スマレジ

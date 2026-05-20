@@ -12,7 +12,7 @@ from pathlib import Path
 from data_loader import (load_daily, load_product, load_customer, load_department,
                          load_hourly, load_customer_age, load_customer_nationality, load_weekday,
                          save_uploaded_csv)
-from sync_drive import get_last_sync_info, get_local_file_summary
+from drive_reader import get_sales_dir, get_data_source_info
 
 CONFIG_DIR = Path(__file__).parent / "config"
 COLORS = ["#c4a882", "#5a3e2b", "#8b7355", "#d4c5a9", "#a0522d", "#deb887", "#8B4513"]
@@ -651,7 +651,7 @@ def main():
     st.title(f"{store['name']} 売上分析")
     st.caption(f"{store['location']} | 営業時間 {store['business_hours']['open']}〜{store['business_hours']['close']}")
 
-    sales_dir = Path(__file__).parent / config["data"]["sales_dir"]
+    sales_dir = get_sales_dir()
 
     with st.sidebar:
         if st.button("ログアウト"):
@@ -671,17 +671,15 @@ def main():
                 st.success(f"{f.name} を保存しました")
             st.rerun()
 
-        sync_info = get_last_sync_info()
-        local_files = get_local_file_summary()
-        with st.expander(f"Google Drive同期（{len(local_files)}ファイル）", expanded=False):
-            if sync_info:
-                st.caption(f"最終同期: {sync_info['last_sync']}")
+        ds = get_data_source_info()
+        with st.expander(f"{ds['icon']} データソース: {ds['source']}", expanded=False):
+            if ds["cached_ttl"]:
+                st.caption(f"キャッシュ: {ds['cached_ttl']}（リロードで最新取得）")
+                csv_files = sorted(sales_dir.glob("*.csv"))
+                st.caption(f"取得済み: {len(csv_files)}ファイル")
             else:
-                st.caption("未同期（Claudeに「データ更新して」と伝えてください）")
-            if local_files:
-                for f in local_files:
-                    st.text(f"  {f['name']}  ({f['size']:,}B)")
-            st.info("💡 Claudeが Google Drive から最新CSVを取得・同期します。")
+                csv_files = sorted(sales_dir.glob("*.csv")) if sales_dir.exists() else []
+                st.caption(f"ローカル: {len(csv_files)}ファイル")
 
         st.divider()
 

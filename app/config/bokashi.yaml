@@ -1,0 +1,45 @@
+store:
+  name: bokashi
+  location: 札幌市中央区南2条西1-7-1 二番館ビル 1F
+  business_hours:
+    open: "10:00"
+    close: "18:00"
+  seats: 20
+
+categories:
+  - ドリンク
+  - スイーツ
+  - フード
+
+menu:
+  ドリンク:
+    - name: 浅煎り珈琲
+      price: 600
+    - name: カフェラテ
+      price: 600
+    - name: 穀物コーヒー
+      price: 600
+    - name: 穀物ラテ
+      price: 600
+    - name: ブレンドハーブティー
+      price: 500
+    - name: ハーブソーダ
+      price: 800
+    - name: 葡萄のストレートジュース
+      price: 800
+  スイーツ:
+    - name: バスクチーズケーキ
+      price: 700
+    - name: りんごのタルトタタン
+      price: 750
+    - name: ぶどうのタルトレット
+      price: 700
+    - name: ティラミス
+      price: 700
+    - name: クラシックプリン
+      price: 600
+    - name: フォンダンショコラ
+      price: 750
+
+data:
+  sales_dir: ../data/sales

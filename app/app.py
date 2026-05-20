@@ -1,4 +1,7 @@
 """カフェ売上分析ダッシュボード（スマレジCSV対応）"""
+import hashlib
+import hmac
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -11,6 +14,35 @@ from sync_drive import get_last_sync_info, get_local_file_summary
 
 CONFIG_DIR = Path(__file__).parent / "config"
 COLORS = ["#c4a882", "#5a3e2b", "#8b7355", "#d4c5a9", "#a0522d", "#deb887", "#8B4513"]
+
+
+def _check_password() -> bool:
+    """パスワード認証。認証済みならTrueを返す。"""
+    if st.session_state.get("authenticated"):
+        return True
+
+    try:
+        expected_hash = st.secrets["password_hash"]
+    except (FileNotFoundError, KeyError):
+        return True
+
+    col_l, col_c, col_r = st.columns([1, 2, 1])
+    with col_c:
+        st.markdown(
+            "<h1 style='text-align:center; color:#5a3e2b;'>bokashi</h1>"
+            "<p style='text-align:center; color:#8b7355;'>売上分析ダッシュボード</p>",
+            unsafe_allow_html=True,
+        )
+        st.divider()
+        password = st.text_input("パスワード", type="password", key="pw_input")
+        if st.button("ログイン", type="primary", use_container_width=True):
+            input_hash = hashlib.sha256(password.encode()).hexdigest()
+            if hmac.compare_digest(input_hash, expected_hash):
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("パスワードが正しくありません")
+    return False
 
 
 def load_config(store_id: str) -> dict:
@@ -388,6 +420,9 @@ def render_product_trend(df_product: pd.DataFrame, df_daily: pd.DataFrame):
 def main():
     st.set_page_config(page_title="bokashi 売上分析", layout="wide")
 
+    if not _check_password():
+        return
+
     configs = [f.stem for f in CONFIG_DIR.glob("*.yaml")]
     if not configs:
         st.error("設定ファイルが見つかりません。config/フォルダを確認してください。")
@@ -403,6 +438,10 @@ def main():
     sales_dir = Path(__file__).parent / config["data"]["sales_dir"]
 
     with st.sidebar:
+        if st.button("ログアウト"):
+            st.session_state.authenticated = False
+            st.rerun()
+        st.divider()
         st.header("データ取り込み")
         uploaded = st.file_uploader(
             "スマレジCSVをアップロード",

@@ -1,4 +1,6 @@
 """スマレジCSVの読み込み・前処理（共通モジュール）"""
+import io
+
 import pandas as pd
 from pathlib import Path
 
@@ -26,13 +28,13 @@ def _read_csvs(sales_dir: Path, prefix: str, add_month: bool = False) -> pd.Data
     for f in files:
         for enc in ("shift_jis", "cp932", "utf-8-sig", "utf-8"):
             try:
-                df = pd.read_csv(f, encoding=enc, quotechar='"', on_bad_lines="skip")
+                df = pd.read_csv(f, encoding=enc, quotechar='"', on_bad_lines="skip", dtype=str)
                 break
             except (UnicodeDecodeError, UnicodeError):
                 continue
         else:
             raw = f.read_bytes().decode("shift_jis", errors="replace")
-            df = pd.read_csv(pd.io.common.StringIO(raw), quotechar='"', on_bad_lines="skip")
+            df = pd.read_csv(io.StringIO(raw), quotechar='"', on_bad_lines="skip", dtype=str)
         if add_month:
             m = f.stem.replace(f"{prefix}_", "")
             df["年月"] = m[:4] + "-" + m[5:]

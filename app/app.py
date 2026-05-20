@@ -19,10 +19,7 @@ COLORS = ["#c4a882", "#5a3e2b", "#8b7355", "#d4c5a9", "#a0522d", "#deb887", "#8B
 
 
 def _safe_df(df: pd.DataFrame) -> pd.DataFrame:
-    """PyArrow互換のためDataFrame列の型を統一する。
-
-    全列を明示的にfloat64またはstrに変換し、mixed-type列を排除する。
-    """
+    """PyArrow互換のためDataFrame列の型を統一する。"""
     df = df.copy()
     for col in df.columns:
         try:
@@ -33,6 +30,9 @@ def _safe_df(df: pd.DataFrame) -> pd.DataFrame:
                 df[col] = df[col].fillna("").astype(str)
         except Exception:
             df[col] = df[col].fillna("").astype(str)
+    for col in df.select_dtypes(include=["object"]).columns:
+        df[col] = df[col].astype(str)
+    df = df.reset_index(drop=True)
     return df
 
 
@@ -757,11 +757,12 @@ def main():
     )
 
     def _safe_render(label, func, *args, **kwargs):
-        """レンダリングエラーをキャッチして表示する。"""
         try:
             func(*args, **kwargs)
         except Exception as e:
-            st.error(f"⚠️ {label}の表示中にエラー: {e}")
+            st.error(f"{label}の表示中にエラー: {e}")
+            import traceback
+            st.code(traceback.format_exc(), language="text")
 
     with tab_daily:
         _safe_render("KPI", render_kpi, df_daily)

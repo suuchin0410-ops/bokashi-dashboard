@@ -18,6 +18,17 @@ CONFIG_DIR = Path(__file__).parent / "config"
 COLORS = ["#c4a882", "#5a3e2b", "#8b7355", "#d4c5a9", "#a0522d", "#deb887", "#8B4513"]
 
 
+def _safe_df(df: pd.DataFrame) -> pd.DataFrame:
+    """PyArrow互換のためDataFrame列の型を統一する。"""
+    df = df.copy()
+    for col in df.columns:
+        if pd.api.types.is_numeric_dtype(df[col]):
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(float)
+        else:
+            df[col] = df[col].astype(str)
+    return df
+
+
 def _get_password_hash():
     """設定ファイルまたはsecretsからパスワードハッシュを取得する。"""
     for cfg_file in CONFIG_DIR.glob("*.yaml"):
@@ -95,7 +106,7 @@ def render_monthly_summary(df: pd.DataFrame):
     display = monthly[["年月", "純売上", "客数", "客単価", "日販平均", "粗利", "粗利率", "値引き", "営業日数"]].copy()
     display.columns = ["年月", "純売上", "客数", "客単価", "日販平均", "粗利", "粗利率(%)", "値引き", "営業日数"]
     st.dataframe(
-        display.style.format({
+        _safe_df(display).style.format({
             "純売上": "¥{:,.0f}", "客数": "{:,.0f}人", "客単価": "¥{:,.0f}",
             "日販平均": "¥{:,.0f}", "粗利": "¥{:,.0f}", "粗利率(%)": "{:.1f}%", "値引き": "¥{:,.0f}",
         }), use_container_width=True, hide_index=True,
@@ -191,7 +202,7 @@ def render_hourly_sales(df_hourly: pd.DataFrame):
     # Table
     display = data[["時間帯", "純売上", "客数", "客単価", "構成比"]].copy()
     st.dataframe(
-        display.style.format({
+        _safe_df(display).style.format({
             "純売上": "¥{:,.0f}", "客数": "{:,.0f}人", "客単価": "¥{:,.0f}", "構成比": "{:.1f}%",
         }), use_container_width=True, hide_index=True,
     )
@@ -240,7 +251,7 @@ def render_weekday_from_csv(df_weekday: pd.DataFrame):
     display = data[["曜日", "回数", "純売上", "日平均売上", "客数", "客単価", "構成比"]].copy()
     display.columns = ["曜日", "営業回数", "売上合計", "日平均売上", "客数", "客単価", "構成比"]
     st.dataframe(
-        display.style.format({
+        _safe_df(display).style.format({
             "売上合計": "¥{:,.0f}", "日平均売上": "¥{:,.0f}", "客数": "{:,.0f}人",
             "客単価": "¥{:,.0f}", "構成比": "{:.1f}%",
         }), use_container_width=True, hide_index=True,
@@ -294,7 +305,7 @@ def render_customer_age(df_age: pd.DataFrame):
     display = data[["ラベル", "純売上", "売上構成比", "客数", "客数構成比", "客単価"]].copy()
     display.columns = ["年代", "売上", "売上構成比", "客数", "客数構成比", "客単価"]
     st.dataframe(
-        display.style.format({
+        _safe_df(display).style.format({
             "売上": "¥{:,.0f}", "売上構成比": "{:.1f}%", "客数": "{:,.0f}人",
             "客数構成比": "{:.1f}%", "客単価": "¥{:,.0f}",
         }), use_container_width=True, hide_index=True,
@@ -330,9 +341,9 @@ def render_customer_nationality(df_nat: pd.DataFrame):
         st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(
-        data[["ラベル", "純売上", "構成比", "客数", "客単価"]].rename(
+        _safe_df(data[["ラベル", "純売上", "構成比", "客数", "客単価"]].rename(
             columns={"ラベル": "国籍"}
-        ).style.format({
+        )).style.format({
             "純売上": "¥{:,.0f}", "構成比": "{:.1f}%", "客数": "{:,.0f}人", "客単価": "¥{:,.0f}",
         }), use_container_width=True, hide_index=True,
     )
@@ -355,7 +366,7 @@ def render_category_breakdown(df_product: pd.DataFrame):
     fig = px.pie(cat, values="売上", names="カテゴリ", color_discrete_sequence=COLORS)
     fig.update_layout(margin=dict(t=30, b=30))
     st.plotly_chart(fig, use_container_width=True)
-    st.dataframe(cat.style.format({"売上": "¥{:,.0f}", "点数": "{:,.0f}"}), use_container_width=True, hide_index=True)
+    st.dataframe(_safe_df(cat).style.format({"売上": "¥{:,.0f}", "点数": "{:,.0f}"}), use_container_width=True, hide_index=True)
 
 
 def render_product_cost(df_product: pd.DataFrame):
@@ -395,7 +406,7 @@ def render_department_sales(df_dept: pd.DataFrame):
         st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(
-        dept[["部門名", "売上", "原価", "粗利", "粗利率", "販売点数", "構成比"]].style.format({
+        _safe_df(dept[["部門名", "売上", "原価", "粗利", "粗利率", "販売点数", "構成比"]]).style.format({
             "売上": "¥{:,.0f}", "原価": "¥{:,.0f}", "粗利": "¥{:,.0f}",
             "粗利率": "{:.1f}%", "販売点数": "{:,.0f}", "構成比": "{:.1f}%",
         }), use_container_width=True, hide_index=True,
@@ -464,7 +475,7 @@ def render_customer_segment_charts(df_cust: pd.DataFrame):
         st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(
-        total[["ラベル", "売上", "客数", "客単価", "販売点数", "点数/人"]].style.format({
+        _safe_df(total[["ラベル", "売上", "客数", "客単価", "販売点数", "点数/人"]]).style.format({
             "売上": "¥{:,.0f}", "客数": "{:,.0f}人", "客単価": "¥{:,.0f}",
             "販売点数": "{:,.0f}", "点数/人": "{:.1f}",
         }), use_container_width=True, hide_index=True,
@@ -595,7 +606,7 @@ def render_product_trend(df_product: pd.DataFrame, df_daily: pd.DataFrame):
     st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(
-        cat_trend.style.format({
+        _safe_df(cat_trend).style.format({
             "前月日販": "¥{:,.0f}", "当月日販": "¥{:,.0f}",
             "変化": "¥{:,.0f}", "変化率": "{:+.1f}%",
         }), use_container_width=True, hide_index=True,
@@ -606,7 +617,7 @@ def render_product_trend(df_product: pd.DataFrame, df_daily: pd.DataFrame):
     detail = merged.sort_values("売上変化", ascending=False).copy()
     detail = detail[detail["前月日販"] + detail["当月日販"] > 0]
     st.dataframe(
-        detail[["商品名", "カテゴリ", "前月日販", "当月日販", "売上変化", "変化率"]].style.format({
+        _safe_df(detail[["商品名", "カテゴリ", "前月日販", "当月日販", "売上変化", "変化率"]]).style.format({
             "前月日販": "¥{:,.0f}", "当月日販": "¥{:,.0f}",
             "売上変化": "¥{:,.0f}", "変化率": "{:+.1f}%",
         }), use_container_width=True, hide_index=True,

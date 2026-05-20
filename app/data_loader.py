@@ -37,6 +37,41 @@ def _to_numeric(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df
 
 
+_DAILY_STANDARD_COLS = {
+    "日付", "純売上", "純売上(税抜)", "消費税", "免税額", "総売上",
+    "値引き", "ポイント利用", "外税受領", "売上対象外", "送料", "手数料",
+    "原価", "売上", "粗利", "販売点数", "返品数", "取引数", "取引単価",
+    "客数", "客単価", "予算設定金額", "予算達成率", "クーポン利用",
+}
+
+
+def _normalize_daily_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """スマレジCSVのフォーマット差異を吸収する。
+
+    月によって「原価」→「売上」へカラム名が変わったり、
+    文字化けした来客数カラム（例: Βc用数）が挿入されて
+    客数・客単価の意味がずれるケースに対応する。
+    """
+    if "売上" in df.columns:
+        if "原価" not in df.columns:
+            df = df.rename(columns={"売上": "原価"})
+        else:
+            df["原価"] = df["原価"].fillna(df["売上"])
+            df = df.drop(columns=["売上"])
+
+    extra = [c for c in df.columns if c not in _DAILY_STANDARD_COLS]
+    for col in extra:
+        vals = pd.to_numeric(df[col], errors="coerce")
+        mask = vals.notna() & (vals > 0)
+        if not mask.any():
+            continue
+        df.loc[mask, "客数"] = vals[mask]
+        df = df.drop(columns=[col])
+        break
+
+    return df
+
+
 def load_daily(sales_dir: Path) -> pd.DataFrame:
     df = _read_csvs(sales_dir, "daily")
     if df.empty:
@@ -44,12 +79,14 @@ def load_daily(sales_dir: Path) -> pd.DataFrame:
     df["日付"] = df["日付"].astype(str)
     df = df[df["日付"].str.match(r"^\d{4}/\d{2}/\d{2}$", na=False)].copy()
     df["日付"] = pd.to_datetime(df["日付"])
+    df = _normalize_daily_columns(df)
     df = _to_numeric(df, [
         "純売上", "純売上(税抜)", "消費税", "総売上", "値引き",
         "原価", "粗利", "販売点数", "返品数", "取引数",
-        "取引単価", "客数", "客単価", "クーポン利用",
+        "取引単価", "客数", "クーポン利用",
     ])
     df = df[df["純売上"] > 0].copy()
+    df["客単価"] = (df["純売上"] / df["客数"].replace(0, pd.NA)).round(0).fillna(0)
     df["曜日番号"] = df["日付"].dt.dayofweek
     df["粗利率"] = (df["粗利"] / df["純売上"] * 100).round(1)
     return df

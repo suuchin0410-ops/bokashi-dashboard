@@ -9,7 +9,9 @@ import streamlit as st
 import yaml
 from pathlib import Path
 
-from data_loader import load_daily, load_product, load_customer, load_department, save_uploaded_csv
+from data_loader import (load_daily, load_product, load_customer, load_department,
+                         load_hourly, load_customer_age, load_customer_nationality, load_weekday,
+                         save_uploaded_csv)
 from sync_drive import get_last_sync_info, get_local_file_summary
 
 CONFIG_DIR = Path(__file__).parent / "config"
@@ -151,6 +153,189 @@ def render_discount_analysis(df: pd.DataFrame):
     c1.metric("値引き合計", f"¥{discount_total:,.0f}")
     c2.metric("クーポン利用", f"¥{coupon_total:,.0f}")
     c3.metric("値引き率", f"{discount_rate:.1f}%")
+
+
+# ── 時間帯別分析 ──
+
+def render_hourly_sales(df_hourly: pd.DataFrame):
+    st.subheader("時間帯別売上")
+    data = df_hourly.groupby("時間").agg(
+        純売上=("純売上", "sum"), 客数=("客数", "sum"),
+    ).reset_index().sort_values("時間")
+    data["時間帯"] = data["時間"].apply(lambda x: f"{x:02d}:00")
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    total = data["純売上"].sum()
+    data["構成比"] = (data["純売上"] / total * 100).round(1) if total > 0 else 0
+
+    # KPI
+    peak_row = data.loc[data["純売上"].idxmax()]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("ピーク時間帯", f"{int(peak_row['時間']):02d}:00〜{int(peak_row['時間'])+1:02d}:00")
+    c2.metric("ピーク売上", f"¥{peak_row['純売上']:,.0f}")
+    c3.metric("ピーク客数", f"{peak_row['客数']:,.0f}人")
+
+    # Bar chart
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=data["時間帯"], y=data["純売上"], name="売上", marker_color="#c4a882",
+                         text=data["構成比"].apply(lambda x: f"{x:.1f}%"), textposition="outside"))
+    fig.add_trace(go.Scatter(x=data["時間帯"], y=data["客数"], name="客数",
+                             line=dict(color="#5a3e2b", width=2), yaxis="y2"))
+    fig.update_layout(
+        yaxis=dict(title="売上（円）"),
+        yaxis2=dict(title="客数（人）", overlaying="y", side="right"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        margin=dict(t=30, b=30),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Table
+    display = data[["時間帯", "純売上", "客数", "客単価", "構成比"]].copy()
+    st.dataframe(
+        display.style.format({
+            "純売上": "¥{:,.0f}", "客数": "{:,.0f}人", "客単価": "¥{:,.0f}", "構成比": "{:.1f}%",
+        }), use_container_width=True, hide_index=True,
+    )
+
+
+# ── 曜日別分析（スマレジCSV版） ──
+
+def render_weekday_from_csv(df_weekday: pd.DataFrame):
+    st.subheader("曜日別売上（スマレジ集計）")
+    wn_short = {"月曜日": "月", "火曜日": "火", "水曜日": "水", "木曜日": "木",
+                "金曜日": "金", "土曜日": "土", "日曜日": "日"}
+
+    data = df_weekday.groupby(["曜日", "曜日番号"]).agg(
+        純売上=("純売上", "sum"), 客数=("客数", "sum"), 回数=("回数", "sum"),
+    ).reset_index().sort_values("曜日番号")
+    data["曜日短"] = data["曜日"].map(wn_short)
+    data["日平均売上"] = (data["純売上"] / data["回数"].replace(0, pd.NA)).round(0).fillna(0)
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    total = data["純売上"].sum()
+    data["構成比"] = (data["純売上"] / total * 100).round(1) if total > 0 else 0
+
+    # Best day
+    best = data.loc[data["純売上"].idxmax()]
+    worst = data.loc[data["純売上"].idxmin()]
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("最高売上曜日", best["曜日短"], f"¥{best['純売上']:,.0f}")
+    c2.metric("最低売上曜日", worst["曜日短"], f"¥{worst['純売上']:,.0f}")
+    c3.metric("最高客単価", data.loc[data["客単価"].idxmax(), "曜日短"], f"¥{data['客単価'].max():,.0f}")
+    c4.metric("最多客数", data.loc[data["客数"].idxmax(), "曜日短"], f"{data['客数'].max():,.0f}人")
+
+    col_l, col_r = st.columns(2)
+    with col_l:
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=data["曜日短"], y=data["純売上"], name="売上合計", marker_color="#c4a882",
+                             text=data["構成比"].apply(lambda x: f"{x:.1f}%"), textposition="outside"))
+        fig.update_layout(yaxis_title="売上（円）", margin=dict(t=30, b=30))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col_r:
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=data["曜日短"], y=data["日平均売上"], name="日平均売上", marker_color="#8b7355",
+                             text=data["日平均売上"].apply(lambda x: f"¥{x:,.0f}"), textposition="outside"))
+        fig.update_layout(yaxis_title="日平均売上（円）", margin=dict(t=30, b=30))
+        st.plotly_chart(fig, use_container_width=True)
+
+    display = data[["曜日", "回数", "純売上", "日平均売上", "客数", "客単価", "構成比"]].copy()
+    display.columns = ["曜日", "営業回数", "売上合計", "日平均売上", "客数", "客単価", "構成比"]
+    st.dataframe(
+        display.style.format({
+            "売上合計": "¥{:,.0f}", "日平均売上": "¥{:,.0f}", "客数": "{:,.0f}人",
+            "客単価": "¥{:,.0f}", "構成比": "{:.1f}%",
+        }), use_container_width=True, hide_index=True,
+    )
+
+
+# ── 年代別・国籍別客層分析 ──
+
+def render_customer_age(df_age: pd.DataFrame):
+    st.subheader("年代別客層")
+    data = df_age.groupby("ラベル").agg(
+        純売上=("純売上", "sum"), 客数=("客数", "sum"), 販売点数=("販売点数", "sum"),
+    ).reset_index()
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    total_sales = data["純売上"].sum()
+    data["売上構成比"] = (data["純売上"] / total_sales * 100).round(1) if total_sales > 0 else 0
+    total_cust = data["客数"].sum()
+    data["客数構成比"] = (data["客数"] / total_cust * 100).round(1) if total_cust > 0 else 0
+
+    # Sort by sales desc
+    data = data.sort_values("純売上", ascending=False)
+
+    # Top age KPI
+    top = data.iloc[0]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("最多年代（売上）", top["ラベル"], f"{top['売上構成比']:.1f}%")
+    c2.metric("最多年代 客数", f"{top['客数']:,.0f}人")
+    c3.metric("最多年代 客単価", f"¥{top['客単価']:,.0f}")
+
+    col_l, col_r = st.columns(2)
+    with col_l:
+        st.markdown("**売上構成**")
+        fig = px.pie(data, values="純売上", names="ラベル", color_discrete_sequence=COLORS)
+        fig.update_layout(margin=dict(t=10, b=10))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col_r:
+        st.markdown("**客数構成**")
+        fig = px.pie(data, values="客数", names="ラベル", color_discrete_sequence=COLORS)
+        fig.update_layout(margin=dict(t=10, b=10))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Bar: unit price by age
+    fig = px.bar(data.sort_values("客単価", ascending=True), x="客単価", y="ラベル", orientation="h",
+                 color_discrete_sequence=["#c4a882"],
+                 text=data.sort_values("客単価", ascending=True)["客単価"].apply(lambda x: f"¥{x:,.0f}"))
+    fig.update_layout(xaxis_title="客単価（円）", yaxis_title="", margin=dict(t=10, b=30, l=80))
+    fig.update_traces(textposition="outside")
+    st.plotly_chart(fig, use_container_width=True)
+
+    display = data[["ラベル", "純売上", "売上構成比", "客数", "客数構成比", "客単価"]].copy()
+    display.columns = ["年代", "売上", "売上構成比", "客数", "客数構成比", "客単価"]
+    st.dataframe(
+        display.style.format({
+            "売上": "¥{:,.0f}", "売上構成比": "{:.1f}%", "客数": "{:,.0f}人",
+            "客数構成比": "{:.1f}%", "客単価": "¥{:,.0f}",
+        }), use_container_width=True, hide_index=True,
+    )
+
+
+def render_customer_nationality(df_nat: pd.DataFrame):
+    st.subheader("国籍別客層")
+    data = df_nat.groupby("ラベル").agg(
+        純売上=("純売上", "sum"), 客数=("客数", "sum"), 販売点数=("販売点数", "sum"),
+    ).reset_index()
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    total_sales = data["純売上"].sum()
+    data["構成比"] = (data["純売上"] / total_sales * 100).round(1) if total_sales > 0 else 0
+
+    col_l, col_r = st.columns(2)
+    with col_l:
+        foreign = data[data["ラベル"] == "海外"]
+        domestic = data[data["ラベル"] == "日本"]
+        foreign_rate = foreign["構成比"].sum() if not foreign.empty else 0
+        foreign_count = int(foreign["客数"].sum()) if not foreign.empty else 0
+        foreign_unit = int(foreign["客単価"].iloc[0]) if not foreign.empty else 0
+        c1, c2, c3 = st.columns(3)
+        c1.metric("インバウンド比率", f"{foreign_rate:.1f}%")
+        c2.metric("海外客数", f"{foreign_count}人")
+        c3.metric("海外客単価", f"¥{foreign_unit:,}")
+
+    with col_r:
+        fig = px.pie(data, values="純売上", names="ラベル",
+                     color="ラベル",
+                     color_discrete_map={"日本": "#c4a882", "海外": "#5a3e2b"})
+        fig.update_layout(margin=dict(t=10, b=10))
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.dataframe(
+        data[["ラベル", "純売上", "構成比", "客数", "客単価"]].rename(
+            columns={"ラベル": "国籍"}
+        ).style.format({
+            "純売上": "¥{:,.0f}", "構成比": "{:.1f}%", "客数": "{:,.0f}人", "客単価": "¥{:,.0f}",
+        }), use_container_width=True, hide_index=True,
+    )
 
 
 # ── 商品分析 ──
@@ -486,6 +671,10 @@ def main():
     df_product_all = load_product(sales_dir)
     df_customer_all = load_customer(sales_dir)
     df_department_all = load_department(sales_dir)
+    df_hourly_all = load_hourly(sales_dir)
+    df_customer_age_all = load_customer_age(sales_dir)
+    df_customer_nat_all = load_customer_nationality(sales_dir)
+    df_weekday_all = load_weekday(sales_dir)
 
     if df_daily_all.empty:
         st.warning("売上データが見つかりません。サイドバーからCSVをアップロードしてください。")
@@ -509,11 +698,20 @@ def main():
                 max_value=df_daily_all["日付"].max(),
             )
 
+    def _filter_by_month(df, month):
+        if df.empty or "年月" not in df.columns:
+            return df
+        return df[df["年月"] == month].copy()
+
     if view_mode == "月別" and selected_month != "全期間":
         df_daily = df_daily_all[df_daily_all["年月"] == selected_month].copy()
-        df_product = df_product_all[df_product_all["年月"] == selected_month].copy() if not df_product_all.empty else df_product_all
-        df_customer = df_customer_all[df_customer_all["年月"] == selected_month].copy() if not df_customer_all.empty else df_customer_all
-        df_department = df_department_all[df_department_all["年月"] == selected_month].copy() if not df_department_all.empty else df_department_all
+        df_product = _filter_by_month(df_product_all, selected_month)
+        df_customer = _filter_by_month(df_customer_all, selected_month)
+        df_department = _filter_by_month(df_department_all, selected_month)
+        df_hourly = _filter_by_month(df_hourly_all, selected_month)
+        df_customer_age = _filter_by_month(df_customer_age_all, selected_month)
+        df_customer_nat = _filter_by_month(df_customer_nat_all, selected_month)
+        df_weekday = _filter_by_month(df_weekday_all, selected_month)
     elif view_mode == "期間指定" and isinstance(date_range, tuple) and len(date_range) == 2:
         df_daily = df_daily_all[
             (df_daily_all["日付"] >= pd.Timestamp(date_range[0]))
@@ -522,14 +720,22 @@ def main():
         df_product = df_product_all.copy()
         df_customer = df_customer_all.copy()
         df_department = df_department_all.copy()
+        df_hourly = df_hourly_all.copy()
+        df_customer_age = df_customer_age_all.copy()
+        df_customer_nat = df_customer_nat_all.copy()
+        df_weekday = df_weekday_all.copy()
     else:
         df_daily = df_daily_all.copy()
         df_product = df_product_all.copy()
         df_customer = df_customer_all.copy()
         df_department = df_department_all.copy()
+        df_hourly = df_hourly_all.copy()
+        df_customer_age = df_customer_age_all.copy()
+        df_customer_nat = df_customer_nat_all.copy()
+        df_weekday = df_weekday_all.copy()
 
-    tab_daily, tab_product, tab_dept, tab_customer, tab_trend = st.tabs(
-        ["日別分析", "商品分析", "部門別分析", "客層分析", "トレンド分析"]
+    tab_daily, tab_hourly, tab_product, tab_dept, tab_customer, tab_trend = st.tabs(
+        ["日別分析", "時間帯・曜日", "商品分析", "部門別分析", "客層分析", "トレンド分析"]
     )
 
     with tab_daily:
@@ -547,6 +753,17 @@ def main():
             render_profitability(df_daily)
         with col_r2:
             render_discount_analysis(df_daily)
+
+    with tab_hourly:
+        if df_hourly.empty:
+            st.warning("時間帯別売上データが見つかりません。")
+        else:
+            render_hourly_sales(df_hourly)
+        st.divider()
+        if df_weekday.empty:
+            st.warning("曜日別売上データが見つかりません。")
+        else:
+            render_weekday_from_csv(df_weekday)
 
     with tab_product:
         if df_product.empty:
@@ -567,12 +784,19 @@ def main():
             render_department_profitability(df_department)
 
     with tab_customer:
-        if df_customer.empty:
+        if df_customer.empty and df_customer_age.empty and df_customer_nat.empty:
             st.warning("客層別売上データが見つかりません。")
         else:
-            render_customer_segment_kpi(df_customer)
-            render_customer_segment_charts(df_customer)
-            render_customer_segment_monthly(df_customer)
+            if not df_customer.empty:
+                render_customer_segment_kpi(df_customer)
+                render_customer_segment_charts(df_customer)
+                render_customer_segment_monthly(df_customer)
+            st.divider()
+            if not df_customer_age.empty:
+                render_customer_age(df_customer_age)
+            st.divider()
+            if not df_customer_nat.empty:
+                render_customer_nationality(df_customer_nat)
 
     with tab_trend:
         if df_product_all.empty:

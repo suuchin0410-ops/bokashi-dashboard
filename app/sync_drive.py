@@ -26,6 +26,7 @@ PREFIX_MAP = {
     "部門別売上": "department",
     "客層別売上_既存・新規": "customer",
     "客層別売上_年代": "customer_age",
+    "客層別売上_国籍": "customer_nationality",
     "曜日別売上": "weekday",
     "時間帯別売上": "hourly",
 }

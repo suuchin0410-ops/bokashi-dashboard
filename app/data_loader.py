@@ -138,6 +138,58 @@ def load_department(sales_dir: Path) -> pd.DataFrame:
     return df
 
 
+def load_hourly(sales_dir: Path) -> pd.DataFrame:
+    df = _read_csvs(sales_dir, "hourly", add_month=True)
+    if df.empty:
+        return df
+    df["時間帯"] = df["時間帯"].astype(str).str.strip()
+    df = df[~df["時間帯"].isin(["", "nan", "合計"])].copy()
+    df = _to_numeric(df, ["純売上", "純売上(税抜)", "消費税", "構成比", "総売上",
+                          "販売点数", "返品数", "取引数", "客数", "客単価"])
+    df = df[df["純売上"] > 0].copy()
+    df["時間"] = df["時間帯"].str.extract(r"(\d{2}):\d{2}").astype(int)
+    return df
+
+
+def load_customer_age(sales_dir: Path) -> pd.DataFrame:
+    df = _read_csvs(sales_dir, "customer_age", add_month=True)
+    if df.empty:
+        return df
+    df["ラベル"] = df["ラベル"].astype(str).str.strip()
+    df = df[~df["ラベル"].isin(["", "nan"])].copy()
+    df = df[df["ラベル"] != "合計"].copy()
+    df = _to_numeric(df, ["純売上", "純売上(税抜)", "消費税", "純売上構成比",
+                          "販売点数", "返品数", "販売点数構成比", "客数", "客単価"])
+    return df
+
+
+def load_customer_nationality(sales_dir: Path) -> pd.DataFrame:
+    df = _read_csvs(sales_dir, "customer_nationality", add_month=True)
+    if df.empty:
+        return df
+    df["ラベル"] = df["ラベル"].astype(str).str.strip()
+    df = df[~df["ラベル"].isin(["", "nan"])].copy()
+    df = df[df["ラベル"] != "合計"].copy()
+    df = _to_numeric(df, ["純売上", "純売上(税抜)", "消費税", "純売上構成比",
+                          "販売点数", "返品数", "販売点数構成比", "客数", "客単価"])
+    return df
+
+
+def load_weekday(sales_dir: Path) -> pd.DataFrame:
+    df = _read_csvs(sales_dir, "weekday", add_month=True)
+    if df.empty:
+        return df
+    df["曜日"] = df["曜日"].astype(str).str.strip()
+    df = df[~df["曜日"].isin(["", "nan", "合計"])].copy()
+    df = _to_numeric(df, ["回数", "純売上", "純売上(税抜)", "消費税", "構成比",
+                          "総売上", "販売点数", "返品数", "取引数", "客数", "客単価"])
+    _weekday_order = {"月曜日": 0, "火曜日": 1, "水曜日": 2, "木曜日": 3,
+                      "金曜日": 4, "土曜日": 5, "日曜日": 6}
+    df["曜日番号"] = df["曜日"].map(_weekday_order).fillna(7).astype(int)
+    df = df.sort_values("曜日番号")
+    return df
+
+
 def save_uploaded_csv(uploaded_file, sales_dir: Path) -> str:
     """Streamlitのアップロードファイルをdata/sales/に保存する。
     ファイル名からprefixを判定して適切な名前で保存。"""

@@ -66,16 +66,23 @@ def _fetch_csvs_from_drive(folder_id: str) -> str:
     service = _build_drive_service()
     query = f"'{folder_id}' in parents and mimeType='text/csv' and trashed=false"
     results = service.files().list(
-        q=query, fields="files(id, name)", pageSize=100
+        q=query, fields="files(id, name, modifiedTime)", pageSize=100
     ).execute()
     files = results.get("files", [])
 
-    tmp_dir = Path(tempfile.mkdtemp(prefix="bokashi_sales_"))
-    downloaded = []
+    # 同じlocal_nameにマッピングされるファイルが複数ある場合、最新のものだけを残す
+    best: dict[str, dict] = {}
     for f in files:
         local_name = _map_filename(f["name"])
         if not local_name:
             continue
+        mod_time = f.get("modifiedTime", "")
+        if local_name not in best or mod_time > best[local_name]["modifiedTime"]:
+            best[local_name] = {"id": f["id"], "name": f["name"], "modifiedTime": mod_time}
+
+    tmp_dir = Path(tempfile.mkdtemp(prefix="bokashi_sales_"))
+    downloaded = []
+    for local_name, f in best.items():
         request = service.files().get_media(fileId=f["id"])
         buf = io.BytesIO()
         downloader = MediaIoBaseDownload(buf, request)

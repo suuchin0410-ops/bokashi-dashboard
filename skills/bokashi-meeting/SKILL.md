@@ -89,8 +89,8 @@ Google Driveから最新の売上CSVを取得してローカルに保存する�
 
 ### 完了条件
 - Notionページにレポートが書き込まれている
-- Streamlitダッシュボードを起動する（`app/app.py`）
-- 「Phase 2 完了。Notionページ: {URL}。ダッシュボード: http://localhost:8501 。会議で活用してください。会議後に『次へ』で議事録の構造化に進みます」
+- Streamlitダッシュボードの公開URLを提示する
+- 「Phase 2 完了。Notionページ: {URL}。ダッシュボード: https://bokashi-dashboard.streamlit.app 。会議で活用してください。会議後に『次へ』で議事録の構造化に進みます」
 
 ---
 
@@ -103,7 +103,7 @@ Google Driveから最新の売上CSVを取得してローカルに保存する�
 ```
 会議を実施してください。
 - Notionページ: {URL}
-- ダッシュボード: http://localhost:8501
+- ダッシュボード: https://bokashi-dashboard.streamlit.app
 終わったら以下を行ってください:
 1. Plaud Noteの文字起こしテキストをNotionページに貼り付け
 2. 「次へ」と言ってください（NotionページのURLも添えてください）

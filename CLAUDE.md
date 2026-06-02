@@ -37,7 +37,7 @@
 ## データフロー（重要）
 
 ```
-駿さん（店長）がスマレジからCSVエクスポート
+舜さん（店長）がスマレジからCSVエクスポート
   ↓
 Google Drive「コンサルティング/bokashi/sales/」に格納
   ↓
@@ -48,7 +48,7 @@ Streamlitアプリが起動時にGoogle Drive APIで直接CSV取得（5分キャ
 
 **データ更新:**
 ダッシュボードは起動時にGoogle Driveから直接CSVを取得するため、
-駿さんがDriveにCSVを置けばリロードで自動反映される。
+舜さんがDriveにCSVを置けばリロードで自動反映される。
 手動同期やgit pushは不要。
 
 **注意:** Google DriveフォルダIDやサービスアカウントキーはStreamlit Secretsで管理。
@@ -98,5 +98,30 @@ bokashi/
 ├── data/
 │   └── sales/                  # 売上CSV（Google Driveから同期）
 │       └── .sync_log.json      # 同期履歴（自動生成）
+├── skills/
+│   └── bokashi-meeting/        # 定例会議フロースキル
+│       └── SKILL.md
 └── CLAUDE.md
 ```
+
+## 合言葉ワークフロー
+
+### 「会議フロー」「MTG」→ 定例会議の全フロー管理
+
+**スキル:** `skills/bokashi-meeting/SKILL.md` を参照。
+5フェーズの対話型ワークフローで定例会議を管理する:
+
+1. **データ取り込み** — Google DriveからCSV取得（データ鮮度の自動チェック付き）
+2. **AI分析レポート** — 売上×前回議事録で会議の論点をNotionに書き込み
+3. **会議実施** — 人間作業。文字起こしをNotionに貼り付け
+4. **議事録構造化** — 文字起こしを構造化議事録に変換（分析上部、原文はトグル）
+5. **総合フィードバック** — 本質的課題・提案・事業間シナジーの分析
+
+途中参加も可能: 「会議の準備をして」→ Phase 2、「議事録更新して」→ Phase 4
+
+**Notion連携:**
+- 読み取り: `app/notion_reader.fetch_page(url_or_id)`
+- 書き込み: `app/notion_writer` の各関数
+- ページ作成: `app/notion_writer.create_meeting_page(date)`
+- トークン: `app/config/.notion_token`（claude-code integration）
+- **新規ページは親ページから権限を自動継承するため、手動での接続追加は不要**

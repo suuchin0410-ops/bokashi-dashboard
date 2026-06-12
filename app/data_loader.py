@@ -10,6 +10,7 @@ CATEGORY_MAP = {
     "ソーダ，ジュース，ティー": "ドリンク",
     "パンケーキ（セットドリンク）": "ドリンク",
     "ランチ（セットドリンク）": "ドリンク",
+    "ランチ（セッットドリンク）": "ドリンク",
     "スイーツ": "スイーツ",
     "パンケーキ": "スイーツ",
     "ランチ": "ランチ",
@@ -113,8 +114,10 @@ def load_product(sales_dir: Path) -> pd.DataFrame:
         "純売上構成比", "販売点数", "返品数",
     ])
     df = df[df["純売上"] > 0].copy()
+    df["商品コード"] = df["商品コード"].astype(str).str.strip()
     df["商品名"] = df["商品名"].astype(str).str.strip()
     df["部門名"] = df["部門名"].astype(str).str.strip()
+    df = df[~df["商品コード"].str.contains("合計|前月|前年", na=False)].copy()
     df = df[~df["商品名"].isin(["", "nan", "合計"])].copy()
     df = df[~df["部門名"].isin(["", "nan", "合計"])].copy()
     df = df[~df["商品名"].str.contains("セット値引", na=False)].copy()

@@ -370,6 +370,7 @@ def render_product_ranking(df_product: pd.DataFrame):
 def render_category_breakdown(df_product: pd.DataFrame):
     st.subheader("カテゴリ別売上構成")
     cat = df_product.groupby("カテゴリ").agg(売上=("純売上", "sum"), 点数=("販売点数", "sum")).sort_values("売上", ascending=False).reset_index()
+    cat = cat[cat["カテゴリ"] != "その他"]
     fig = px.pie(cat, values="売上", names="カテゴリ", color_discrete_sequence=COLORS)
     fig.update_layout(margin=dict(t=30, b=30))
     st.plotly_chart(fig, use_container_width=True)

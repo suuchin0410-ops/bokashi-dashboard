@@ -5,7 +5,7 @@ __pycache__/
 dist/
 build/
 .env
-.streamlit/secrets.toml
+**/secrets.toml
 docs/
 data/sales/
 app/config/.notion_token

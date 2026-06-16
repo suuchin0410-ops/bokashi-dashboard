@@ -85,7 +85,22 @@ def load_config(store_id: str) -> dict:
 
 # ── 日別分析 ──
 
+def render_data_period(df: pd.DataFrame, label: str = "データ期間"):
+    """データの対象期間を表示する"""
+    if df.empty:
+        return
+    if "日付" in df.columns:
+        date_min = df["日付"].min()
+        date_max = df["日付"].max()
+        active_days = len(df)
+        st.caption(f"📅 {label}: **{date_min.strftime('%Y/%m/%d')}〜{date_max.strftime('%Y/%m/%d')}**（{active_days}日間）")
+    elif "年月" in df.columns:
+        months = sorted(df["年月"].unique())
+        st.caption(f"📅 {label}: **{months[0]}〜{months[-1]}**" if len(months) > 1 else f"📅 {label}: **{months[0]}**")
+
+
 def render_kpi(df: pd.DataFrame):
+    render_data_period(df)
     col1, col2, col3, col4, col5 = st.columns(5)
     total_sales = df["純売上"].sum()
     total_customers = df["客数"].sum()
@@ -780,6 +795,7 @@ def main():
             _safe_render("値引き", render_discount_analysis, df_daily)
 
     with tab_hourly:
+        render_data_period(df_hourly, "時間帯・曜日データ")
         if df_hourly.empty:
             st.warning("時間帯別売上データが見つかりません。")
         else:
@@ -791,6 +807,7 @@ def main():
             _safe_render("曜日別売上", render_weekday_from_csv, df_weekday)
 
     with tab_product:
+        render_data_period(df_product, "商品データ")
         if df_product.empty:
             st.warning("商品別売上データが見つかりません。")
         else:
@@ -802,6 +819,7 @@ def main():
                 _safe_render("原価率", render_product_cost, df_product)
 
     with tab_dept:
+        render_data_period(df_department, "部門データ")
         if df_department.empty:
             st.warning("部門別売上データが見つかりません。")
         else:
@@ -809,6 +827,7 @@ def main():
             _safe_render("部門別粗利", render_department_profitability, df_department)
 
     with tab_customer:
+        render_data_period(df_customer, "客層データ")
         if df_customer.empty and df_customer_age.empty and df_customer_nat.empty:
             st.warning("客層別売上データが見つかりません。")
         else:

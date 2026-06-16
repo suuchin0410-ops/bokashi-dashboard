@@ -181,7 +181,7 @@ def render_hourly_sales(df_hourly: pd.DataFrame):
         純売上=("純売上", "sum"), 客数=("客数", "sum"),
     ).reset_index().sort_values("時間")
     data["時間帯"] = data["時間"].apply(lambda x: f"{x:02d}:00")
-    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).fillna(0).round(0)
     total = data["純売上"].sum()
     data["構成比"] = (data["純売上"] / total * 100).round(1) if total > 0 else 0
 
@@ -226,8 +226,8 @@ def render_weekday_from_csv(df_weekday: pd.DataFrame):
         純売上=("純売上", "sum"), 客数=("客数", "sum"), 回数=("回数", "sum"),
     ).reset_index().sort_values("曜日番号")
     data["曜日短"] = data["曜日"].map(wn_short)
-    data["日平均売上"] = (data["純売上"] / data["回数"].replace(0, pd.NA)).round(0).fillna(0)
-    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    data["日平均売上"] = (data["純売上"] / data["回数"].replace(0, pd.NA)).fillna(0).round(0)
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).fillna(0).round(0)
     total = data["純売上"].sum()
     data["構成比"] = (data["純売上"] / total * 100).round(1) if total > 0 else 0
 
@@ -272,7 +272,7 @@ def render_customer_age(df_age: pd.DataFrame):
     data = df_age.groupby("ラベル").agg(
         純売上=("純売上", "sum"), 客数=("客数", "sum"), 販売点数=("販売点数", "sum"),
     ).reset_index()
-    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).fillna(0).round(0)
     total_sales = data["純売上"].sum()
     data["売上構成比"] = (data["純売上"] / total_sales * 100).round(1) if total_sales > 0 else 0
     total_cust = data["客数"].sum()
@@ -324,7 +324,7 @@ def render_customer_nationality(df_nat: pd.DataFrame):
     data = df_nat.groupby("ラベル").agg(
         純売上=("純売上", "sum"), 客数=("客数", "sum"), 販売点数=("販売点数", "sum"),
     ).reset_index()
-    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).round(0).fillna(0)
+    data["客単価"] = (data["純売上"] / data["客数"].replace(0, pd.NA)).fillna(0).round(0)
     total_sales = data["純売上"].sum()
     data["構成比"] = (data["純売上"] / total_sales * 100).round(1) if total_sales > 0 else 0
 

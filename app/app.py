@@ -730,6 +730,38 @@ def main():
                 max_value=df_daily_all["日付"].max(),
             )
 
+        # イベント日除外フィルター
+        st.divider()
+        st.header("イベント日除外")
+        median_sales = df_daily_all["純売上"].median()
+        outlier_threshold = median_sales * 2.5
+        outlier_dates = df_daily_all[df_daily_all["純売上"] > outlier_threshold]["日付"].tolist()
+
+        exclude_enabled = st.checkbox(
+            "イベント日を除外して表示",
+            value=False,
+            help="売上が通常の2.5倍を超える日を除外し、通常営業の実力値を確認できます",
+        )
+        if outlier_dates:
+            outlier_labels = {
+                d.strftime("%Y/%m/%d"): f"{d.strftime('%Y/%m/%d')}（¥{int(df_daily_all[df_daily_all['日付'] == d]['純売上'].iloc[0]):,}）"
+                for d in outlier_dates
+            }
+            default_selection = [d.strftime("%Y/%m/%d") for d in outlier_dates] if exclude_enabled else []
+            exclude_dates_str = st.multiselect(
+                "除外する日を選択",
+                options=list(outlier_labels.keys()),
+                default=default_selection,
+                format_func=lambda x: outlier_labels.get(x, x),
+                help=f"自動検出: 日販中央値 ¥{median_sales:,.0f} の2.5倍（¥{outlier_threshold:,.0f}）超の日",
+            )
+        else:
+            exclude_dates_str = []
+            if exclude_enabled:
+                st.info("外れ値に該当する日はありません")
+
+        exclude_dates = [pd.Timestamp(d) for d in exclude_dates_str]
+
     def _filter_by_month(df, month):
         if df.empty or "年月" not in df.columns:
             return df
@@ -766,6 +798,16 @@ def main():
         df_customer_nat = df_customer_nat_all.copy()
         df_weekday = df_weekday_all.copy()
 
+    # イベント日除外フィルターの適用（日別データのみ）
+    has_exclusion = len(exclude_dates) > 0
+    if has_exclusion:
+        excluded_sales = df_daily[df_daily["日付"].isin(exclude_dates)]["純売上"].sum()
+        df_daily = df_daily[~df_daily["日付"].isin(exclude_dates)].copy()
+    aggregated_csv_note = (
+        "※ このデータはスマレジの月次集計CSVのため、イベント日の除外は反映されていません。"
+        "日別分析タブの数値が除外後の実力値です。"
+    ) if has_exclusion else None
+
     tab_daily, tab_hourly, tab_product, tab_dept, tab_customer, tab_trend = st.tabs(
         ["日別分析", "時間帯・曜日", "商品分析", "部門別分析", "客層分析", "トレンド分析"]
     )
@@ -779,6 +821,12 @@ def main():
             st.code(traceback.format_exc(), language="text")
 
     with tab_daily:
+        if has_exclusion:
+            dates_str = "・".join(d.strftime("%m/%d") for d in exclude_dates)
+            st.info(
+                f"🔍 イベント日除外モード: {dates_str} を除外中"
+                f"（除外売上: ¥{excluded_sales:,.0f}）— 通常営業の実力値を表示しています"
+            )
         _safe_render("KPI", render_kpi, df_daily)
         st.divider()
         _safe_render("月別サマリー", render_monthly_summary, df_daily)
@@ -795,6 +843,8 @@ def main():
             _safe_render("値引き", render_discount_analysis, df_daily)
 
     with tab_hourly:
+        if aggregated_csv_note:
+            st.warning(aggregated_csv_note)
         render_data_period(df_hourly, "時間帯・曜日データ")
         if df_hourly.empty:
             st.warning("時間帯別売上データが見つかりません。")
@@ -807,6 +857,8 @@ def main():
             _safe_render("曜日別売上", render_weekday_from_csv, df_weekday)
 
     with tab_product:
+        if aggregated_csv_note:
+            st.warning(aggregated_csv_note)
         render_data_period(df_product, "商品データ")
         if df_product.empty:
             st.warning("商品別売上データが見つかりません。")
@@ -819,6 +871,8 @@ def main():
                 _safe_render("原価率", render_product_cost, df_product)
 
     with tab_dept:
+        if aggregated_csv_note:
+            st.warning(aggregated_csv_note)
         render_data_period(df_department, "部門データ")
         if df_department.empty:
             st.warning("部門別売上データが見つかりません。")
@@ -827,6 +881,8 @@ def main():
             _safe_render("部門別粗利", render_department_profitability, df_department)
 
     with tab_customer:
+        if aggregated_csv_note:
+            st.warning(aggregated_csv_note)
         render_data_period(df_customer, "客層データ")
         if df_customer.empty and df_customer_age.empty and df_customer_nat.empty:
             st.warning("客層別売上データが見つかりません。")

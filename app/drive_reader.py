@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import re
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -60,9 +61,15 @@ def _build_drive_service():
     return build("drive", "v3", credentials=creds)
 
 
+_PREV_TMP_DIR: str | None = None
+
+
 @st.cache_data(ttl=300, show_spinner="Google Driveからデータを取得中...")
 def _fetch_csvs_from_drive(folder_id: str) -> str:
     """DriveフォルダのCSVをダウンロードしてtmpディレクトリのパスを返す。5分キャッシュ。"""
+    global _PREV_TMP_DIR
+    if _PREV_TMP_DIR and Path(_PREV_TMP_DIR).exists():
+        shutil.rmtree(_PREV_TMP_DIR, ignore_errors=True)
     service = _build_drive_service()
     query = f"'{folder_id}' in parents and mimeType='text/csv' and trashed=false"
     results = service.files().list(
@@ -92,6 +99,7 @@ def _fetch_csvs_from_drive(folder_id: str) -> str:
         (tmp_dir / local_name).write_bytes(buf.getvalue())
         downloaded.append(local_name)
 
+    _PREV_TMP_DIR = str(tmp_dir)
     return str(tmp_dir)
 
 

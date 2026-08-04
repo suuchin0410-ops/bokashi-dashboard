@@ -371,6 +371,88 @@ def render_customer_nationality(df_nat: pd.DataFrame):
     )
 
 
+# ── 曜日別月次比較 ──
+
+def render_weekday_monthly_comparison(df_weekday_all: pd.DataFrame):
+    """曜日ごとの月次推移を横並びで比較する。"""
+    st.subheader("曜日別 月次比較")
+    if df_weekday_all.empty or "年月" not in df_weekday_all.columns:
+        st.warning("比較に必要な曜日別データがありません。")
+        return
+
+    wn_short = {"月曜日": "月", "火曜日": "火", "水曜日": "水", "木曜日": "木",
+                "金曜日": "金", "土曜日": "土", "日曜日": "日"}
+    wn_order = {"月曜日": 0, "火曜日": 1, "水曜日": 2, "木曜日": 3,
+                "金曜日": 4, "土曜日": 5, "日曜日": 6}
+
+    months = sorted(df_weekday_all["年月"].unique())
+    if len(months) < 2:
+        st.info("比較には2ヶ月以上のデータが必要です。")
+        return
+
+    selected_months = st.multiselect(
+        "比較する月を選択", months, default=months[-3:] if len(months) >= 3 else months,
+        key="weekday_comp_months",
+    )
+    if len(selected_months) < 2:
+        st.info("2ヶ月以上選択してください。")
+        return
+
+    data = df_weekday_all[df_weekday_all["年月"].isin(selected_months)].copy()
+    data["曜日短"] = data["曜日"].map(wn_short)
+    data["曜日順"] = data["曜日"].map(wn_order)
+
+    metric = st.radio("指標", ["日平均売上", "客数", "客単価"], horizontal=True, key="weekday_comp_metric")
+
+    agg = data.groupby(["年月", "曜日", "曜日短", "曜日順"]).agg(
+        純売上=("純売上", "sum"), 客数=("客数", "sum"), 回数=("回数", "sum"),
+    ).reset_index()
+    agg["日平均売上"] = (agg["純売上"] / agg["回数"].replace(0, pd.NA)).fillna(0).round(0)
+    agg["客単価"] = (agg["純売上"] / agg["客数"].replace(0, pd.NA)).fillna(0).round(0)
+    agg = agg.sort_values("曜日順")
+
+    col_map = {"日平均売上": "日平均売上", "客数": "客数", "客単価": "客単価"}
+    y_col = col_map[metric]
+    fmt_map = {"日平均売上": "¥{:,.0f}", "客数": "{:,.0f}人", "客単価": "¥{:,.0f}"}
+
+    fig = go.Figure()
+    for i, m in enumerate(sorted(selected_months)):
+        m_data = agg[agg["年月"] == m]
+        month_label = f"{int(m.split('-')[1])}月"
+        fig.add_trace(go.Bar(
+            x=m_data["曜日短"], y=m_data[y_col], name=month_label,
+            marker_color=COLORS[i % len(COLORS)],
+            text=m_data[y_col].apply(lambda x: fmt_map[metric].format(x)),
+            textposition="outside",
+        ))
+    fig.update_layout(
+        barmode="group",
+        yaxis_title=metric,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        margin=dict(t=40, b=30),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    pivot = agg.pivot_table(index=["曜日順", "曜日短"], columns="年月", values=y_col, aggfunc="first").reset_index()
+    pivot = pivot.sort_values("曜日順").drop(columns=["曜日順"])
+    pivot = pivot.rename(columns={"曜日短": "曜日"})
+
+    if len(selected_months) >= 2:
+        sorted_months = sorted(selected_months)
+        latest = sorted_months[-1]
+        prev = sorted_months[-2]
+        if latest in pivot.columns and prev in pivot.columns:
+            pivot["前月比"] = ((pivot[latest] / pivot[prev].replace(0, pd.NA) - 1) * 100).round(1)
+            pivot["前月比"] = pivot["前月比"].apply(lambda x: f"{x:+.1f}%" if pd.notna(x) else "—")
+
+    month_cols = [c for c in pivot.columns if c not in ("曜日", "前月比")]
+    fmt = {c: fmt_map[metric] for c in month_cols}
+    st.dataframe(
+        _safe_df(pivot).style.format(fmt, na_rep="—"),
+        use_container_width=True, hide_index=True,
+    )
+
+
 # ── 商品分析 ──
 
 def render_product_ranking(df_product: pd.DataFrame):
@@ -777,17 +859,19 @@ def main():
         df_customer_nat = _filter_by_month(df_customer_nat_all, selected_month)
         df_weekday = _filter_by_month(df_weekday_all, selected_month)
     elif view_mode == "期間指定" and isinstance(date_range, tuple) and len(date_range) == 2:
+        start_ts = pd.Timestamp(date_range[0])
+        end_ts = pd.Timestamp(date_range[1])
         df_daily = df_daily_all[
-            (df_daily_all["日付"] >= pd.Timestamp(date_range[0]))
-            & (df_daily_all["日付"] <= pd.Timestamp(date_range[1]))
+            (df_daily_all["日付"] >= start_ts) & (df_daily_all["日付"] <= end_ts)
         ].copy()
-        df_product = df_product_all.copy()
-        df_customer = df_customer_all.copy()
-        df_department = df_department_all.copy()
-        df_hourly = df_hourly_all.copy()
-        df_customer_age = df_customer_age_all.copy()
-        df_customer_nat = df_customer_nat_all.copy()
-        df_weekday = df_weekday_all.copy()
+        period_months = set(df_daily["年月"].unique()) if not df_daily.empty else set()
+        df_product = df_product_all[df_product_all["年月"].isin(period_months)].copy() if "年月" in df_product_all.columns else df_product_all.copy()
+        df_customer = df_customer_all[df_customer_all["年月"].isin(period_months)].copy() if "年月" in df_customer_all.columns else df_customer_all.copy()
+        df_department = df_department_all[df_department_all["年月"].isin(period_months)].copy() if "年月" in df_department_all.columns else df_department_all.copy()
+        df_hourly = df_hourly_all[df_hourly_all["年月"].isin(period_months)].copy() if "年月" in df_hourly_all.columns else df_hourly_all.copy()
+        df_customer_age = df_customer_age_all[df_customer_age_all["年月"].isin(period_months)].copy() if "年月" in df_customer_age_all.columns else df_customer_age_all.copy()
+        df_customer_nat = df_customer_nat_all[df_customer_nat_all["年月"].isin(period_months)].copy() if "年月" in df_customer_nat_all.columns else df_customer_nat_all.copy()
+        df_weekday = df_weekday_all[df_weekday_all["年月"].isin(period_months)].copy() if "年月" in df_weekday_all.columns else df_weekday_all.copy()
     else:
         df_daily = df_daily_all.copy()
         df_product = df_product_all.copy()
@@ -808,8 +892,8 @@ def main():
         "日別分析タブの数値が除外後の実力値です。"
     ) if has_exclusion else None
 
-    tab_daily, tab_hourly, tab_product, tab_dept, tab_customer, tab_trend = st.tabs(
-        ["日別分析", "時間帯・曜日", "商品分析", "部門別分析", "客層分析", "トレンド分析"]
+    tab_daily, tab_hourly, tab_weekday_comp, tab_product, tab_dept, tab_customer, tab_trend = st.tabs(
+        ["日別分析", "時間帯・曜日", "曜日比較", "商品分析", "部門別分析", "客層分析", "トレンド分析"]
     )
 
     def _safe_render(label, func, *args, **kwargs):
@@ -897,6 +981,9 @@ def main():
             st.divider()
             if not df_customer_nat.empty:
                 _safe_render("国籍別", render_customer_nationality, df_customer_nat)
+
+    with tab_weekday_comp:
+        _safe_render("曜日別月次比較", render_weekday_monthly_comparison, df_weekday_all)
 
     with tab_trend:
         if df_product_all.empty:

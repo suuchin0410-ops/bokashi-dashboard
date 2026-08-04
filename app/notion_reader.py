@@ -1,23 +1,14 @@
 """Notionページのテキストを取得するユーティリティ"""
 import requests
-import re
 from pathlib import Path
+
+from notion_writer import extract_page_id
 
 TOKEN_FILE = Path(__file__).parent / "config" / ".notion_token"
 
 
 def _get_token():
     return TOKEN_FILE.read_text().strip()
-
-
-def _extract_page_id(url_or_id: str) -> str:
-    url_or_id = url_or_id.strip().rstrip("/")
-    clean = url_or_id.split("?")[0]
-    raw = clean.split("-")[-1] if "-" in clean.split("/")[-1] else clean.split("/")[-1]
-    raw = raw.replace("-", "")
-    if len(raw) == 32:
-        return f"{raw[:8]}-{raw[8:12]}-{raw[12:16]}-{raw[16:20]}-{raw[20:]}"
-    return raw
 
 
 def _get_blocks(block_id: str, token: str) -> list:
@@ -57,7 +48,7 @@ def _get_page_title(page_id: str, token: str) -> str:
 
 def fetch_page(url_or_id: str) -> dict:
     token = _get_token()
-    page_id = _extract_page_id(url_or_id)
+    page_id = extract_page_id(url_or_id)
     title = _get_page_title(page_id, token)
     blocks = _get_blocks(page_id, token)
 

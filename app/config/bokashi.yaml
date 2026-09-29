@@ -46,6 +46,7 @@ data:
 
 analysis:
   event_day_threshold: 80000
+  max_tasks_per_person: 10
 
 category_map:
   ドリンク: ドリンク

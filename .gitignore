@@ -10,3 +10,6 @@ docs/
 data/sales/
 app/config/.notion_token
 .claude/
+
+# bokashi OPSアプリ（es-ops）へのローカルリンク
+ops-app

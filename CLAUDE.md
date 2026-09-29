@@ -59,6 +59,22 @@ Streamlitアプリが起動時にGoogle Drive APIで直接CSV取得（5分キャ
 - **データ出力:** CSV書き出し（Shift-JIS、日別集計形式）
 - **CSVカラム:** 日付, 純売上, 純売上(税抜), 消費税, 免税額, 総売上, 値引き, ポイント利用, 外税受領, 売上対象外, 送料, 手数料, 原価, 粗利, 販売点数, 返品数, 取引数, 取引単価, 客数, 客単価, 予算設定金額, 予算達成率, クーポン利用
 - **注意:** CSV末尾に合計・前月比・前年比の行あり（読み込み時に除外が必要）
+- **重要:** CSVの読み込みは必ず `app/data_loader.py` の関数を使うこと。`csv.reader` による手書きパースは禁止（エンコーディング・カラムずれの温床）。月間比較は `compare_same_period()` を使用し、結果を必ず `validate_daily()` で検証する
+- **イベント日閾値:** ¥80,000超の日はイベント日として通常営業と分離して分析する（`config/bokashi.yaml` の `analysis.event_day_threshold`）
+
+## bokashi OPSアプリ連携（在庫・仕入・原価率）
+- **アプリ:** https://bokashi-ops-app.web.app（Firebaseプロジェクト `bokashi-ops-app`）
+- **ソース:** `ops-app/` → `../../../Projects/es/es-ops` へのシンボリックリンク（gitignore済み）。es-ops のマルチテナント版で、`VITE_TENANT=bokashi`（`.env.bokashi`）でビルド。
+  旧スタンドアロン版 `Projects/bokashi-ops`（2026-06で更新停止）は使わない
+- **アプリ側の運用ルールは `ops-app/CLAUDE.md` を参照**（特に「bokashi売上連携」「firestore.rules デプロイ時の注意」）。アプリのコード変更・デプロイ・Firestoreへの書き込みはこのフォルダからは行わない
+- **読み取り:** `app/ops_reader.py`（Firestore REST・読み取り専用。gcloud の ADC があれば使う）
+  - `python app/ops_reader.py` でサマリー、`--json` でJSON
+  - `monthly_cost()` 月次原価率（es-ops の `monthlyCost.ts` と同じ定義: 期首在庫＋仕入−期末在庫。本棚卸しが揃わない月は仕入÷売上の「推定」）
+  - `current_stock()` 直近の本棚卸し＋以降の仕入＝推定在庫（消費は差し引けないので上限値）・発注点割れ
+  - `recipe_costs()` レシピの理論原価率 / `sales_gap()` ローカルCSVとOPS売上の不一致チェック
+- **売上の正はこのフォルダの `data/sales/`（Drive同期）。** 原価率の分母は日単位でローカルCSVを優先し、無い日だけOPSの `dailySales` で補う
+- **会議で原価率を出す時の注意:** 本棚卸しは 2026-07-14・08-05 の2回のみ、仕入記録は 2026-09 分から（9/1〜9/28で90件）、レシピは未登録（2026-09-29 時点）。
+  確定原価率はまだ出せないため、数字を出す時は必ず「推定」「仕入記録の範囲」を明記する
 
 ## アプリの利用者
 - **メイン:** 鈴木（コンサルタント）
@@ -86,20 +102,29 @@ bokashi/
 │   ├── export_report.py        # HTMLレポート出力
 │   ├── export_pdf.py           # PDFレポート出力
 │   ├── notion_reader.py        # Notion議事録取得
+│   ├── ops_reader.py           # bokashi OPSアプリ（在庫・仕入・原価率）の読み取り
+│   ├── task_ledger.py          # アクションアイテム台帳（data/tasks.json）。完了は翌週非表示・アーカイブへ削除
+│   ├── meeting_report.py       # 会議準備レポート生成（フォーマット固定。文章は docs/meeting-notes/ctx/*.json）
 │   ├── generate_dummy_data.py  # ダミーデータ生成（開発用）
 │   ├── config/
 │   │   └── bokashi.yaml        # bokashi固有の設定
 │   └── requirements.txt
 ├── docs/
 │   ├── meeting-notes/          # 議事録（Notionから取得・構造化）
+│   │   └── ctx/                # 会議ごとのレポート文章（meeting_report.py の入力）
 │   ├── reports/                # 生成済みレポート（HTML/PDF）
 │   ├── strategy/               # 戦略資料・分析
 │   └── proposals/              # 提案書
 ├── data/
+│   ├── tasks.json              # アクションアイテム台帳（未完了のみ。状態: 進行中/保留）
+│   ├── tasks_archive.json      # 完了・取下タスクの履歴（台帳から削除されたもの）
 │   └── sales/                  # 売上CSV（Google Driveから同期）
 │       └── .sync_log.json      # 同期履歴（自動生成）
+├── ops-app/                    # → Projects/es/es-ops（bokashi OPSアプリのソース。シンボリックリンク）
 ├── skills/
-│   └── bokashi-meeting/        # 定例会議フロースキル
+│   ├── bokashi-meeting/        # 定例会議フロースキル
+│   │   └── SKILL.md
+│   └── bokashi-monthly-report/ # 月次総合レポートスキル
 │       └── SKILL.md
 └── CLAUDE.md
 ```
@@ -118,6 +143,19 @@ bokashi/
 5. **総合フィードバック** — 本質的課題・提案・事業間シナジーの分析
 
 途中参加も可能: 「会議の準備をして」→ Phase 2、「議事録更新して」→ Phase 4
+
+### 「月次レポート」「先月のまとめ」→ 月次総合レポート作成
+
+**スキル:** `skills/bokashi-monthly-report/SKILL.md` を参照。
+毎月1日に前月分のデータを集約し、Notionに月次総合レポートを作成する:
+
+- **売上データ全量** — 月間実績・曜日別・時間帯別・部門別・商品TOP15・顧客分析・日別ランキング
+- **会議内容まとめ** — 月内の全定例会議の議題・決定事項を表形式で整理
+- **アクション進捗一覧** — 全会議のアクションアイテムの月末時点の進捗
+- **月次総評** — 達成事項・未達課題・前月からのトレンド変化
+- **翌月への提言** — 最優先課題・売上シミュレーション・事業間シナジー案
+
+**注意:** 前年比は使用しない（2025年は別事業体のデータのため）
 
 **Notion連携:**
 - 読み取り: `app/notion_reader.fetch_page(url_or_id)`

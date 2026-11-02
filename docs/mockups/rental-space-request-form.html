@@ -1,0 +1,290 @@
+<title>bokashi Base 貸切予約申込</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a single-column form for phones (max 640px), sections in reading order, a sticky estimate bar at the bottom; then a confirm screen and a done screen. */
+:root{
+  --bg:#f6f5f0; --surface:#ffffff; --surface-2:#f0eee6; --fg:#1f1f1d; --muted:#66665f; --line:#d8d5ca; --line-strong:#1f1f1d;
+  --accent:#3f5a3c; --accent-soft:#e4ebe1; --accent-fg:#ffffff;
+  --money:#7a5a12; --money-soft:#faf5e6;
+  --ok:#2f6b3a; --ok-soft:#e2efe4; --warn:#9a5a00; --warn-soft:#fbefd9;
+  --font-body:'Noto Sans JP',"Hiragino Sans","Yu Gothic",sans-serif; --font-display:'Noto Serif JP',"Hiragino Mincho ProN",serif;
+  --radius:8px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#161614; --surface:#1f1f1c; --surface-2:#262623; --fg:#ecebe4; --muted:#a6a59b; --line:#3a3a35; --line-strong:#ecebe4;
+  --accent:#9bbd95; --accent-soft:#263226; --accent-fg:#101510; --money:#dcb860; --money-soft:#2d2716;
+  --ok:#8fcf9a; --ok-soft:#1e2f22; --warn:#e6b25c; --warn-soft:#332714; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#161614; --surface:#1f1f1c; --surface-2:#262623; --fg:#ecebe4; --muted:#a6a59b; --line:#3a3a35; --line-strong:#ecebe4;
+  --accent:#9bbd95; --accent-soft:#263226; --accent-fg:#101510; --money:#dcb860; --money-soft:#2d2716;
+  --ok:#8fcf9a; --ok-soft:#1e2f22; --warn:#e6b25c; --warn-soft:#332714; color-scheme:dark }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.65;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.3}
+button{font:inherit;color:inherit}
+a{color:var(--accent)}
+.num{font-variant-numeric:tabular-nums}
+
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:640px;margin:0 auto;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand b{font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:.02em}
+.brand span{font-size:11px;color:var(--muted);letter-spacing:.08em}
+.mock-tag{font-size:11px;color:var(--warn);background:var(--warn-soft);border-radius:999px;padding:2px 10px;font-weight:700;letter-spacing:.04em}
+
+main{max-width:640px;margin:0 auto;padding-block:24px 140px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+.intro h1{font-size:24px;font-weight:700}
+.intro p{margin:8px 0 0;color:var(--muted)}
+.steps{display:flex;gap:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.steps span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.steps span.on{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:700}
+
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sec h2{font-size:16px;font-weight:700;display:flex;align-items:baseline;gap:10px}
+.sec h2 small{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.06em}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label,.field>.lbl{font-size:13px;font-weight:700}
+.field>label .req,.lbl .req{font-size:11px;color:var(--warn);font-weight:700;margin-left:6px}
+.field>label .opt,.lbl .opt{font-size:11px;color:var(--muted);font-weight:500;margin-left:6px}
+.field input,.field select,.field textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;min-height:48px;width:100%}
+.field textarea{min-height:96px;resize:vertical}
+.field .hint{font-size:12.5px;color:var(--muted)}
+.field input:focus-visible,.field select:focus-visible,.field textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.stepper button{background:var(--surface-2);border:0;width:48px;min-height:48px;cursor:pointer;font-size:20px}
+.stepper input{border:0!important;border-radius:0!important;text-align:center;font-size:18px;font-weight:700}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt-card{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;cursor:pointer;min-height:48px;align-items:center}
+.opt-card b{font-size:15px}
+.opt-card .d{font-size:12.5px;color:var(--muted);grid-column:1}
+.opt-card .p{font-size:15px;font-weight:700;white-space:nowrap;text-align:right;grid-row:1/3;align-self:center;font-variant-numeric:tabular-nums}
+.opt-card input{position:absolute;opacity:0;width:0;height:0}
+.opt-card:has(input:checked){border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.check{display:flex;align-items:flex-start;gap:10px;min-height:48px;cursor:pointer;padding:6px 0}
+.check input{width:20px;height:20px;accent-color:var(--accent);margin-top:3px;flex:none}
+.check span small{display:block;color:var(--muted);font-size:12.5px}
+.alert{border-radius:var(--radius);padding:10px 14px;font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
+.alert svg{width:16px;height:16px;flex:none;margin-top:4px}
+.alert-warn{background:var(--warn-soft);color:var(--warn)}
+.alert-ok{background:var(--ok-soft);color:var(--ok)}
+.rules{font-size:13px;color:var(--muted);margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+
+.est{background:var(--money-soft);border:1px solid color-mix(in srgb,var(--money) 35%,transparent);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.est .r{display:flex;justify-content:space-between;gap:12px;font-size:13.5px}
+.est .r.total{border-top:1px solid color-mix(in srgb,var(--money) 40%,transparent);padding-top:8px;margin-top:4px;font-size:17px;font-weight:700}
+.est .r span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--surface);border-top:1px solid var(--line);padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar-in{max-width:608px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bar .lbl{font-size:12px;color:var(--muted)}
+.bar .amt{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:11px 20px;cursor:pointer;font-weight:700;min-height:48px;text-decoration:none;color:var(--fg)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-block{width:100%}
+.btn svg{width:16px;height:16px}
+.actions{display:flex;flex-direction:column;gap:10px}
+
+.dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px}
+.dl dt{color:var(--muted);white-space:nowrap}
+.dl dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.done-no{font-family:var(--font-display);font-size:30px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.next{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.next li{display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:14px}
+.next li i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.next li small{display:block;color:var(--muted);font-size:12.5px}
+.foot{font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
+.foot b{font-family:var(--font-display);font-size:16px;color:var(--fg)}
+@media (max-width:460px){ .row3{grid-template-columns:1fr} }
+</style>
+
+<header class="top"><div class="top-in"><div class="brand"><b>bokashi Base</b><span>札幌・大通　レンタルスペース</span></div><span class="mock-tag">モック</span></div></header>
+
+<main>
+  <!-- 入力 -->
+  <div id="screen-form" class="stack" style="display:flex;flex-direction:column;gap:20px">
+    <div class="intro"><h1>貸切・レンタルスペース 予約申込</h1><p>ご希望を送っていただくと、2営業日以内に店舗からご連絡します。この時点ではまだ予約は確定しません。</p></div>
+    <div class="steps" aria-hidden="true"><span class="on">1 入力</span><span>2 確認</span><span>3 送信完了</span></div>
+
+    <form id="form" novalidate style="display:flex;flex-direction:column;gap:20px">
+      <section class="sec">
+        <h2>ご希望の日時</h2>
+        <div class="row2">
+          <div class="field"><label for="date1">第1希望日<span class="req">必須</span></label><input type="date" id="date1" required></div>
+          <div class="field"><label for="date2">第2希望日<span class="opt">任意</span></label><input type="date" id="date2"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="start">開始<span class="req">必須</span></label><input type="time" id="start" value="13:00" step="1800" required></div>
+          <div class="field"><label for="end">終了<span class="req">必須</span></label><input type="time" id="end" value="16:00" step="1800" required></div>
+        </div>
+        <div class="field"><label for="people">人数<span class="req">必須</span></label>
+          <div class="stepper"><button type="button" id="p-minus" aria-label="1人減らす">−</button><input type="number" id="people" min="1" value="20" inputmode="numeric"><button type="button" id="p-plus" aria-label="1人増やす">＋</button></div>
+          <span class="hint">テーブル18席・カウンター10席（28席）。立食の場合はご相談ください。</span></div>
+        <div id="time-alert"></div>
+        <ul class="rules"><li>ご利用時間：月〜金 18:00〜21:00 ／ 土日祝 10:00〜21:00</li><li>スペース利用料：1時間 ¥15,400〜（1日 ¥154,000）税込</li></ul>
+      </section>
+
+      <section class="sec">
+        <h2>ご利用内容</h2>
+        <div class="field"><label for="kind">用途<span class="req">必須</span></label>
+          <select id="kind" required><option value="">選んでください</option><option>会議・研修</option><option>交流会・パーティー</option><option>勉強会・セミナー</option><option>撮影・展示</option><option>誕生日・お祝い</option><option>その他</option></select></div>
+        <div class="field"><label for="purpose">内容を一言で<span class="req">必須</span></label><input type="text" id="purpose" placeholder="例）社内キックオフと懇親会" required></div>
+      </section>
+
+      <section class="sec">
+        <h2>プラン <small>お食事は1階カフェから</small></h2>
+        <div class="opts" role="radiogroup" aria-label="プラン">
+          <label class="opt-card"><input type="radio" name="plan" value="space" checked><b>スペースのみ</b><span class="d">お食事なし。持ち込みはご相談ください</span><span class="p">¥0／人</span></label>
+          <label class="opt-card"><input type="radio" name="plan" value="light"><b>軽食</b><span class="d">会議後の打ち上げなどに、つまめる軽食</span><span class="p">¥2,000〜／人</span></label>
+          <label class="opt-card"><input type="radio" name="plan" value="party"><b>パーティ</b><span class="d">パーティ向けのお料理</span><span class="p">¥3,000〜／人</span></label>
+        </div>
+        <label class="check"><input type="checkbox" id="drink"><span>飲み放題を付ける<small>お1人様 +¥2,000。どちらのお食事にも付けられます</small></span></label>
+        <label class="check"><input type="checkbox" id="trash"><span>ゴミの回収をお願いする<small>¥1,100</small></span></label>
+        <div class="field"><label for="food-note">アレルギー・苦手な食材・ご要望<span class="opt">任意</span></label><textarea id="food-note" placeholder="例）ベジタリアン2名、乾杯用にスパークリング希望"></textarea></div>
+      </section>
+
+      <section class="sec">
+        <h2>お客様情報</h2>
+        <div class="field"><label for="name">お名前<span class="req">必須</span></label><input type="text" id="name" autocomplete="name" required></div>
+        <div class="field"><label for="org">会社・団体名<span class="opt">任意</span></label><input type="text" id="org" autocomplete="organization"><span class="hint">請求書の宛名になります。個人のご利用は空欄で結構です。</span></div>
+        <div class="field"><label for="email">メールアドレス<span class="req">必須</span></label><input type="email" id="email" autocomplete="email" inputmode="email" required><span class="hint">確認のご連絡と、ご利用後の請求書をお送りします。</span></div>
+        <div class="field"><label for="phone">電話番号<span class="req">必須</span></label><input type="tel" id="phone" autocomplete="tel" inputmode="tel" required><span class="hint">当日の連絡用です。</span></div>
+        <div class="field"><label for="note">その他ご要望<span class="opt">任意</span></label><textarea id="note" placeholder="例）プロジェクター接続あり、事前に見学したい"></textarea></div>
+        <label class="check"><input type="checkbox" id="tour"><span>事前に会場を見学したい</span></label>
+      </section>
+
+      <section class="sec">
+        <h2>ご利用にあたって</h2>
+        <ul class="rules">
+          <li>当日の延長はできません。無断延長は30分ごとに ¥10,000 を申し受けます。</li>
+          <li>会場は2階です。エレベーターはありません。</li>
+          <li>設備（無料）：75V型モニター・スピーカー・マイク4本・Wi-Fi・各席電源・簡易キッチン</li>
+          <li>ご利用後、確定金額の請求書をメールでお送りします。お振込でお支払いください。</li>
+        </ul>
+        <label class="check"><input type="checkbox" id="agree" required><span>上記を確認しました<span class="req">必須</span></span></label>
+        <div class="field"><span class="lbl">お見積（税込・目安）</span><div class="est" id="est"></div><span class="hint">お食事の内容により変わります。確定金額はご利用後の請求書でお知らせします。</span></div>
+        <div id="err"></div>
+      </section>
+    </form>
+  </div>
+
+  <!-- 確認 -->
+  <div id="screen-confirm" hidden style="display:flex;flex-direction:column;gap:20px">
+    <div class="intro"><h1>入力内容の確認</h1><p>内容をご確認のうえ、送信してください。</p></div>
+    <div class="steps" aria-hidden="true"><span>1 入力</span><span class="on">2 確認</span><span>3 送信完了</span></div>
+    <section class="sec"><h2>ご希望の日時・内容</h2><dl class="dl" id="c-when"></dl></section>
+    <section class="sec"><h2>プラン・お見積</h2><div class="est" id="c-est"></div></section>
+    <section class="sec"><h2>お客様情報</h2><dl class="dl" id="c-who"></dl></section>
+    <div class="actions"><button type="button" class="btn btn-primary btn-block" id="send">この内容で申し込む</button><button type="button" class="btn btn-block" id="back">入力に戻る</button></div>
+  </div>
+
+  <!-- 完了 -->
+  <div id="screen-done" hidden style="display:flex;flex-direction:column;gap:20px">
+    <div class="steps" aria-hidden="true"><span>1 入力</span><span>2 確認</span><span class="on">3 送信完了</span></div>
+    <section class="sec">
+      <div class="alert alert-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>お申し込みを受け付けました。確認メールを <b id="d-email"></b> にお送りしました。</span></div>
+      <div><div class="lbl" style="font-size:12px;color:var(--muted)">受付番号</div><div class="done-no" id="d-no"></div></div>
+      <dl class="dl" id="d-sum"></dl>
+    </section>
+    <section class="sec">
+      <h2>このあとの流れ</h2>
+      <ol class="next">
+        <li><i>1</i><span>店舗から2営業日以内にご連絡します<small>日程の空き状況と、お食事の内容を確認します</small></span></li>
+        <li><i>2</i><span>日程が確定したらご連絡します<small>確定内容をメールでお送りします</small></span></li>
+        <li><i>3</i><span>当日ご利用<small>当日の人数変更は前日までにお知らせください</small></span></li>
+        <li><i>4</i><span>ご利用後に請求書をメールでお送りします<small>お振込でお支払いください</small></span></li>
+      </ol>
+    </section>
+    <p class="foot"><b>bokashi Base</b><br>札幌市中央区南2条西1-7-1 二番館ビル 2F（大通駅35番出口 徒歩0分）<br>011-596-7770</p>
+    <button type="button" class="btn btn-block" id="again">もう一件申し込む</button>
+  </div>
+</main>
+
+<div class="bar" id="bar"><div class="bar-in"><div><div class="lbl">お見積（税込・目安）</div><div class="amt num" id="bar-amt">¥0</div></div><button type="button" class="btn btn-primary" id="to-confirm">確認画面へ</button></div></div>
+
+<script>
+(function(){
+'use strict';
+const PRICE={ spaceHour:15400, spaceDay:154000, light:2000, party:3000, drink:2000, trash:1100 };
+const PLAN={ space:'スペースのみ', light:'軽食', party:'パーティ' };
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const yen=n=>'¥'+Math.round(n).toLocaleString('ja-JP');
+const ICON_WARN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+function localDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dow(s){ return ['日','月','火','水','木','金','土'][new Date(s+'T00:00:00').getDay()]; }
+function fmt(s){ if(!s) return ''; const [y,m,d]=s.split('-'); return `${y}/${Number(m)}/${Number(d)}（${dow(s)}）`; }
+function hours(s,e){ const [a,b]=s.split(':').map(Number),[c,d]=e.split(':').map(Number); return ((c*60+d)-(a*60+b))/60; }
+function within(date,s,e){ if(!date||!s||!e) return true; const w=new Date(date+'T00:00:00').getDay(); return s>=((w===0||w===6)?'10:00':'18:00') && e<='21:00'; }
+
+function read(){ return {
+  date1:$('#date1').value, date2:$('#date2').value, start:$('#start').value, end:$('#end').value, people:Number($('#people').value)||0,
+  kind:$('#kind').value, purpose:$('#purpose').value.trim(), plan:(document.querySelector('input[name=plan]:checked')||{}).value||'space',
+  drink:$('#drink').checked, trash:$('#trash').checked, foodNote:$('#food-note').value.trim(),
+  name:$('#name').value.trim(), org:$('#org').value.trim(), email:$('#email').value.trim(), phone:$('#phone').value.trim(), note:$('#note').value.trim(), tour:$('#tour').checked, agree:$('#agree').checked }; }
+function calc(f){
+  const h=Math.max(0,hours(f.start||'0:00',f.end||'0:00')); const bh=Math.ceil(h); const space=Math.min(bh*PRICE.spaceHour,PRICE.spaceDay);
+  const lines=[{l:`スペース利用料（${bh}時間${space===PRICE.spaceDay?'・1日上限':''}）`,a:space}];
+  const unit=f.plan==='light'?PRICE.light:f.plan==='party'?PRICE.party:0;
+  if(unit) lines.push({l:`お食事 ${PLAN[f.plan]}（${yen(unit)}×${f.people}名）`,a:unit*f.people});
+  if(f.drink) lines.push({l:`飲み放題（${yen(PRICE.drink)}×${f.people}名）`,a:PRICE.drink*f.people});
+  if(f.trash) lines.push({l:'ゴミ回収',a:PRICE.trash});
+  return { lines, total:lines.reduce((s,x)=>s+x.a,0), hours:h };
+}
+function estHTML(c){ return c.lines.map(x=>`<div class="r"><span>${esc(x.l)}</span><span>${yen(x.a)}</span></div>`).join('')+`<div class="r total"><span>合計（税込・目安）</span><span>${yen(c.total)}〜</span></div>`; }
+
+function refresh(){
+  const f=read(); const c=calc(f);
+  $('#est').innerHTML=estHTML(c); $('#bar-amt').textContent=yen(c.total)+'〜';
+  const msgs=[];
+  if(f.start&&f.end&&c.hours<=0) msgs.push('終了時刻は開始時刻より後にしてください。');
+  if(f.date1&&!within(f.date1,f.start,f.end)) msgs.push(`第1希望日は${['土','日'].includes(dow(f.date1))?'':'平日のため18:00〜21:00、'}ご利用時間外です。時間を調整するか、そのまま送ってご相談ください。`);
+  if(f.date2&&!within(f.date2,f.start,f.end)) msgs.push('第2希望日がご利用時間外です。');
+  if(f.date1&&f.date1<localDate(new Date())) msgs.push('第1希望日が過去の日付です。');
+  if(f.people>28) msgs.push(`${f.people}名は席数（28席）を超えます。立食などご相談ください。`);
+  $('#time-alert').innerHTML=msgs.map(m=>`<div class="alert alert-warn">${ICON_WARN}<span>${m}</span></div>`).join('');
+}
+const form=$('#form'); form.addEventListener('input',refresh); form.addEventListener('change',refresh);
+$('#p-minus').addEventListener('click',()=>{ const i=$('#people'); i.value=Math.max(1,(Number(i.value)||1)-1); refresh(); });
+$('#p-plus').addEventListener('click',()=>{ const i=$('#people'); i.value=(Number(i.value)||0)+1; refresh(); });
+
+function showScreen(k){ ['form','confirm','done'].forEach(s=>{ $('#screen-'+s).hidden = s!==k; }); $('#bar').hidden = k!=='form'; window.scrollTo({top:0}); }
+
+function validate(f){
+  const miss=[];
+  if(!f.date1) miss.push('第1希望日'); if(!f.start||!f.end||hours(f.start,f.end)<=0) miss.push('時間'); if(!f.people) miss.push('人数');
+  if(!f.kind) miss.push('用途'); if(!f.purpose) miss.push('内容'); if(!f.name) miss.push('お名前');
+  if(!/.+@.+\..+/.test(f.email)) miss.push('メールアドレス'); if(!f.phone) miss.push('電話番号'); if(!f.agree) miss.push('ご利用にあたっての確認');
+  return miss;
+}
+$('#to-confirm').addEventListener('click',()=>{
+  const f=read(); const miss=validate(f);
+  if(miss.length){ $('#err').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>${miss.join('・')}を入力してください。</span></div>`; $('#err').scrollIntoView({block:'center'}); return; }
+  $('#err').innerHTML='';
+  const c=calc(f);
+  $('#c-when').innerHTML=`<dt>第1希望</dt><dd class="num">${fmt(f.date1)} ${f.start}〜${f.end}（${c.hours}時間）</dd>${f.date2?`<dt>第2希望</dt><dd class="num">${fmt(f.date2)} ${f.start}〜${f.end}</dd>`:''}<dt>人数</dt><dd>${f.people}名</dd><dt>用途</dt><dd>${esc(f.kind)}</dd><dt>内容</dt><dd>${esc(f.purpose)}</dd>`;
+  $('#c-est').innerHTML=`<div class="r"><span><b>${PLAN[f.plan]}${f.drink?'＋飲み放題':''}</b></span><span></span></div>`+estHTML(c)+(f.foodNote?`<div class="r" style="color:var(--muted)"><span>ご要望：${esc(f.foodNote)}</span><span></span></div>`:'');
+  $('#c-who').innerHTML=`<dt>お名前</dt><dd>${esc(f.name)}</dd>${f.org?`<dt>会社・団体</dt><dd>${esc(f.org)}</dd>`:''}<dt>メール</dt><dd>${esc(f.email)}</dd><dt>電話</dt><dd>${esc(f.phone)}</dd>${f.note?`<dt>ご要望</dt><dd>${esc(f.note)}</dd>`:''}<dt>見学</dt><dd>${f.tour?'希望する':'希望しない'}</dd>`;
+  showScreen('confirm');
+});
+$('#back').addEventListener('click',()=>showScreen('form'));
+$('#send').addEventListener('click',()=>{
+  const f=read(); const c=calc(f); const d=new Date();
+  const no='RQ-'+localDate(d).replace(/-/g,'').slice(2)+'-'+String(Math.floor(Math.random()*900)+100);
+  try{ const list=JSON.parse(localStorage.getItem('bokashi-rental-requests')||'[]'); list.push(Object.assign({no,at:d.toISOString(),total:c.total},f)); localStorage.setItem('bokashi-rental-requests',JSON.stringify(list)); }catch(e){}
+  $('#d-no').textContent=no; $('#d-email').textContent=f.email;
+  $('#d-sum').innerHTML=`<dt>第1希望</dt><dd class="num">${fmt(f.date1)} ${f.start}〜${f.end}</dd><dt>内容</dt><dd>${esc(f.purpose)}（${f.people}名）</dd><dt>プラン</dt><dd>${PLAN[f.plan]}${f.drink?'＋飲み放題':''}</dd><dt>お見積</dt><dd class="num">${yen(c.total)}〜（税込・目安）</dd>`;
+  showScreen('done');
+});
+$('#again').addEventListener('click',()=>{ form.reset(); $('#people').value=20; $('#start').value='13:00'; $('#end').value='16:00'; setDefaultDate(); refresh(); showScreen('form'); });
+function setDefaultDate(){ const d=new Date(); d.setDate(d.getDate()+7); while(d.getDay()!==6) d.setDate(d.getDate()+1); $('#date1').min=localDate(new Date()); $('#date2').min=localDate(new Date()); $('#date1').value=localDate(d); }
+setDefaultDate(); refresh();
+})();
+</script>

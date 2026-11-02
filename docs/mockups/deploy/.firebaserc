@@ -1,0 +1,4 @@
+{
+  "projects": { "default": "bokashi-ops-app" },
+  "targets": { "bokashi-ops-app": { "hosting": { "rental": ["bokashi-rental"] } } }
+}

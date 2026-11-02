@@ -1,0 +1,957 @@
+<title>bokashi Base レンタル管理</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a top bar with the brand and three staff views (予約一覧 / 新規予約 / 仕組み) plus a customer view (#apply: the public request form). A reservation opens as a full-width work sheet with a 6-step pipeline. Data lives in the artifact's shared db; browser storage is the fallback. */
+:root{
+  --bg:#f6f5f0; --surface:#ffffff; --surface-2:#f0eee6; --fg:#1f1f1d; --muted:#66665f; --line:#d8d5ca; --line-strong:#1f1f1d;
+  --accent:#3f5a3c; --accent-soft:#e4ebe1; --accent-fg:#ffffff;
+  --money:#7a5a12; --money-soft:#faf5e6;
+  --ok:#2f6b3a; --ok-soft:#e2efe4; --warn:#9a5a00; --warn-soft:#fbefd9; --info:#2d4f6e; --info-soft:#e1eaf2; --danger:#9b2b2b; --danger-soft:#f8e3e3;
+  --font-body:'Noto Sans JP',"Hiragino Sans","Yu Gothic",sans-serif; --font-display:'Noto Serif JP',"Hiragino Mincho ProN",serif;
+  --radius:6px; --shadow:0 1px 2px rgba(31,31,29,.06),0 8px 24px rgba(31,31,29,.06);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#161614; --surface:#1f1f1c; --surface-2:#262623; --fg:#ecebe4; --muted:#a6a59b; --line:#3a3a35; --line-strong:#ecebe4;
+  --accent:#9bbd95; --accent-soft:#263226; --accent-fg:#101510;
+  --money:#dcb860; --money-soft:#2d2716;
+  --ok:#8fcf9a; --ok-soft:#1e2f22; --warn:#e6b25c; --warn-soft:#332714; --info:#9cc0e0; --info-soft:#1c2a38; --danger:#f0978f; --danger-soft:#3a1d1b;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#161614; --surface:#1f1f1c; --surface-2:#262623; --fg:#ecebe4; --muted:#a6a59b; --line:#3a3a35; --line-strong:#ecebe4;
+  --accent:#9bbd95; --accent-soft:#263226; --accent-fg:#101510;
+  --money:#dcb860; --money-soft:#2d2716;
+  --ok:#8fcf9a; --ok-soft:#1e2f22; --warn:#e6b25c; --warn-soft:#332714; --info:#9cc0e0; --info-soft:#1c2a38; --danger:#f0978f; --danger-soft:#3a1d1b;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.6;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.3}
+button{font:inherit;color:inherit}
+a{color:var(--accent)}
+.num{font-variant-numeric:tabular-nums}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand b{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:.02em}
+.brand span{font-size:11px;color:var(--muted);letter-spacing:.08em}
+.nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.nav button{background:none;border:0;padding:8px 12px;border-radius:var(--radius);cursor:pointer;color:var(--muted);font-weight:500;min-height:44px}
+.nav button:hover{background:var(--surface-2);color:var(--fg)}
+.nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mock-tag{font-size:11px;color:var(--warn);background:var(--warn-soft);border-radius:999px;padding:2px 10px;font-weight:700;letter-spacing:.04em}
+body[data-mode="customer"] .nav,body[data-mode="customer"] .mock-tag{display:none}
+
+main{max-width:1180px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.view{display:flex;flex-direction:column;gap:20px}
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.view-head h1{font-size:22px;font-weight:700}
+.view-head p{margin:4px 0 0;color:var(--muted)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.hot{border-color:var(--warn);background:var(--warn-soft)}
+
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;min-height:36px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+.table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:760px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:.04em}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.new td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+td .sub{display:block;font-size:12px;color:var(--muted)}
+td.r,th.r{text-align:right}
+.empty{padding:32px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:12px;align-items:center}
+
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.st-draft{background:var(--warn-soft);color:var(--warn)}
+.st-confirmed{background:var(--info-soft);color:var(--info)}
+.st-shared{background:var(--accent-soft);color:var(--accent)}
+.st-done{background:var(--surface-2);color:var(--fg)}
+.st-invoiced{background:var(--money-soft);color:var(--money)}
+.st-paid{background:var(--ok-soft);color:var(--ok)}
+.src{display:inline-block;font-size:11px;font-weight:700;border-radius:3px;padding:1px 6px;background:var(--info-soft);color:var(--info);vertical-align:1px;margin-left:6px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:9px 16px;cursor:pointer;font-weight:500;min-height:44px;text-decoration:none;color:var(--fg)}
+.btn:hover{background:var(--surface-2)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+.btn-primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn-money{background:var(--money);border-color:var(--money);color:#fff;font-weight:700}
+.btn-money:hover{filter:brightness(1.08);background:var(--money)}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn-sm{min-height:36px;padding:6px 12px;font-size:13px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card h2 .step-no{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.06em}
+.card h2 small{font-size:12px;color:var(--muted);font-weight:500}
+.card.locked{opacity:.55}
+.card.focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+.form .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.field .lbl{font-size:12px;color:var(--muted);font-weight:500}
+.field .req{font-size:11px;color:var(--warn);font-weight:700;margin-left:6px}
+.field input,.field select,.field textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;min-height:44px;width:100%}
+.field textarea{min-height:88px;resize:vertical}
+.field .hint{font-size:12px;color:var(--muted)}
+.check{display:flex;align-items:flex-start;gap:10px;min-height:44px;cursor:pointer;padding:4px 0}
+.check input{width:18px;height:18px;accent-color:var(--accent);margin-top:4px;flex:none}
+.check span small{display:block;color:var(--muted);font-size:12px}
+.plan-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.plan-opt{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:44px}
+.plan-opt b{font-size:13.5px}
+.plan-opt span{font-size:12px;color:var(--muted)}
+.plan-opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.plan-opt input{position:absolute;opacity:0;width:0;height:0}
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.stepper button{background:var(--surface-2);border:0;width:48px;min-height:44px;cursor:pointer;font-size:20px}
+.stepper input{border:0!important;border-radius:0!important;text-align:center;font-size:17px;font-weight:700}
+
+.est{background:var(--money-soft);border:1px solid color-mix(in srgb,var(--money) 35%,transparent);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.est .row{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.est .row.total{border-top:1px solid color-mix(in srgb,var(--money) 40%,transparent);padding-top:8px;margin-top:4px;font-size:16px;font-weight:700}
+.est .row span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.alert{border-radius:var(--radius);padding:10px 14px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.alert svg{width:16px;height:16px;flex:none;margin-top:3px}
+.alert-warn{background:var(--warn-soft);color:var(--warn)}
+.alert-ok{background:var(--ok-soft);color:var(--ok)}
+.alert-info{background:var(--info-soft);color:var(--info)}
+
+/* detail */
+.detail-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.detail-head h1{font-size:22px}
+.detail-head .meta{color:var(--muted);font-size:13px;margin-top:4px}
+.pipeline{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.pipe{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;font-size:12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pipe b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pipe span{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pipe.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.pipe.done span{color:var(--accent)}
+.pipe.now{border-color:var(--line-strong);border-width:2px}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13.5px}
+.dl dt{color:var(--muted);white-space:nowrap}
+.dl dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.event-card{border:1px solid var(--line);border-left:4px solid var(--info);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:13px;background:var(--surface-2)}
+.event-card b{font-size:14px}
+.event-card .ev-meta{color:var(--muted);font-size:12px}
+
+.mail{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:13px}
+.mail .mh{background:var(--surface-2);padding:8px 12px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px;margin:0}
+.mail .mh dt{color:var(--muted)}
+.mail .mh dd{margin:0;overflow-wrap:anywhere}
+.mail pre{margin:0;padding:12px;white-space:pre-wrap;font:inherit;line-height:1.7;max-height:280px;overflow:auto}
+
+.timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.timeline li{display:grid;grid-template-columns:auto 1fr;gap:10px}
+.timeline time{color:var(--muted);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.timeline li.auto .t::before{content:"自動";font-size:10px;font-weight:700;background:var(--info-soft);color:var(--info);border-radius:3px;padding:1px 5px;margin-right:6px;vertical-align:1px}
+
+/* invoice */
+.invoice{background:#fff;color:#1f1f1d;border:1px solid var(--line);padding:32px 36px;font-size:13px;line-height:1.6;display:flex;flex-direction:column;gap:20px;font-family:var(--font-body)}
+.invoice .inv-top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.invoice h2{font-family:var(--font-display);font-size:26px;letter-spacing:.3em;font-weight:600}
+.invoice .to{font-size:16px;font-weight:700;border-bottom:1px solid #1f1f1d;padding-bottom:4px;display:inline-block}
+.invoice .from{font-size:12px;text-align:right;line-height:1.7}
+.invoice .from b{font-family:var(--font-display);font-size:15px}
+.invoice .total-box{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid #1f1f1d;padding-bottom:6px}
+.invoice .total-box span:first-child{font-weight:700}
+.invoice .total-box span:last-child{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.invoice table{min-width:0;font-size:12.5px}
+.invoice th{color:#555550;border-bottom:1px solid #1f1f1d;background:#f3f1ea}
+.invoice td{border-bottom:1px solid #c9c6bc;padding:8px 10px}
+.invoice tfoot td{border-bottom:0;padding:5px 10px}
+.invoice .bank{font-size:12px;background:#f3f1ea;padding:10px 12px;border-radius:4px}
+.invoice-wrap{overflow-x:auto}
+
+/* flow view */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.flow .card{gap:8px}
+.flow .card .who{font-size:11px;font-weight:700;letter-spacing:.06em;border-radius:3px;padding:2px 8px;align-self:flex-start}
+.who-human{background:var(--surface-2);color:var(--muted)}
+.who-auto{background:var(--info-soft);color:var(--info)}
+.who-cust{background:var(--accent-soft);color:var(--accent)}
+.flow p{margin:0;font-size:13px;color:var(--muted)}
+.flow ul{margin:0;padding-left:18px;font-size:13px}
+
+/* customer view */
+.apply{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px;width:100%}
+.apply .intro h1{font-size:24px;font-weight:700}
+.apply .intro p{margin:8px 0 0;color:var(--muted);font-size:15px}
+.steps{display:flex;gap:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.steps span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.steps span.on{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:700}
+.apply .card{padding:18px}
+.apply .field input,.apply .field select,.apply .field textarea{min-height:48px;font-size:15px}
+.apply .field label{font-size:13px;font-weight:700;color:var(--fg)}
+.rules{font-size:13px;color:var(--muted);margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.done-no{font-family:var(--font-display);font-size:30px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.next{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.next li{display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:14px}
+.next li i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.next li small{display:block;color:var(--muted);font-size:12.5px}
+.apply-foot{font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
+.apply-foot b{font-family:var(--font-display);font-size:16px;color:var(--fg)}
+.bar{position:sticky;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar-in{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bar .lbl{font-size:12px;color:var(--muted)}
+.bar .amt{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100vw - 32px);z-index:20}
+.toast.show{opacity:1}
+.confirm{border:1px solid var(--line-strong);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--surface-2)}
+.confirm p{margin:0;font-size:13px}
+.inline-edit{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.extra-row{display:grid;grid-template-columns:1fr 120px auto;gap:8px;align-items:end}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.foot-note{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.store-tag{font-size:11px;border-radius:3px;padding:1px 7px;background:var(--surface-2);color:var(--muted);font-weight:700}
+.store-tag.db{background:var(--ok-soft);color:var(--ok)}
+
+@media (max-width:860px){
+  .grid-2{grid-template-columns:1fr}
+  .pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .form{grid-template-columns:1fr}
+  .plan-opts{grid-template-columns:1fr}
+  .extra-row{grid-template-columns:1fr 1fr auto}
+  .invoice{padding:20px 16px}
+}
+@media (prefers-reduced-motion: reduce){ .toast{transition:none} }
+</style>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><b>bokashi Base</b><span id="brand-sub">レンタルスペース管理</span></div>
+    <span class="mock-tag">モック・サンプルデータ</span>
+    <nav class="nav" aria-label="画面">
+      <button type="button" data-nav="list">予約一覧</button>
+      <button type="button" data-nav="new">新規予約</button>
+      <button type="button" data-nav="apply">申込フォーム（お客様用）</button>
+      <button type="button" data-nav="flow">仕組み</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 予約一覧 -->
+  <section class="view" id="view-list">
+    <div class="view-head">
+      <div><h1>予約一覧</h1><p>Webからの申込は自動でここに「仮予約」として入ります。行をクリックすると作業シートが開きます。</p></div>
+      <button type="button" class="btn btn-primary" data-nav="new">＋ 新規予約（電話・来店分）</button>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="filters" id="filters" role="group" aria-label="状態で絞り込み"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>利用日時</th><th>利用者</th><th>利用内容</th><th>プラン</th><th class="r">人数</th><th class="r">金額（見込/確定）</th><th>状態</th><th>次にやること</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="foot-note"><span>金額は税込。仮予約〜共有済みは見積、利用終了以降は確定額。</span><span class="store-tag" id="store-tag">読み込み中</span><button type="button" class="btn btn-ghost btn-sm" id="reset">サンプルデータに戻す</button></div>
+  </section>
+
+  <!-- 新規予約（スタッフ入力） -->
+  <section class="view" id="view-new" hidden>
+    <div class="view-head"><div><h1>新規予約（スタッフ入力）</h1><p>電話や来店で受けた問い合わせを入れます。お客様自身の入力は「申込フォーム」から。</p></div></div>
+    <form id="form-new" class="grid-2" novalidate>
+      <div class="stack">
+        <div class="card">
+          <h2>日時</h2>
+          <div class="form">
+            <div class="field"><label for="f-date">利用日</label><input type="date" id="f-date" required></div>
+            <div class="field"><label for="f-people">人数</label><input type="number" id="f-people" min="1" value="20" required><span class="hint">テーブル18席・カウンター10席（28席）</span></div>
+            <div class="field"><label for="f-start">開始</label><input type="time" id="f-start" value="13:00" step="1800" required></div>
+            <div class="field"><label for="f-end">終了</label><input type="time" id="f-end" value="16:00" step="1800" required></div>
+            <div class="full" id="f-hours-alert"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>利用者</h2>
+          <div class="form">
+            <div class="field"><label for="f-name">お名前</label><input type="text" id="f-name" placeholder="例）山田 太郎" required></div>
+            <div class="field"><label for="f-org">会社・団体名</label><input type="text" id="f-org" placeholder="請求書の宛名になります"></div>
+            <div class="field"><label for="f-email">メールアドレス</label><input type="email" id="f-email" placeholder="請求書の送付先" required></div>
+            <div class="field"><label for="f-phone">電話番号</label><input type="tel" id="f-phone"></div>
+            <div class="field full"><label for="f-purpose">利用内容</label><input type="text" id="f-purpose" placeholder="例）社内キックオフと懇親会" required></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>プラン</h2>
+          <div class="plan-opts">
+            <label class="plan-opt"><input type="radio" name="plan" value="space" checked><b>スペースのみ</b><span>お食事なし</span></label>
+            <label class="plan-opt"><input type="radio" name="plan" value="light"><b>軽食</b><span>お1人様 ¥2,000〜</span></label>
+            <label class="plan-opt"><input type="radio" name="plan" value="party"><b>パーティ</b><span>お1人様 ¥3,000〜</span></label>
+          </div>
+          <label class="check"><input type="checkbox" id="f-drink"><span>飲み放題を付ける（お1人様 +¥2,000）</span></label>
+          <label class="check"><input type="checkbox" id="f-trash"><span>ゴミ回収をお願いする（¥1,100）</span></label>
+          <div class="field full"><label for="f-note">備考（アレルギー・持ち込み・機材など）</label><textarea id="f-note"></textarea></div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <h2>見積（税込）</h2>
+          <div class="est" id="f-est"></div>
+          <p class="small muted" style="margin:0">スペース利用料は1時間 ¥15,400、1日上限 ¥154,000。お食事・飲み放題は人数×単価。</p>
+        </div>
+        <div class="card">
+          <h2>登録後の流れ</h2>
+          <ol style="margin:0;padding-left:20px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px">
+            <li>仮予約として一覧に載る</li>
+            <li>日程をフィックスすると Googleカレンダーに登録される</li>
+            <li>利用内容を確認メールで共有</li>
+            <li>当日終了後、確定額と請求先を確認して請求書を送信</li>
+          </ol>
+          <button type="submit" class="btn btn-primary">仮予約として登録</button>
+          <div id="f-error"></div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- 詳細（作業シート） -->
+  <section class="view" id="view-detail" hidden></section>
+
+  <!-- お客様用 申込フォーム -->
+  <section class="view" id="view-apply" hidden>
+    <div class="apply" id="apply-form-screen">
+      <div class="intro"><h1>貸切・レンタルスペース 予約申込</h1><p>ご希望を送っていただくと、2営業日以内に店舗からご連絡します。この時点ではまだ予約は確定しません。</p></div>
+      <div class="steps" aria-hidden="true"><span class="on">1 入力</span><span>2 確認</span><span>3 送信完了</span></div>
+      <form id="form-apply" novalidate style="display:flex;flex-direction:column;gap:18px">
+        <section class="card">
+          <h2>ご希望の日時</h2>
+          <div class="form">
+            <div class="field"><label for="q-date1">第1希望日<span class="req">必須</span></label><input type="date" id="q-date1" required></div>
+            <div class="field"><label for="q-date2">第2希望日</label><input type="date" id="q-date2"></div>
+            <div class="field"><label for="q-start">開始<span class="req">必須</span></label><input type="time" id="q-start" value="13:00" step="1800" required></div>
+            <div class="field"><label for="q-end">終了<span class="req">必須</span></label><input type="time" id="q-end" value="16:00" step="1800" required></div>
+            <div class="field full"><label for="q-people">人数<span class="req">必須</span></label>
+              <div class="stepper"><button type="button" id="q-minus" aria-label="1人減らす">−</button><input type="number" id="q-people" min="1" value="20" inputmode="numeric"><button type="button" id="q-plus" aria-label="1人増やす">＋</button></div>
+              <span class="hint">テーブル18席・カウンター10席（28席）。立食の場合はご相談ください。</span></div>
+            <div class="full" id="q-alert"></div>
+          </div>
+          <ul class="rules"><li>ご利用時間：月〜金 18:00〜21:00 ／ 土日祝 10:00〜21:00</li><li>スペース利用料：1時間 ¥15,400〜（1日 ¥154,000）税込</li></ul>
+        </section>
+        <section class="card">
+          <h2>ご利用内容</h2>
+          <div class="field"><label for="q-kind">用途<span class="req">必須</span></label>
+            <select id="q-kind" required><option value="">選んでください</option><option>会議・研修</option><option>交流会・パーティー</option><option>勉強会・セミナー</option><option>撮影・展示</option><option>誕生日・お祝い</option><option>その他</option></select></div>
+          <div class="field"><label for="q-purpose">内容を一言で<span class="req">必須</span></label><input type="text" id="q-purpose" placeholder="例）社内キックオフと懇親会" required></div>
+        </section>
+        <section class="card">
+          <h2>プラン <small>お食事は1階カフェから</small></h2>
+          <div class="plan-opts" role="radiogroup" aria-label="プラン">
+            <label class="plan-opt"><input type="radio" name="qplan" value="space" checked><b>スペースのみ</b><span>お食事なし</span></label>
+            <label class="plan-opt"><input type="radio" name="qplan" value="light"><b>軽食</b><span>お1人様 ¥2,000〜</span></label>
+            <label class="plan-opt"><input type="radio" name="qplan" value="party"><b>パーティ</b><span>お1人様 ¥3,000〜</span></label>
+          </div>
+          <label class="check"><input type="checkbox" id="q-drink"><span>飲み放題を付ける<small>お1人様 +¥2,000。どちらのお食事にも付けられます</small></span></label>
+          <label class="check"><input type="checkbox" id="q-trash"><span>ゴミの回収をお願いする<small>¥1,100</small></span></label>
+          <div class="field"><label for="q-food">アレルギー・苦手な食材・ご要望</label><textarea id="q-food" placeholder="例）ベジタリアン2名、乾杯用にスパークリング希望"></textarea></div>
+        </section>
+        <section class="card">
+          <h2>お客様情報</h2>
+          <div class="field"><label for="q-name">お名前<span class="req">必須</span></label><input type="text" id="q-name" autocomplete="name" required></div>
+          <div class="field"><label for="q-org">会社・団体名</label><input type="text" id="q-org" autocomplete="organization"><span class="hint">請求書の宛名になります。個人のご利用は空欄で結構です。</span></div>
+          <div class="field"><label for="q-email">メールアドレス<span class="req">必須</span></label><input type="email" id="q-email" autocomplete="email" inputmode="email" required><span class="hint">確認のご連絡と、ご利用後の請求書をお送りします。</span></div>
+          <div class="field"><label for="q-phone">電話番号<span class="req">必須</span></label><input type="tel" id="q-phone" autocomplete="tel" inputmode="tel" required></div>
+          <div class="field"><label for="q-note">その他ご要望</label><textarea id="q-note" placeholder="例）プロジェクター接続あり、事前に見学したい"></textarea></div>
+          <label class="check"><input type="checkbox" id="q-tour"><span>事前に会場を見学したい</span></label>
+        </section>
+        <section class="card">
+          <h2>ご利用にあたって</h2>
+          <ul class="rules">
+            <li>当日の延長はできません。無断延長は30分ごとに ¥10,000 を申し受けます。</li>
+            <li>会場は2階です。エレベーターはありません。</li>
+            <li>設備（無料）：75V型モニター・スピーカー・マイク4本・Wi-Fi・各席電源・簡易キッチン</li>
+            <li>ご利用後、確定金額の請求書をメールでお送りします。お振込でお支払いください。</li>
+          </ul>
+          <label class="check"><input type="checkbox" id="q-agree"><span>上記を確認しました<span class="req">必須</span></span></label>
+          <div class="field"><span class="lbl">お見積（税込・目安）</span><div class="est" id="q-est"></div><span class="hint">お食事の内容により変わります。確定金額はご利用後の請求書でお知らせします。</span></div>
+          <div id="q-err"></div>
+        </section>
+      </form>
+      <div class="bar"><div class="bar-in"><div><div class="lbl">お見積（税込・目安）</div><div class="amt num" id="q-bar-amt">¥0</div></div><button type="button" class="btn btn-primary" id="q-to-confirm">確認画面へ</button></div></div>
+    </div>
+
+    <div class="apply" id="apply-confirm-screen" hidden>
+      <div class="intro"><h1>入力内容の確認</h1><p>内容をご確認のうえ、送信してください。</p></div>
+      <div class="steps" aria-hidden="true"><span>1 入力</span><span class="on">2 確認</span><span>3 送信完了</span></div>
+      <section class="card"><h2>ご希望の日時・内容</h2><dl class="dl" id="qc-when"></dl></section>
+      <section class="card"><h2>プラン・お見積</h2><div class="est" id="qc-est"></div></section>
+      <section class="card"><h2>お客様情報</h2><dl class="dl" id="qc-who"></dl></section>
+      <div class="stack"><button type="button" class="btn btn-primary btn-block" id="q-send">この内容で申し込む</button><button type="button" class="btn btn-block" id="q-back">入力に戻る</button></div>
+      <div id="q-send-err"></div>
+    </div>
+
+    <div class="apply" id="apply-done-screen" hidden>
+      <div class="steps" aria-hidden="true"><span>1 入力</span><span>2 確認</span><span class="on">3 送信完了</span></div>
+      <section class="card">
+        <div class="alert alert-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>お申し込みを受け付けました。確認メールを <b id="qd-email"></b> にお送りしました。</span></div>
+        <div><div class="small muted">受付番号</div><div class="done-no" id="qd-no"></div></div>
+        <dl class="dl" id="qd-sum"></dl>
+      </section>
+      <section class="card">
+        <h2>このあとの流れ</h2>
+        <ol class="next">
+          <li><i>1</i><span>店舗から2営業日以内にご連絡します<small>日程の空き状況と、お食事の内容を確認します</small></span></li>
+          <li><i>2</i><span>日程が確定したらご連絡します<small>確定内容をメールでお送りします</small></span></li>
+          <li><i>3</i><span>当日ご利用<small>当日の人数変更は前日までにお知らせください</small></span></li>
+          <li><i>4</i><span>ご利用後に請求書をメールでお送りします<small>お振込でお支払いください</small></span></li>
+        </ol>
+      </section>
+      <p class="apply-foot"><b>bokashi Base</b><br>札幌市中央区南2条西1-7-1 二番館ビル 2F（大通駅35番出口 徒歩0分）<br>011-596-7770</p>
+      <button type="button" class="btn btn-block" id="q-again">もう一件申し込む</button>
+      <div id="apply-staff-link" hidden><button type="button" class="btn btn-ghost btn-block" data-nav="list">← 管理画面に戻る（スタッフ用）</button></div>
+    </div>
+  </section>
+
+  <!-- 仕組み -->
+  <section class="view" id="view-flow" hidden>
+    <div class="view-head"><div><h1>仕組み</h1><p>お客様がやること、店舗がやること、自動で動くことの切り分けです。</p></div></div>
+    <div class="flow">
+      <div class="card"><span class="who who-cust">お客様</span><h2>0. 申込フォーム</h2><p>Webフォームから希望日時・プラン・連絡先を送る。送信した瞬間に管理画面の一覧へ「仮予約」として入る。</p><ul><li>このページの「申込フォーム」がそれ</li><li>受付番号を発行し、受付メールを自動送信</li></ul></div>
+      <div class="card"><span class="who who-human">店舗</span><h2>1. 仮予約の確認</h2><p>一覧で新着を確認。電話・来店分は「新規予約」から入力。見積は自動計算。</p></div>
+      <div class="card"><span class="who who-auto">自動</span><h2>2. 日程フィックス → カレンダー登録</h2><p>「日程を確定」を押した瞬間に Google カレンダーへ予定が作られる。変更・取消も同期。</p><ul><li>件名：【貸切】利用者名・人数</li><li>説明：プラン・連絡先・備考</li></ul></div>
+      <div class="card"><span class="who who-auto">自動</span><h2>3. 利用内容の共有</h2><p>確定内容を利用者にメールで送る。スタッフにはカレンダーの説明欄で共有される。</p></div>
+      <div class="card"><span class="who who-human">店舗</span><h2>4. 当日終了 → 実績入力</h2><p>実際の人数・終了時刻・追加分を入れる。確定額が再計算される。</p></div>
+      <div class="card"><span class="who who-human">店舗 → 自動</span><h2>5. 請求先確認 → 請求書送信</h2><p>宛名とメールアドレスを確認して「送信」。請求書 PDF が作られ、利用者のメールアドレスに自動送信される。</p><ul><li>請求書番号を自動採番</li><li>支払期限：発行日の翌月末</li></ul></div>
+      <div class="card"><span class="who who-human">店舗</span><h2>6. 入金確認</h2><p>入金を確認したら完了。未入金は一覧で目立たせる。</p></div>
+    </div>
+    <div class="card">
+      <h2>本番でつなぐもの</h2>
+      <div class="dl">
+        <dt>申込フォーム</dt><dd>bokashi.ink の Rental ページに置く。送信内容が管理画面の仮予約になり、お客様に受付メール、店舗に通知が飛ぶ。</dd>
+        <dt>データ</dt><dd>このモックは共有データベースに保存（同じリンクを開く人全員で共有）。本番は Firestore など店舗の DB にして、舜さん・スタッフ・コンサルが同じ一覧を見る。</dd>
+        <dt>カレンダー</dt><dd>Google Calendar API。店舗のカレンダーにサービスアカウントで書き込む。このモックでは「Googleカレンダーで開く」リンクで代用。</dd>
+        <dt>メール送信</dt><dd>Gmail API または SendGrid。差出人は店舗アドレス、請求書 PDF を添付。このモックでは送信内容を画面に表示。</dd>
+        <dt>請求書</dt><dd>テンプレートから PDF 生成。発行者情報・登録番号・振込先は設定画面で一度だけ登録。</dd>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+// ---------- 料金（プラン資料より・税込） ----------
+const PRICE = { spaceHour:15400, spaceDay:154000, light:2000, party:3000, drink:2000, trash:1100, extension30:10000 };
+const PLAN_LABEL = { space:'スペースのみ', light:'軽食', party:'パーティ' };
+const STATUS = {
+  draft:    { label:'仮予約',   cls:'st-draft',     next:'日程を確定する' },
+  confirmed:{ label:'日程確定', cls:'st-confirmed', next:'利用内容を共有する' },
+  shared:   { label:'共有済み', cls:'st-shared',    next:'当日終了後に実績を入力' },
+  done:     { label:'利用終了', cls:'st-done',      next:'請求書を送信する' },
+  invoiced: { label:'請求済み', cls:'st-invoiced',  next:'入金を確認する' },
+  paid:     { label:'入金済み', cls:'st-paid',      next:'完了' }
+};
+const ORDER = ['draft','confirmed','shared','done','invoiced','paid'];
+const SHOP = { name:'bokashi Base', corp:'[発行者名（会社名）]', regno:'[登録番号 T0000000000000]', addr:'札幌市中央区南2条西1-7-1 二番館ビル', tel:'011-596-7770', bank:'[銀行名] [支店名] 普通 [口座番号] [口座名義]' };
+const STORE_KEY = 'bokashi-rental-mock-v2';
+
+// ---------- サンプルデータ ----------
+function seed(){
+  const L = (at,text,auto)=>({at,text,auto:!!auto});
+  return [
+    { id:'R-2026-011', source:'staff', status:'paid', date:'2026-10-11', start:'10:00', end:'15:00', name:'佐藤 由紀', org:'サンプル株式会社', email:'sato@example.com', phone:'011-000-0001', purpose:'社内研修（午前）と昼食会', plan:'light', drink:false, people:16, trash:true, note:'プロジェクター接続あり',
+      calendar:{ id:'evt_7f21', at:'2026-09-28 11:20' }, sharedAt:'2026-09-28 11:24',
+      actual:{ people:16, end:'15:00', ext30:0, trash:true, extras:[] },
+      billing:{ org:'サンプル株式会社', name:'佐藤 由紀', email:'sato@example.com' },
+      invoice:{ no:'INV-2026-0011', issued:'2026-10-12', due:'2026-11-30', sentAt:'2026-10-12 09:05', total:110100 }, paidAt:'2026-10-24',
+      log:[L('2026-09-25 14:02','仮予約を登録'),L('2026-09-28 11:20','日程を確定。Googleカレンダーに登録（evt_7f21）',true),L('2026-09-28 11:24','確認メールを送信',true),L('2026-10-11 15:30','実績を入力。確定額を算出'),L('2026-10-12 09:05','請求書 INV-2026-0011 を sato@example.com に送信',true),L('2026-10-24 10:00','入金を確認')] },
+    { id:'R-2026-012', source:'staff', status:'invoiced', date:'2026-10-18', start:'10:00', end:'16:00', name:'田中 美咲', org:'株式会社ノースリンク（サンプル）', email:'tanaka@example.com', phone:'011-000-0002', purpose:'社内キックオフと懇親会', plan:'party', drink:true, people:24, trash:true, note:'乾杯用にスパークリング希望',
+      calendar:{ id:'evt_9a03', at:'2026-10-02 16:40' }, sharedAt:'2026-10-02 16:45',
+      actual:{ people:26, end:'16:30', ext30:1, trash:true, extras:[{label:'スパークリング 2本', amount:9000}] },
+      billing:{ org:'株式会社ノースリンク（サンプル）', name:'田中 美咲', email:'tanaka@example.com' },
+      invoice:{ no:'INV-2026-0012', issued:'2026-10-19', due:'2026-11-30', sentAt:'2026-10-19 09:10', total:257900 }, paidAt:null,
+      log:[L('2026-09-30 10:15','仮予約を登録'),L('2026-10-02 16:40','日程を確定。Googleカレンダーに登録（evt_9a03）',true),L('2026-10-02 16:45','確認メールを送信',true),L('2026-10-18 16:45','実績を入力。人数26名・30分延長・確定額を算出'),L('2026-10-19 09:10','請求書 INV-2026-0012 を tanaka@example.com に送信',true)] },
+    { id:'R-2026-013', source:'web', receipt:'RQ-261015-318', kind:'交流会・パーティー', status:'done', date:'2026-10-31', start:'18:00', end:'21:00', name:'高橋 健', org:'札幌読書会（サンプル）', email:'takahashi@example.com', phone:'011-000-0003', purpose:'読書会と交流会', plan:'light', drink:true, people:15, trash:false, note:'',
+      calendar:{ id:'evt_b1c8', at:'2026-10-20 13:05' }, sharedAt:'2026-10-20 13:08',
+      actual:{ people:14, end:'21:00', ext30:0, trash:false, extras:[] },
+      billing:{ org:'札幌読書会（サンプル）', name:'高橋 健', email:'takahashi@example.com' }, invoice:null, paidAt:null,
+      log:[L('2026-10-15 09:30','Web申込を受付（RQ-261015-318）。受付メールを送信',true),L('2026-10-20 13:05','日程を確定。Googleカレンダーに登録（evt_b1c8）',true),L('2026-10-20 13:08','確認メールを送信',true),L('2026-10-31 21:20','実績を入力。人数14名・確定額を算出')] },
+    { id:'R-2026-014', source:'staff', status:'shared', date:'2026-11-08', start:'13:00', end:'17:00', name:'鈴木 花', org:'大通クリエイターズ（サンプル）', email:'suzuki@example.com', phone:'011-000-0004', purpose:'クリエイター交流会', plan:'party', drink:true, people:20, trash:true, note:'ベジタリアン2名',
+      calendar:{ id:'evt_d44e', at:'2026-10-27 15:12' }, sharedAt:'2026-10-27 15:15', actual:null, billing:null, invoice:null, paidAt:null,
+      log:[L('2026-10-24 17:40','仮予約を登録'),L('2026-10-27 15:12','日程を確定。Googleカレンダーに登録（evt_d44e）',true),L('2026-10-27 15:15','確認メールを送信',true)] },
+    { id:'R-2026-015', source:'web', receipt:'RQ-261029-742', kind:'勉強会・セミナー', status:'confirmed', date:'2026-11-14', start:'18:30', end:'21:00', name:'中村 俊', org:'', email:'nakamura@example.com', phone:'090-0000-0005', purpose:'勉強会（個人主催）', plan:'light', drink:false, people:12, trash:false, note:'',
+      calendar:{ id:'evt_e902', at:'2026-11-01 10:30' }, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null,
+      log:[L('2026-10-29 12:00','Web申込を受付（RQ-261029-742）。受付メールを送信',true),L('2026-11-01 10:30','日程を確定。Googleカレンダーに登録（evt_e902）',true)] },
+    { id:'R-2026-016', source:'web', receipt:'RQ-261101-205', kind:'会議・研修', date2:'2026-11-28', tour:true, status:'draft', date:'2026-11-21', start:'10:00', end:'18:00', name:'伊藤 真理', org:'株式会社ホクトラボ（サンプル）', email:'ito@example.com', phone:'011-000-0006', purpose:'企業研修（終日）', plan:'space', drink:false, people:30, trash:false, note:'事前に会場を見たい',
+      calendar:null, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null,
+      log:[L('2026-11-01 16:20','Web申込を受付（RQ-261101-205）。受付メールを送信',true)] }
+  ];
+}
+
+// ---------- 保存先（共有DB → 使えなければブラウザ保存） ----------
+let data = [];
+let mode = 'loading'; // 'db' | 'local' | 'loading'
+let dbCol = null;
+let lastDetailJSON = '';
+const clone = o => JSON.parse(JSON.stringify(o));
+function localLoad(){ try{ const raw=localStorage.getItem(STORE_KEY); if(raw){ const d=JSON.parse(raw); if(Array.isArray(d)) return d; } }catch(e){} return seed(); }
+function localSave(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }catch(e){} }
+async function save(r){
+  if(mode==='db'){ try{ await dbCol.doc(r.id).set(clone(r)); }catch(e){ toast('保存できませんでした（'+(e&&e.code||'error')+'）。この端末の表示だけ更新しています'); } }
+  else localSave();
+}
+async function removeAll(){
+  if(mode==='db'){ await Promise.all(data.map(r=>dbCol.doc(r.id).delete().catch(()=>{}))); data=[]; }
+  else { data=[]; localSave(); }
+}
+async function seedAll(){
+  const rows=seed();
+  if(mode==='db'){ for(const r of rows){ await dbCol.doc(r.id).set(r); } }
+  else { data=rows; localSave(); renderCurrent(); }
+}
+function setStoreTag(){ const t=$('#store-tag'); if(!t) return; t.className='store-tag'+(mode==='db'?' db':''); t.textContent = mode==='db'?'保存先：共有データベース（このリンクを開く全員で共有）': mode==='local'?'保存先：このブラウザだけ':'読み込み中'; }
+async function initStore(){
+  let db=null;
+  try{ if(window.claude && typeof window.claude.use==='function') db=await window.claude.use('db'); }catch(e){ db=null; }
+  if(!db){ mode='local'; data=localLoad(); setStoreTag(); renderCurrent(); return; }
+  mode='db'; dbCol=db.collection('reservations'); setStoreTag();
+  let delivered=false;
+  const timer=setTimeout(()=>{ if(!delivered){ toast('共有データにまだ接続できません。しばらくしてから再読み込みしてください'); } },10000);
+  dbCol.onSnapshot(snap=>{
+    const next=snap.docs.map(d=>d.data()).filter(x=>x&&x.id).map(clone);
+    if(delivered){
+      const known=new Set(data.map(r=>r.id));
+      snap.docChanges().forEach(ch=>{ const d=ch.doc.data(); if(ch.type==='added'&&d&&!known.has(d.id)&&d.source==='web'&&!ch.doc.metadata.hasPendingWrites) toast('新しいWeb申込が届きました：'+(d.org||d.name)+' 様'); });
+    }
+    data=next; if(!snap.metadata.fromCache){ clearTimeout(timer); } delivered=true; renderCurrent();
+  }, err=>{ clearTimeout(timer); mode='local'; data=localLoad(); setStoreTag(); renderCurrent(); toast('共有データに接続できないため、この端末の保存に切り替えました'); });
+}
+function renderCurrent(){
+  if(view==='list') renderList();
+  else if(view==='detail'){ const r=get(currentId); const j=r?JSON.stringify(r):''; if(!r||j!==lastDetailJSON) renderDetail(); }
+}
+function nowStr(){ const d=new Date(); return localDate(d)+' '+d.toTimeString().slice(0,5); }
+function localDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayStr(){ return localDate(new Date()); }
+function nextId(){ const n=Math.max(0,...data.map(r=>parseInt(String(r.id).slice(-3),10)||0))+1; return 'R-2026-'+String(n).padStart(3,'0'); }
+function nextInvoiceNo(){ const n=Math.max(0,...data.filter(r=>r.invoice).map(r=>parseInt(String(r.invoice.no).slice(-4),10)||0))+1; return 'INV-2026-'+String(n).padStart(4,'0'); }
+
+// ---------- 計算 ----------
+const yen = n => '¥'+Math.round(n).toLocaleString('ja-JP');
+function hoursBetween(s,e){ const [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number); return ((eh*60+em)-(sh*60+sm))/60; }
+function dowJa(dateStr){ return ['日','月','火','水','木','金','土'][new Date(dateStr+'T00:00:00').getDay()]; }
+function fmtDate(dateStr){ if(!dateStr) return ''; const [y,m,d]=dateStr.split('-'); return `${y}/${Number(m)}/${Number(d)}（${dowJa(dateStr)}）`; }
+function withinHours(dateStr,s,e){ if(!dateStr||!s||!e) return true; const dow=new Date(dateStr+'T00:00:00').getDay(); const open = (dow===0||dow===6)?'10:00':'18:00'; return s>=open && e<='21:00'; }
+function calc(r, useActual){
+  const a = useActual && r.actual ? r.actual : null;
+  const people = a ? a.people : r.people;
+  const end = a ? a.end : r.end;
+  const hours = Math.max(0, hoursBetween(r.start||'0:00', end||'0:00'));
+  const billHours = Math.ceil(hours);
+  const space = Math.min(billHours*PRICE.spaceHour, PRICE.spaceDay);
+  const foodUnit = r.plan==='light'?PRICE.light : r.plan==='party'?PRICE.party : 0;
+  const lines = [];
+  lines.push({ label:`スペース利用料（${billHours}時間${space===PRICE.spaceDay?'・1日上限':''}）`, amount:space });
+  if(foodUnit) lines.push({ label:`お食事 ${PLAN_LABEL[r.plan]}（${yen(foodUnit)}×${people}名）`, amount:foodUnit*people });
+  if(r.drink) lines.push({ label:`飲み放題（${yen(PRICE.drink)}×${people}名）`, amount:PRICE.drink*people });
+  const trash = a ? a.trash : r.trash;
+  if(trash) lines.push({ label:'ゴミ回収', amount:PRICE.trash });
+  if(a && a.ext30>0) lines.push({ label:`延長（30分×${a.ext30}）`, amount:PRICE.extension30*a.ext30 });
+  if(a && a.extras) a.extras.forEach(x=>{ if(x.label&&x.amount) lines.push({ label:x.label, amount:Number(x.amount) }); });
+  const total = lines.reduce((s,l)=>s+l.amount,0);
+  return { lines, total, tax:Math.round(total - total/1.1), hours, people };
+}
+function amountOf(r){ return ORDER.indexOf(r.status)>=3 ? calc(r,true).total : calc(r,false).total; }
+
+// ---------- 共通 UI ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastTimer;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200); }
+const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const ICON_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+const ICON_MAIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>';
+
+let view='list', currentId=null, filter='all', customerOnly=false;
+function show(v, id){
+  view=v; if(id) currentId=id;
+  ['list','new','detail','apply','flow'].forEach(k=>{ $('#view-'+k).hidden = k!==v; });
+  document.querySelectorAll('.nav [data-nav]').forEach(b=>{ const cur = b.dataset.nav===v || (v==='detail'&&b.dataset.nav==='list'); if(cur) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  $('#brand-sub').textContent = v==='apply' ? '札幌・大通　レンタルスペース' : 'レンタルスペース管理';
+  if(v==='list') renderList(); if(v==='new') renderEstimate(); if(v==='detail') renderDetail(); if(v==='apply') renderApplyEstimate();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.nav==='apply'){ customerOnly=false; $('#apply-staff-link').hidden=false; } show(b.dataset.nav); }));
+$('#reset').addEventListener('click',async()=>{ await removeAll(); await seedAll(); toast('サンプルデータに戻しました'); });
+
+// ---------- 一覧 ----------
+function renderList(){
+  const month = todayStr().slice(0,7);
+  if(mode==='loading'){ $('#rows').innerHTML=`<tr><td colspan="8" class="empty">読み込んでいます…</td></tr>`; $('#kpis').innerHTML=''; $('#filters').innerHTML=''; return; }
+  const thisMonth = data.filter(r=>r.date.startsWith(month));
+  const upcoming = data.filter(r=>r.date>=todayStr() && r.status!=='paid');
+  const newWeb = data.filter(r=>r.status==='draft' && r.source==='web');
+  const unbilled = data.filter(r=>r.status==='done');
+  const unpaid = data.filter(r=>r.status==='invoiced');
+  $('#kpis').innerHTML = [
+    { l:'Web申込・未対応', v:newWeb.length+'件', s:newWeb.length?'日程の確定が必要':'新着なし', hot:newWeb.length>0 },
+    { l:'今月の予約', v:thisMonth.length+'件', s:'売上見込 '+yen(thisMonth.reduce((s,r)=>s+amountOf(r),0)) },
+    { l:'これからの予約', v:upcoming.length+'件', s:upcoming.filter(r=>r.status==='draft').length+'件が日程未確定' },
+    { l:'請求書 未送信', v:unbilled.length+'件', s:yen(unbilled.reduce((s,r)=>s+amountOf(r),0)) },
+    { l:'入金待ち', v:unpaid.length+'件', s:yen(unpaid.reduce((s,r)=>s+amountOf(r),0)) }
+  ].map(k=>`<div class="kpi ${k.hot?'hot':''}"><span class="l">${k.l}</span><span class="v num">${k.v}</span><span class="s num">${k.s}</span></div>`).join('');
+
+  const counts = {}; data.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+  $('#filters').innerHTML = [['all','すべて',data.length],...ORDER.map(s=>[s,STATUS[s].label,counts[s]||0])]
+    .map(([k,l,n])=>`<button type="button" class="chip" data-f="${k}" aria-pressed="${filter===k}">${l} <span class="num muted">${n}</span></button>`).join('');
+  $('#filters').querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{ filter=c.dataset.f; renderList(); }));
+
+  const rows = data.filter(r=>filter==='all'||r.status===filter).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1));
+  if(!data.length){ $('#rows').innerHTML=`<tr><td colspan="8"><div class="empty"><span>まだ予約がありません。お客様の申込フォームから送ると、ここに「仮予約」として入ります。</span><button type="button" class="btn btn-sm" id="seed-btn">サンプルデータを入れる</button></div></td></tr>`; $('#seed-btn').addEventListener('click',async()=>{ await seedAll(); toast('サンプルデータを入れました'); }); return; }
+  $('#rows').innerHTML = rows.length ? rows.map(r=>{
+    const st=STATUS[r.status]; const isActual = ORDER.indexOf(r.status)>=3; const isNew = r.status==='draft'&&r.source==='web';
+    return `<tr data-id="${esc(r.id)}" tabindex="0" class="${isNew?'new':''}">
+      <td class="num">${fmtDate(r.date)}<span class="sub num">${r.start}〜${isActual&&r.actual?r.actual.end:r.end}${r.date2?'<br>第2希望 '+fmtDate(r.date2):''}</span></td>
+      <td>${esc(r.name)}${r.source==='web'?'<span class="src">Web</span>':''}<span class="sub">${esc(r.org||'個人')}</span></td>
+      <td>${esc(r.purpose)}</td>
+      <td>${PLAN_LABEL[r.plan]}${r.drink?'<span class="sub">＋飲み放題</span>':''}</td>
+      <td class="r num">${isActual&&r.actual?r.actual.people:r.people}名</td>
+      <td class="r num">${yen(amountOf(r))}<span class="sub">${isActual?'確定':'見積'}</span></td>
+      <td><span class="status ${st.cls}">${st.label}</span></td>
+      <td class="muted">${isNew?'Web申込に返信して日程を確定する':st.next}</td></tr>`; }).join('')
+    : `<tr><td colspan="8" class="empty">この状態の予約はありません</td></tr>`;
+  $('#rows').querySelectorAll('tr[data-id]').forEach(tr=>{ const open=()=>show('detail',tr.dataset.id); tr.addEventListener('click',open); tr.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } }); });
+}
+
+// ---------- 新規（スタッフ） ----------
+const formNew = $('#form-new');
+function readForm(){
+  return { date:$('#f-date').value, start:$('#f-start').value, end:$('#f-end').value, people:Number($('#f-people').value)||0,
+    name:$('#f-name').value.trim(), org:$('#f-org').value.trim(), email:$('#f-email').value.trim(), phone:$('#f-phone').value.trim(), purpose:$('#f-purpose').value.trim(),
+    plan:(formNew.querySelector('input[name=plan]:checked')||{}).value||'space', drink:$('#f-drink').checked, trash:$('#f-trash').checked, note:$('#f-note').value.trim() };
+}
+function estHTML(c, approx){
+  return c.lines.map(l=>`<div class="row"><span>${esc(l.label)}</span><span>${yen(l.amount)}</span></div>`).join('')
+    + `<div class="row total"><span>合計（税込${approx?'・目安':''}）</span><span>${yen(c.total)}${approx?'〜':''}</span></div>` + (approx?'':`<div class="row small muted"><span>うち消費税 10%</span><span>${yen(c.tax)}</span></div>`);
+}
+function hourMsgs(f, dateKey){
+  const msgs=[]; const d=f[dateKey];
+  if(f.start&&f.end&&hoursBetween(f.start,f.end)<=0) msgs.push('終了時刻が開始時刻より前になっています。');
+  if(d&&!withinHours(d,f.start,f.end)) msgs.push(`ご利用時間外です（平日 18:00〜21:00 ／ 土日祝 10:00〜21:00）。${['土','日'].includes(dowJa(d))?'':'平日は18時以降のみです。'}`);
+  if(f.people>28) msgs.push(`席数28席を超えています（${f.people}名）。立食か人数調整の相談が必要です。`);
+  return msgs;
+}
+function renderEstimate(){
+  const f=readForm(); $('#f-est').innerHTML = estHTML(calc(f,false));
+  $('#f-hours-alert').innerHTML = hourMsgs(f,'date').map(m=>`<div class="alert alert-warn">${ICON_WARN}<span>${m}</span></div>`).join('');
+}
+formNew.addEventListener('input',renderEstimate);
+formNew.addEventListener('change',renderEstimate);
+formNew.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const f=readForm(); const miss=[];
+  if(!f.date) miss.push('利用日'); if(!f.name) miss.push('お名前'); if(!f.email||!/.+@.+\..+/.test(f.email)) miss.push('メールアドレス'); if(!f.purpose) miss.push('利用内容'); if(hoursBetween(f.start,f.end)<=0) miss.push('終了時刻');
+  if(miss.length){ $('#f-error').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>${miss.join('・')}を確認してください。</span></div>`; return; }
+  const r = Object.assign({ id:nextId(), source:'staff', status:'draft', calendar:null, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null, log:[{at:nowStr(),text:'仮予約を登録（スタッフ入力）',auto:false}] }, f);
+  data.unshift(r); await save(r); formNew.reset(); $('#f-people').value=20; $('#f-start').value='13:00'; $('#f-end').value='16:00'; $('#f-error').innerHTML='';
+  toast(`${r.id} を仮予約として登録しました`); show('detail', r.id);
+});
+
+// ---------- お客様用 申込フォーム ----------
+const formApply = $('#form-apply');
+function readApply(){ return {
+  date:$('#q-date1').value, date2:$('#q-date2').value, start:$('#q-start').value, end:$('#q-end').value, people:Number($('#q-people').value)||0,
+  kind:$('#q-kind').value, purpose:$('#q-purpose').value.trim(), plan:(formApply.querySelector('input[name=qplan]:checked')||{}).value||'space',
+  drink:$('#q-drink').checked, trash:$('#q-trash').checked, foodNote:$('#q-food').value.trim(),
+  name:$('#q-name').value.trim(), org:$('#q-org').value.trim(), email:$('#q-email').value.trim(), phone:$('#q-phone').value.trim(), note:$('#q-note').value.trim(), tour:$('#q-tour').checked, agree:$('#q-agree').checked }; }
+function renderApplyEstimate(){
+  const f=readApply(); const c=calc(f,false);
+  $('#q-est').innerHTML=estHTML(c,true); $('#q-bar-amt').textContent=yen(c.total)+'〜';
+  const msgs=hourMsgs(f,'date'); if(f.date2&&!withinHours(f.date2,f.start,f.end)) msgs.push('第2希望日がご利用時間外です。'); if(f.date&&f.date<todayStr()) msgs.push('第1希望日が過去の日付です。');
+  $('#q-alert').innerHTML=msgs.map(m=>`<div class="alert alert-warn">${ICON_WARN}<span>${m}</span></div>`).join('');
+}
+formApply.addEventListener('input',renderApplyEstimate); formApply.addEventListener('change',renderApplyEstimate);
+$('#q-minus').addEventListener('click',()=>{ const i=$('#q-people'); i.value=Math.max(1,(Number(i.value)||1)-1); renderApplyEstimate(); });
+$('#q-plus').addEventListener('click',()=>{ const i=$('#q-people'); i.value=(Number(i.value)||0)+1; renderApplyEstimate(); });
+function applyScreen(k){ ['form','confirm','done'].forEach(s=>{ $('#apply-'+s+'-screen').hidden = s!==k; }); window.scrollTo({top:0}); }
+$('#q-to-confirm').addEventListener('click',()=>{
+  const f=readApply(); const miss=[];
+  if(!f.date) miss.push('第1希望日'); if(!f.start||!f.end||hoursBetween(f.start,f.end)<=0) miss.push('時間'); if(!f.people) miss.push('人数');
+  if(!f.kind) miss.push('用途'); if(!f.purpose) miss.push('内容'); if(!f.name) miss.push('お名前'); if(!/.+@.+\..+/.test(f.email)) miss.push('メールアドレス'); if(!f.phone) miss.push('電話番号'); if(!f.agree) miss.push('ご利用にあたっての確認');
+  if(miss.length){ $('#q-err').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>${miss.join('・')}を入力してください。</span></div>`; $('#q-err').scrollIntoView({block:'center'}); return; }
+  $('#q-err').innerHTML=''; const c=calc(f,false);
+  $('#qc-when').innerHTML=`<dt>第1希望</dt><dd class="num">${fmtDate(f.date)} ${f.start}〜${f.end}（${c.hours}時間）</dd>${f.date2?`<dt>第2希望</dt><dd class="num">${fmtDate(f.date2)} ${f.start}〜${f.end}</dd>`:''}<dt>人数</dt><dd>${f.people}名</dd><dt>用途</dt><dd>${esc(f.kind)}</dd><dt>内容</dt><dd>${esc(f.purpose)}</dd>`;
+  $('#qc-est').innerHTML=`<div class="row"><span><b>${PLAN_LABEL[f.plan]}${f.drink?'＋飲み放題':''}</b></span><span></span></div>`+estHTML(c,true)+(f.foodNote?`<div class="row muted"><span>ご要望：${esc(f.foodNote)}</span><span></span></div>`:'');
+  $('#qc-who').innerHTML=`<dt>お名前</dt><dd>${esc(f.name)}</dd>${f.org?`<dt>会社・団体</dt><dd>${esc(f.org)}</dd>`:''}<dt>メール</dt><dd>${esc(f.email)}</dd><dt>電話</dt><dd>${esc(f.phone)}</dd>${f.note?`<dt>ご要望</dt><dd>${esc(f.note)}</dd>`:''}<dt>見学</dt><dd>${f.tour?'希望する':'希望しない'}</dd>`;
+  applyScreen('confirm');
+});
+$('#q-back').addEventListener('click',()=>applyScreen('form'));
+$('#q-send').addEventListener('click',async()=>{
+  const btn=$('#q-send'); btn.disabled=true; btn.textContent='送信しています…';
+  const f=readApply(); const c=calc(f,false); const d=new Date();
+  const receipt='RQ-'+localDate(d).replace(/-/g,'').slice(2)+'-'+String(Math.floor(Math.random()*900)+100);
+  const note=[f.note, f.foodNote?'食事：'+f.foodNote:'', f.tour?'見学希望':''].filter(Boolean).join('／');
+  const r={ id:nextId(), source:'web', receipt, status:'draft', date:f.date, date2:f.date2||'', start:f.start, end:f.end, people:f.people, kind:f.kind, purpose:f.purpose, plan:f.plan, drink:f.drink, trash:f.trash,
+    name:f.name, org:f.org, email:f.email, phone:f.phone, note, tour:f.tour, calendar:null, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null,
+    log:[{at:nowStr(),text:`Web申込を受付（${receipt}）。受付メールを ${f.email} に送信`,auto:true}] };
+  let ok=true;
+  if(mode==='db'){ try{ await dbCol.doc(r.id).set(r); }catch(e){ ok=false; } } else { data.unshift(r); localSave(); }
+  btn.disabled=false; btn.textContent='この内容で申し込む';
+  if(!ok){ $('#q-send-err').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>送信できませんでした。通信状況を確認して、もう一度お試しください。</span></div>`; return; }
+  $('#q-send-err').innerHTML='';
+  $('#qd-no').textContent=receipt; $('#qd-email').textContent=f.email;
+  $('#qd-sum').innerHTML=`<dt>第1希望</dt><dd class="num">${fmtDate(f.date)} ${f.start}〜${f.end}</dd><dt>内容</dt><dd>${esc(f.purpose)}（${f.people}名）</dd><dt>プラン</dt><dd>${PLAN_LABEL[f.plan]}${f.drink?'＋飲み放題':''}</dd><dt>お見積</dt><dd class="num">${yen(c.total)}〜（税込・目安）</dd>`;
+  applyScreen('done');
+});
+$('#q-again').addEventListener('click',()=>{ formApply.reset(); $('#q-people').value=20; $('#q-start').value='13:00'; $('#q-end').value='16:00'; setApplyDefaultDate(); renderApplyEstimate(); applyScreen('form'); });
+function setApplyDefaultDate(){ const d=new Date(); d.setDate(d.getDate()+7); while(d.getDay()!==6) d.setDate(d.getDate()+1); $('#q-date1').min=todayStr(); $('#q-date2').min=todayStr(); $('#q-date1').value=localDate(d); }
+
+// ---------- 詳細 ----------
+function get(id){ return data.find(r=>r.id===id); }
+function addLog(r,text,auto){ r.log=r.log||[]; r.log.push({at:nowStr(),text,auto:!!auto}); }
+function gcalUrl(r){
+  const d=r.date.replace(/-/g,''), s=r.start.replace(':',''), e=r.end.replace(':','');
+  const text=`【貸切】${r.org||r.name}様 ${r.people}名`;
+  const details=`${r.purpose}\nプラン：${PLAN_LABEL[r.plan]}${r.drink?'＋飲み放題':''}\n担当：${r.name}（${r.email}${r.phone?' / '+r.phone:''}）\n備考：${r.note||'なし'}\n予約ID：${r.id}`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(text)}&dates=${d}T${s}00/${d}T${e}00&ctz=Asia/Tokyo&details=${encodeURIComponent(details)}&location=${encodeURIComponent('bokashi Base 2F '+SHOP.addr)}`;
+}
+function confirmMailBody(r){
+  const c=calc(r,false);
+  return `${r.org?r.org+'\n':''}${r.name} 様
+
+bokashi Base です。ご予約内容を確認させていただきます。
+
+■ 日時：${fmtDate(r.date)} ${r.start}〜${r.end}
+■ 内容：${r.purpose}
+■ プラン：${PLAN_LABEL[r.plan]}${r.drink?'＋飲み放題':''}
+■ 人数：${r.people}名
+■ お見積（税込）：${yen(c.total)}
+${c.lines.map(l=>'　・'+l.label+'　'+yen(l.amount)).join('\n')}
+
+当日の人数変更は前日までにお知らせください。
+終了後、確定金額の請求書をこのメールアドレス宛にお送りします。
+
+bokashi Base　${SHOP.tel}
+${SHOP.addr} 2F`;
+}
+function invoiceMailBody(r){
+  return `${r.billing.org?r.billing.org+'\n':''}${r.billing.name} 様
+
+先日は bokashi Base をご利用いただきありがとうございました。
+${fmtDate(r.date)} ご利用分の請求書をお送りします。
+
+■ 請求書番号：${r.invoice.no}
+■ ご請求金額（税込）：${yen(r.invoice.total)}
+■ お支払期限：${fmtDate(r.invoice.due)}
+
+請求書 PDF を添付しています。お振込をお願いいたします。
+
+bokashi Base　${SHOP.tel}`;
+}
+function dueDate(issued){ const d=new Date(issued+'T00:00:00'); return localDate(new Date(d.getFullYear(), d.getMonth()+2, 0)); }
+
+function renderDetail(){
+  const r=get(currentId); if(!r){ show('list'); return; }
+  lastDetailJSON=JSON.stringify(r);
+  const st=STATUS[r.status]; const idx=ORDER.indexOf(r.status);
+  const steps=[['仮予約',r.log&&r.log[0]?r.log[0].at.slice(5,10):''],['日程確定',r.calendar?'カレンダー '+r.calendar.id:'カレンダー登録'],['内容共有',r.sharedAt?r.sharedAt.slice(5,16):'確認メール'],['利用終了',r.actual?'実績入力済み':'実績入力'],['請求済み',r.invoice?r.invoice.no:'請求書送信'],['入金済み',r.paidAt?r.paidAt.slice(5,10):'入金確認']];
+  const est=calc(r,false), act=r.actual?calc(r,true):null;
+
+  const html = `
+  <div class="detail-head">
+    <div><button type="button" class="btn btn-ghost btn-sm" data-nav="list">← 予約一覧</button>
+      <h1 style="margin-top:6px">${esc(r.org||r.name)}${r.org?'　<span class="muted" style="font-size:15px;font-weight:500">'+esc(r.name)+' 様</span>':' 様'}${r.source==='web'?'<span class="src" style="font-size:12px;vertical-align:middle">Web申込</span>':''}</h1>
+      <div class="meta num">${esc(r.id)}${r.receipt?'　｜　受付番号 '+esc(r.receipt):''}　｜　${fmtDate(r.date)} ${r.start}〜${r.end}　｜　${esc(r.purpose)}</div></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status ${st.cls}" style="font-size:13px">${st.label}</span><span class="small muted">次：${st.next}</span></div>
+  </div>
+  <div class="pipeline">${steps.map((s,i)=>`<div class="pipe ${i<=idx?'done':''} ${i===idx+1||(i===idx&&idx===5)?'now':''}"><b>${i+1}. ${s[0]}</b><span>${esc(s[1])}</span></div>`).join('')}</div>
+  <div class="grid-2">
+    <div class="stack">
+      ${r.source==='web'&&idx===0?`<div class="alert alert-info">${ICON_MAIL}<span>Webからの申込です。${r.date2?'第2希望は '+fmtDate(r.date2)+'。':''}空き状況とお食事の内容を確認して返信し、日程が決まったら下の「日程を確定」を押してください。</span></div>`:''}
+      ${stepCalendar(r,idx)}
+      ${stepShare(r,idx)}
+      ${stepActual(r,idx,act)}
+      ${stepInvoice(r,idx,act)}
+      ${stepPaid(r,idx)}
+    </div>
+    <div class="stack">
+      <div class="card"><h2>予約内容</h2>
+        <dl class="dl"><dt>利用日時</dt><dd class="num">${fmtDate(r.date)} ${r.start}〜${r.end}（${est.hours}時間）</dd>
+        ${r.date2?`<dt>第2希望</dt><dd class="num">${fmtDate(r.date2)}</dd>`:''}
+        <dt>利用者</dt><dd>${esc(r.name)}${r.org?'／'+esc(r.org):''}</dd><dt>連絡先</dt><dd>${esc(r.email)}${r.phone?'<br>'+esc(r.phone):''}</dd>
+        ${r.kind?`<dt>用途</dt><dd>${esc(r.kind)}</dd>`:''}<dt>利用内容</dt><dd>${esc(r.purpose)}</dd><dt>プラン</dt><dd>${PLAN_LABEL[r.plan]}${r.drink?'＋飲み放題':''}　${r.people}名</dd>
+        <dt>ゴミ回収</dt><dd>${r.trash?'あり（¥1,100）':'なし'}</dd><dt>備考</dt><dd>${esc(r.note||'—')}</dd>${r.tour?'<dt>見学</dt><dd>希望あり</dd>':''}</dl>
+        ${idx<3?`<div class="actions"><button type="button" class="btn btn-sm" id="edit-draft">予約内容を修正</button></div>`:''}
+        <div id="edit-area"></div>
+      </div>
+      <div class="card"><h2>見積（予約時）</h2><div class="est">${estHTML(est)}</div></div>
+      <div class="card"><h2>履歴</h2><ul class="timeline">${(r.log||[]).slice().reverse().map(l=>`<li class="${l.auto?'auto':''}"><time>${esc(l.at)}</time><span class="t">${esc(l.text)}</span></li>`).join('')}</ul></div>
+    </div>
+  </div>`;
+  const el=$('#view-detail'); el.innerHTML=html;
+  el.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.nav)));
+  bindDetail(r,idx);
+}
+
+function stepCalendar(r,idx){
+  if(idx>=1){
+    return `<div class="card"><h2><span class="step-no">STEP 2</span>日程確定・Googleカレンダー</h2>
+      <div class="event-card"><b>【貸切】${esc(r.org||r.name)}様 ${r.people}名</b><span class="num">${fmtDate(r.date)} ${r.start}〜${r.end}　bokashi Base 2F</span><span class="ev-meta num">カレンダーID ${esc(r.calendar.id)}　登録 ${esc(r.calendar.at)}（自動）</span></div>
+      <div class="actions"><a class="btn btn-sm" href="${gcalUrl(r)}" target="_blank" rel="noopener">${ICON_CAL} Googleカレンダーで開く</a>${idx<3?'<button type="button" class="btn btn-sm btn-ghost" id="unconfirm">日程を取り消す（仮予約に戻す）</button>':''}</div></div>`;
+  }
+  return `<div class="card focus"><h2><span class="step-no">STEP 2</span>日程を確定する</h2>
+    <p class="small muted" style="margin:0">確定すると Googleカレンダーに予定が自動登録され、スタッフ全員に見えるようになります。</p>
+    ${!withinHours(r.date,r.start,r.end)?`<div class="alert alert-warn">${ICON_WARN}<span>ご利用時間外の予約です。確定前に時間を調整してください。</span></div>`:''}
+    ${r.people>28?`<div class="alert alert-warn">${ICON_WARN}<span>席数28席を超えています（${r.people}名）。立食か人数調整の相談が必要です。</span></div>`:''}
+    <div class="confirm"><p><b>登録される予定</b></p><div class="event-card"><b>【貸切】${esc(r.org||r.name)}様 ${r.people}名</b><span class="num">${fmtDate(r.date)} ${r.start}〜${r.end}　bokashi Base 2F</span><span class="ev-meta">説明欄：${esc(r.purpose)}／${PLAN_LABEL[r.plan]}${r.drink?'＋飲み放題':''}／${esc(r.name)} ${esc(r.email)}</span></div>
+    <div class="actions"><button type="button" class="btn btn-primary" id="confirm-date">${ICON_CAL} 日程を確定してカレンダーに登録</button></div></div></div>`;
+}
+function stepShare(r,idx){
+  if(idx<1) return `<div class="card locked"><h2><span class="step-no">STEP 3</span>利用内容の確認・共有</h2><p class="small muted" style="margin:0">日程確定後に、確認メールを送れます。</p></div>`;
+  if(idx>=2) return `<div class="card"><h2><span class="step-no">STEP 3</span>利用内容の確認・共有</h2>
+    <div class="alert alert-ok">${ICON_OK}<span>${esc(r.sharedAt)} に確認メールを ${esc(r.email)} へ送信しました（自動）</span></div>
+    <details><summary class="small muted" style="cursor:pointer">送信したメールを見る</summary><div class="mail" style="margin-top:8px"><dl class="mh"><dt>宛先</dt><dd>${esc(r.email)}</dd><dt>件名</dt><dd>【bokashi Base】ご予約内容の確認（${fmtDate(r.date)}）</dd></dl><pre>${esc(confirmMailBody(r))}</pre></div></details></div>`;
+  return `<div class="card focus"><h2><span class="step-no">STEP 3</span>利用内容を確認して共有する</h2>
+    <p class="small muted" style="margin:0">予約内容をメールで利用者に送ります。送る前に右の「予約内容」を確認してください。</p>
+    <div class="mail"><dl class="mh"><dt>宛先</dt><dd>${esc(r.email)}</dd><dt>件名</dt><dd>【bokashi Base】ご予約内容の確認（${fmtDate(r.date)}）</dd></dl><pre>${esc(confirmMailBody(r))}</pre></div>
+    <div class="actions"><button type="button" class="btn btn-primary" id="share">${ICON_MAIL} 確認メールを送信</button><button type="button" class="btn" id="copy-share">本文をコピー</button></div></div>`;
+}
+function stepActual(r,idx,act){
+  if(idx<2) return `<div class="card locked"><h2><span class="step-no">STEP 4</span>当日終了・実績入力</h2><p class="small muted" style="margin:0">利用当日が終わったら、実際の人数と終了時刻を入れます。</p></div>`;
+  if(idx>=3) return `<div class="card"><h2><span class="step-no">STEP 4</span>当日終了・実績</h2>
+    <dl class="dl"><dt>実際の人数</dt><dd class="num">${r.actual.people}名${r.actual.people!==r.people?`<span class="muted">（予約 ${r.people}名）</span>`:''}</dd><dt>終了時刻</dt><dd class="num">${esc(r.actual.end)}${r.actual.ext30?`<span class="muted">（延長 30分×${r.actual.ext30}）</span>`:''}</dd><dt>追加</dt><dd>${[r.actual.trash?'ゴミ回収':'',...(r.actual.extras||[]).map(x=>esc(x.label)+' '+yen(x.amount))].filter(Boolean).join('、')||'なし'}</dd></dl>
+    <div class="est">${estHTML(act)}</div>${idx===3?'<div class="actions"><button type="button" class="btn btn-sm" id="redo-actual">実績を修正</button></div>':''}</div>`;
+  const past = r.date<=todayStr();
+  return `<div class="card ${past?'focus':''}"><h2><span class="step-no">STEP 4</span>当日終了・実績を入力する</h2>
+    ${past?'':`<div class="alert alert-info">${ICON_CAL}<span>利用日は ${fmtDate(r.date)} です。終了後に入力してください（モックなので今も入力できます）。</span></div>`}
+    ${actualForm(r)}</div>`;
+}
+function actualForm(r){
+  const a=r.actual||{people:r.people,end:r.end,ext30:0,trash:r.trash,extras:[]};
+  return `<form id="form-actual" novalidate><div class="inline-edit">
+    <div class="field"><label for="a-people">実際の人数</label><input type="number" id="a-people" min="1" value="${a.people}"></div>
+    <div class="field"><label for="a-end">実際の終了時刻</label><input type="time" id="a-end" value="${esc(a.end)}" step="900"><span class="hint">予定 ${esc(r.end)}</span></div>
+    <div class="field"><label for="a-ext">無断延長（30分単位）</label><input type="number" id="a-ext" min="0" value="${a.ext30||0}"><span class="hint">¥10,000／30分</span></div>
+    </div>
+    <label class="check"><input type="checkbox" id="a-trash" ${a.trash?'checked':''}><span>ゴミ回収（¥1,100）</span></label>
+    <div class="field"><span class="lbl">追加項目（ドリンク追加・備品など）</span><div id="extras">${(a.extras||[]).map((x,i)=>extraRow(x,i)).join('')}</div><button type="button" class="btn btn-sm" id="add-extra" style="align-self:flex-start;margin-top:6px">＋ 追加項目</button></div>
+    <div class="est" id="a-est" style="margin-top:12px"></div>
+    <div class="actions" style="margin-top:12px"><button type="submit" class="btn btn-primary">確定額を保存して請求へ進む</button></div></form>`;
+}
+function extraRow(x,i){ return `<div class="extra-row"><div class="field"><label for="x-l-${i}">項目</label><input type="text" id="x-l-${i}" class="x-label" value="${esc(x.label||'')}" placeholder="例）スパークリング 2本"></div><div class="field"><label for="x-a-${i}">金額（税込）</label><input type="number" id="x-a-${i}" class="x-amount" min="0" value="${x.amount||''}"></div><button type="button" class="btn btn-sm x-del" aria-label="削除">×</button></div>`; }
+function readActual(){
+  const extras=[...document.querySelectorAll('#extras .extra-row')].map(row=>({label:row.querySelector('.x-label').value.trim(),amount:Number(row.querySelector('.x-amount').value)||0})).filter(x=>x.label&&x.amount);
+  return { people:Number($('#a-people').value)||1, end:$('#a-end').value, ext30:Number($('#a-ext').value)||0, trash:$('#a-trash').checked, extras };
+}
+function stepInvoice(r,idx,act){
+  if(idx<3) return `<div class="card locked"><h2><span class="step-no">STEP 5</span>請求先の確認・請求書送信</h2><p class="small muted" style="margin:0">実績入力後に、請求書を作って送れます。</p></div>`;
+  if(idx>=4) return `<div class="card"><h2><span class="step-no">STEP 5</span>請求書送信済み</h2>
+    <div class="alert alert-ok">${ICON_OK}<span>${esc(r.invoice.sentAt)} に請求書 ${esc(r.invoice.no)}（${yen(r.invoice.total)}）を ${esc(r.billing.email)} へ送信しました（自動）</span></div>
+    <details><summary class="small muted" style="cursor:pointer">送信したメールと請求書を見る</summary>
+      <div class="mail" style="margin-top:8px"><dl class="mh"><dt>宛先</dt><dd>${esc(r.billing.email)}</dd><dt>件名</dt><dd>【bokashi Base】ご請求書（${esc(r.invoice.no)}）</dd><dt>添付</dt><dd>${esc(r.invoice.no)}.pdf</dd></dl><pre>${esc(invoiceMailBody(r))}</pre></div>
+      <div class="invoice-wrap" style="margin-top:12px">${invoiceHTML(r,act)}</div></details></div>`;
+  const b=r.billing||{org:r.org,name:r.name,email:r.email};
+  return `<div class="card focus"><h2><span class="step-no">STEP 5</span>請求先を確認して請求書を送る</h2>
+    <form id="form-billing" novalidate><div class="form">
+      <div class="field"><label for="b-org">宛名（会社・団体）</label><input type="text" id="b-org" value="${esc(b.org||'')}" placeholder="空欄なら個人名宛"></div>
+      <div class="field"><label for="b-name">担当者名</label><input type="text" id="b-name" value="${esc(b.name||'')}"></div>
+      <div class="field full"><label for="b-email">送付先メールアドレス</label><input type="email" id="b-email" value="${esc(b.email||'')}"><span class="hint">予約時のアドレス：${esc(r.email)}</span></div>
+    </div>
+    <div class="est" style="margin-top:12px"><div class="row total" style="border:0;margin:0;padding:0"><span>ご請求金額（税込）</span><span>${yen(act.total)}</span></div><div class="row small muted"><span>うち消費税 10%</span><span>${yen(act.tax)}</span></div></div>
+    <details style="margin-top:12px"><summary class="small muted" style="cursor:pointer">請求書プレビュー</summary><div class="invoice-wrap" style="margin-top:8px">${invoiceHTML(Object.assign({},r,{billing:b,invoice:{no:nextInvoiceNo(),issued:todayStr(),due:dueDate(todayStr()),total:act.total}}),act)}</div></details>
+    <div class="confirm" style="margin-top:12px"><p><b>送信すると</b> 請求書 PDF を作り、上のメールアドレスへ自動送信します。送信後の金額変更は再発行になります。</p>
+    <div class="actions"><button type="submit" class="btn btn-money">${ICON_MAIL} 請求書を作成して送信</button></div><div id="b-error"></div></div></form></div>`;
+}
+function stepPaid(r,idx){
+  if(idx<4) return `<div class="card locked"><h2><span class="step-no">STEP 6</span>入金確認</h2></div>`;
+  if(idx>=5) return `<div class="card"><h2><span class="step-no">STEP 6</span>入金確認</h2><div class="alert alert-ok">${ICON_OK}<span>${fmtDate(r.paidAt)} 入金を確認。この予約は完了です。</span></div></div>`;
+  const over = todayStr()>r.invoice.due;
+  return `<div class="card focus"><h2><span class="step-no">STEP 6</span>入金を確認する</h2>
+    ${over?`<div class="alert alert-warn">${ICON_WARN}<span>支払期限 ${fmtDate(r.invoice.due)} を過ぎています。</span></div>`:`<div class="alert alert-info">${ICON_CAL}<span>支払期限 ${fmtDate(r.invoice.due)}</span></div>`}
+    <div class="actions"><button type="button" class="btn btn-primary" id="mark-paid">${ICON_OK} 入金を確認した</button><button type="button" class="btn" id="resend">請求書を再送</button></div></div>`;
+}
+function invoiceHTML(r,c){
+  const b=r.billing, inv=r.invoice;
+  return `<div class="invoice" aria-label="請求書プレビュー">
+    <div class="inv-top"><h2>請求書</h2><div class="from num"><b>${SHOP.name}</b><br>${SHOP.corp}<br>${SHOP.addr}<br>TEL ${SHOP.tel}<br>登録番号 ${SHOP.regno}</div></div>
+    <div class="inv-top"><div><div class="to">${esc(b.org||b.name)} 御中</div>${b.org?`<div class="small" style="margin-top:4px">ご担当：${esc(b.name)} 様</div>`:''}</div>
+      <div class="small num" style="text-align:right">請求書番号　${esc(inv.no)}<br>発行日　${fmtDate(inv.issued)}<br>お支払期限　${fmtDate(inv.due)}</div></div>
+    <div class="total-box"><span>ご請求金額</span><span class="num">${yen(inv.total)}</span><span class="small">（税込）</span></div>
+    <div class="small">件名：${fmtDate(r.date)} レンタルスペースご利用分（${esc(r.purpose)}）</div>
+    <table><thead><tr><th>摘要</th><th class="r">金額（税込）</th></tr></thead>
+      <tbody>${c.lines.map(l=>`<tr><td>${esc(l.label)}</td><td class="r num">${yen(l.amount)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td class="r">小計（税抜）</td><td class="r num">${yen(c.total-c.tax)}</td></tr><tr><td class="r">消費税（10%）</td><td class="r num">${yen(c.tax)}</td></tr><tr><td class="r" style="font-weight:700">合計</td><td class="r num" style="font-weight:700">${yen(c.total)}</td></tr></tfoot></table>
+    <div class="bank"><b>お振込先</b>　${SHOP.bank}<br>振込手数料はご負担をお願いいたします。</div></div>`;
+}
+
+function bindDetail(r,idx){
+  const el=$('#view-detail');
+  const on=(sel,ev,fn)=>{ const n=el.querySelector(sel); if(n) n.addEventListener(ev,fn); };
+  const commit=async(msg)=>{ await save(r); if(msg) toast(msg); renderDetail(); };
+  on('#confirm-date','click',()=>{ r.status='confirmed'; r.calendar={id:'evt_'+Math.random().toString(16).slice(2,6),at:nowStr()}; addLog(r,`日程を確定。Googleカレンダーに登録（${r.calendar.id}）`,true); commit('日程を確定し、Googleカレンダーに登録しました'); });
+  on('#unconfirm','click',()=>{ r.status='draft'; addLog(r,`日程を取り消し。カレンダーの予定 ${r.calendar.id} を削除`,true); r.calendar=null; r.sharedAt=null; commit('仮予約に戻しました'); });
+  on('#share','click',()=>{ r.status='shared'; r.sharedAt=nowStr(); addLog(r,'確認メールを送信',true); commit(`確認メールを ${r.email} に送信しました`); });
+  on('#copy-share','click',async()=>{ const txt=confirmMailBody(r); try{ await navigator.clipboard.writeText(txt); toast('本文をコピーしました'); }catch(e){ const pre=el.querySelector('.mail pre'); const range=document.createRange(); range.selectNodeContents(pre); const s=getSelection(); s.removeAllRanges(); s.addRange(range); toast('選択しました。コピーしてください'); } });
+  on('#edit-draft','click',()=>{ const area=el.querySelector('#edit-area'); area.innerHTML=`<form id="form-edit" class="form" novalidate style="margin-top:8px">
+      <div class="field"><label for="e-date">利用日</label><input type="date" id="e-date" value="${esc(r.date)}"></div><div class="field"><label for="e-people">人数</label><input type="number" id="e-people" min="1" value="${r.people}"></div>
+      <div class="field"><label for="e-start">開始</label><input type="time" id="e-start" value="${esc(r.start)}" step="1800"></div><div class="field"><label for="e-end">終了</label><input type="time" id="e-end" value="${esc(r.end)}" step="1800"></div>
+      <div class="field"><label for="e-plan">プラン</label><select id="e-plan">${Object.entries(PLAN_LABEL).map(([k,v])=>`<option value="${k}" ${r.plan===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label for="e-email">メール</label><input type="email" id="e-email" value="${esc(r.email)}"></div>
+      <label class="check"><input type="checkbox" id="e-drink" ${r.drink?'checked':''}><span>飲み放題</span></label><label class="check"><input type="checkbox" id="e-trash" ${r.trash?'checked':''}><span>ゴミ回収</span></label>
+      <div class="field full"><label for="e-note">備考</label><textarea id="e-note">${esc(r.note)}</textarea></div>
+      <div class="actions full"><button type="submit" class="btn btn-primary btn-sm">保存</button><button type="button" class="btn btn-sm" id="e-cancel">やめる</button></div></form>`;
+    area.querySelector('#e-cancel').addEventListener('click',()=>area.innerHTML='');
+    area.querySelector('#form-edit').addEventListener('submit',e=>{ e.preventDefault(); const changedDate = r.date!==$('#e-date').value||r.start!==$('#e-start').value||r.end!==$('#e-end').value;
+      Object.assign(r,{date:$('#e-date').value,people:Number($('#e-people').value)||1,start:$('#e-start').value,end:$('#e-end').value,plan:$('#e-plan').value,email:$('#e-email').value.trim(),drink:$('#e-drink').checked,trash:$('#e-trash').checked,note:$('#e-note').value.trim()});
+      addLog(r,'予約内容を修正'); if(r.calendar&&changedDate){ addLog(r,`カレンダーの予定 ${r.calendar.id} を更新`,true); }
+      commit('保存しました'); });
+  });
+  const fa=el.querySelector('#form-actual');
+  if(fa){
+    const refresh=()=>{ const a=readActual(); fa.querySelector('#a-est').innerHTML=estHTML(calc(Object.assign({},r,{actual:a}),true)); };
+    fa.addEventListener('input',refresh); fa.addEventListener('change',refresh); refresh();
+    const bindDel=()=>fa.querySelectorAll('.x-del').forEach(b=>b.onclick=()=>{ b.closest('.extra-row').remove(); refresh(); });
+    fa.querySelector('#add-extra').addEventListener('click',()=>{ const box=fa.querySelector('#extras'); const i=box.children.length; box.insertAdjacentHTML('beforeend',extraRow({},i)); bindDel(); });
+    bindDel();
+    fa.addEventListener('submit',e=>{ e.preventDefault(); const a=readActual(); if(hoursBetween(r.start,a.end)<=0){ toast('終了時刻を確認してください'); return; } r.actual=a; r.status='done'; r.billing=r.billing||{org:r.org,name:r.name,email:r.email}; addLog(r,`実績を入力。人数${a.people}名${a.ext30?'・30分延長×'+a.ext30:''}・確定額 ${yen(calc(r,true).total)}`); commit('確定額を保存しました'); });
+  }
+  on('#redo-actual','click',()=>{ r.status='shared'; commit(); });
+  const fb=el.querySelector('#form-billing');
+  if(fb){ fb.addEventListener('submit',e=>{ e.preventDefault(); const email=$('#b-email').value.trim(); if(!/.+@.+\..+/.test(email)){ fb.querySelector('#b-error').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>メールアドレスを確認してください。</span></div>`; return; }
+      r.billing={org:$('#b-org').value.trim(),name:$('#b-name').value.trim()||r.name,email}; const c=calc(r,true); const issued=todayStr();
+      r.invoice={no:nextInvoiceNo(),issued,due:dueDate(issued),sentAt:nowStr(),total:c.total}; r.status='invoiced';
+      addLog(r,`請求書 ${r.invoice.no} を ${email} に送信（${yen(c.total)}）`,true); commit(`請求書 ${r.invoice.no} を ${email} に送信しました`); }); }
+  on('#mark-paid','click',()=>{ r.status='paid'; r.paidAt=todayStr(); addLog(r,'入金を確認'); commit('入金を確認しました。完了です'); });
+  on('#resend','click',()=>{ addLog(r,`請求書 ${r.invoice.no} を ${r.billing.email} に再送`,true); commit('請求書を再送しました'); });
+}
+
+// ---------- 初期化 ----------
+(function init(){
+  const d=new Date(); d.setDate(d.getDate()+14); $('#f-date').value=localDate(d);
+  setApplyDefaultDate();
+  const h=(location.hash||'').replace('#','');
+  if(h==='apply'){ customerOnly=true; document.body.dataset.mode='customer'; $('#apply-staff-link').hidden=true; show('apply'); }
+  else show(['list','new','flow'].includes(h)?h:'list');
+  initStore();
+})();
+})();
+</script>

@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>html{color-scheme:light}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-family:system-ui,sans-serif;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;min-height:100vh;-webkit-font-smoothing:antialiased}img,svg,video{max-width:100%;height:auto}[hidden]{display:none!important}</style>
 <title>レンタル予約管理 本番化設計書</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,9 +43,7 @@ nav.toc a{color:var(--muted);text-decoration:none;line-height:1.5}
 nav.toc a:hover{color:var(--fg)}
 @media (max-width:960px){.wrap{grid-template-columns:1fr;gap:24px}nav.toc{position:static;border-left:0;padding-left:0;border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--surface)}}
 </style>
-</head>
-<body>
-
+</head><body>
 <div class="wrap">
 <header><div class="brand">bokashi Base</div><h1>レンタルスペース予約管理 本番化設計書</h1><div class="meta">date: 2026-11-02 ・ type: 設計書（本番化の方針。コードは含まない） ・ status: 案。オーナー・舜さんの判断待ち</div></header>
 <nav class="toc" aria-label="目次"><b>目次</b><a href="#s0">0. 結論（先に）</a><a href="#s1">1. この文書の前提</a><a href="#s2">2. 全体構成</a><a href="#s3">3. 画面と状態遷移</a><a href="#s4">4. Firestore の設計</a><a href="#s5">5. 公開フォームからの書き込みの受け方</a><a href="#s6">6. Google Calendar 連携</a><a href="#s7">7. メール送信</a><a href="#s8">8. 請求書 PDF</a><a href="#s9">9. 段階分けと工数の目安</a><a href="#s10">10. 未確定事項（決めていただきたいこと）</a><a href="#s11">11. 運用ルール（開発・デプロイ時に守ること）</a><a href="#s12">付録 A. モックとの対応</a><a href="#s13">付録 B. 参照した資料</a></nav>
@@ -1380,5 +1373,4 @@ Functions  submitRentalRequest（HTTPS onRequest, asia-northeast1）
 </article>
 </div>
 
-</body>
-</html>
+</body></html>

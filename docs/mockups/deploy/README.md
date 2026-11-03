@@ -30,11 +30,11 @@ firebase deploy --only hosting:rental # 公開
 1. `rental-space-tool.html` の `DEFAULTS.email` に店舗の実在メールアドレスを入れ、`python3 build.py` → `firebase deploy --only hosting:rental`
 2. 店舗の管理用端末（1台・1ブラウザ・1タブ）で https://bokashi-rental.web.app を開き、「設定」で店舗名・発行者名・登録番号・住所・電話・店舗メール・振込先を保存
 3. 「設定」→「サンプルデータを消す」（上部の「サンプルデータ表示中」が消えればOK）
-4. 試しに「新規予約」で1件登録 → 日程確定（Googleカレンダーの保存先を店舗用カレンダーにする）→ 確認メール作成、まで一度通す
+4. 試しに「予約を登録」→「電話・来店分を入力」で1件登録 → 日程確定（Googleカレンダーの保存先を店舗用カレンダーにする）→ 確認メール作成、まで一度通す
 5. 閉店時に「設定」→「バックアップを保存（JSON）」。端末を替えるときは「復元」
 6. お客様には https://bokashi-rental.web.app/#apply を案内（bokashi.ink の Rental ページからリンク）。管理用のブラウザをお客様に触らせない
 
 ## 既知の制約（本番化で解消）
 
 - 保存はブラウザ内のみ。複数端末での共有、メール・カレンダーの完全自動化、請求書 PDF の自動添付は `design.html` の本番化で実装する
-- Codex（OpenAI）によるレビュー2回分は `../codex-review-2026-11-03.md` に保存。未対応の指摘もそこに残っている
+- Codex（OpenAI）によるレビュー（ロジック2回・UI/UX 2回）は `../codex-review-2026-11-03.md` に保存。未対応の指摘もそこに残っている

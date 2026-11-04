@@ -51,10 +51,10 @@ cd "$(mktemp -d)" && cp "/Users/suzukishinya/Desktop/Claude Code/Projects/es/es-
 
 ## 運用開始チェックリスト
 
-1. **Firebase コンソールで Authentication を有効化**（鈴木の操作・初回のみ）: https://console.firebase.google.com/project/bokashi-ops-app/authentication → 「始める」→ Sign-in method で **メール / パスワード** を有効化
-2. スタッフ用アカウントを作る（鈴木の操作。パスワードは12文字以上、チャットや文書に書かない）:
-   es-ops で `node scripts/auth/create-shared-accounts.cjs --project bokashi-ops-app --email crew@bokashi-ops.app --apply`
-   （OPSアプリの認証切替でも同じアカウントを使う予定なので、ここで決めたパスワードがそのまま OPS のパスワードになる）
+1. ~~Firebase コンソールで Authentication を有効化~~ **済（2026-11-04）**: メール / パスワード を有効化。承認済みドメインに bokashi-rental.web.app を追加済み
+2. ~~スタッフ用アカウントを作る~~ **済（2026-11-04）**: `crew@bokashi-ops.app` を作成。パスワードは鈴木の PC の `~/.config/bokashi-rental/staff-password.txt`（リポジトリ外・本人のみ読める）。
+   店長には口頭か電話で伝える。変更は es-ops で `node scripts/auth/create-shared-accounts.cjs --project bokashi-ops-app --email crew@bokashi-ops.app --apply --reset`
+   （OPSアプリの認証切替でも同じアカウントを使う予定なので、このパスワードがそのまま OPS のパスワードになる）
 3. 店舗の端末で https://bokashi-rental.web.app を開き、パスワードでログイン → 「設定」で店舗名・発行者名・登録番号・住所・電話・店舗メール・振込先を保存（全端末で共通になる）
 4. 「設定」→「サンプルデータを消す」（上部の「サンプルデータ表示中」が消えればOK）。旧ブラウザ保存版の予約があれば「この端末に残っている予約を共有データベースへ移す」
 5. 試しにお客様用フォーム（/#apply）から1件申し込み → 予約一覧に「Web申込」の仮予約が出る → 日程確定（Googleカレンダーの保存先を店舗用カレンダーにする）→ 確認メール作成、まで一度通す

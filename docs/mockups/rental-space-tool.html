@@ -87,6 +87,22 @@ td.r,th.r{text-align:right}
 .st-paid{background:var(--ok-soft);color:var(--ok)}
 .st-cancelled{background:var(--surface-2);color:var(--muted)}
 .src{display:inline-block;font-size:11px;font-weight:700;border-radius:3px;padding:1px 6px;background:var(--info-soft);color:var(--info);vertical-align:1px;margin-left:6px}
+.src.rep{background:var(--ok-soft);color:var(--ok)}
+details.cust>summary{list-style:none;cursor:pointer;display:block;min-height:0}
+details.cust>summary::-webkit-details-marker{display:none}
+.cust-sum{display:flex;flex-direction:column;gap:4px;width:100%}
+.cust-sum .open-hint{font-size:12px;color:var(--accent)}
+details.cust[open] .open-hint::after{content:"閉じる"}
+details.cust:not([open]) .open-hint::after{content:"すべての予約を見る"}
+.cust-head{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;justify-content:space-between}
+.cust-head h2{font-size:16px}
+.cust-stats{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:13px;color:var(--muted)}
+.cust-stats b{color:var(--fg);font-weight:600}
+.hist{display:flex;flex-direction:column;gap:0;margin:0;padding:0;list-style:none}
+.hist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;align-items:center}
+.hist li:first-child{border-top:0}
+.hist .h-main{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+.hist .h-sub{display:block;color:var(--muted);font-size:12px}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:9px 16px;cursor:pointer;font-weight:500;min-height:44px;text-decoration:none;color:var(--fg)}
 .btn:hover{background:var(--surface-2)}
@@ -133,6 +149,7 @@ button.kpi .l::after{content:" ›";color:var(--muted)}
 .check input{width:18px;height:18px;accent-color:var(--accent);margin-top:4px;flex:none}
 .check span small{display:block;color:var(--muted);font-size:12px}
 .plan-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pay-opts{grid-template-columns:repeat(2,minmax(0,1fr))}
 .plan-opt{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:44px}
 .plan-opt b{font-size:13.5px}
 .plan-opt span{font-size:12px;color:var(--muted)}
@@ -384,6 +401,7 @@ body.login-open .bottom-nav{display:none!important}
     <button type="button" class="sample-tag" id="sample-tag" data-nav="settings" hidden title="設定画面で消せます">サンプルデータ表示中</button>
     <nav class="nav" aria-label="画面">
       <button type="button" data-nav="list">予約一覧</button>
+      <button type="button" data-nav="customers">顧客</button>
       <button type="button" data-nav="new">予約を登録</button>
       <button type="button" data-nav="apply">お客様用フォーム</button>
       <button type="button" data-nav="flow">使い方</button>
@@ -414,6 +432,13 @@ body.login-open .bottom-nav{display:none!important}
   </section>
 
   <!-- 新規予約（スタッフ入力） -->
+  <section class="view" id="view-customers" hidden>
+    <div class="view-head">
+      <div><h1>顧客リスト</h1><p>予約から自動でまとめています（同じ会社・団体名、個人は同じメールアドレスか電話番号を同一のお客様として扱います）。登録や更新は不要です。</p></div>
+    </div>
+    <div class="toolbar"><div class="small muted" id="customers-summary"></div><input type="search" class="search" id="customers-search" placeholder="会社・団体・名前・メール・電話で検索" aria-label="顧客を検索"></div>
+    <div class="stack" id="customers-body"></div>
+  </section>
   <section class="view" id="view-new" hidden>
     <div class="view-head"><div><h1>予約を登録</h1><p>電話・来店で受けた申込をここで入力します。フォームからのWeb申込は自動で一覧に入るので、入力は不要です。</p></div>
       <div class="seg" role="tablist" aria-label="申込の受け方"><button type="button" role="tab" id="seg-manual" aria-selected="true" aria-controls="form-new">電話・来店分を入力</button><button type="button" role="tab" id="seg-import" aria-selected="false" aria-controls="panel-import">取込コードから（予備）</button></div></div>
@@ -440,10 +465,13 @@ body.login-open .bottom-nav{display:none!important}
           <h2>利用者</h2>
           <div class="form">
             <div class="field"><label for="f-name">お名前<span class="req">必須</span></label><input type="text" id="f-name" placeholder="例）山田 太郎" required autocomplete="off"></div>
-            <div class="field"><label for="f-org">会社・団体名</label><input type="text" id="f-org" autocomplete="off"><span class="hint">請求書の宛名になります。個人利用は空欄</span></div>
+            <div class="field"><label for="f-org">会社・団体名</label><input type="text" id="f-org" autocomplete="off"><span class="hint">個人利用は空欄</span></div>
             <div class="field"><label for="f-email">メールアドレス<span class="req">必須</span></label><input type="email" id="f-email" required autocomplete="off"><span class="hint">確認メール・請求書の送付先</span></div>
             <div class="field"><label for="f-phone">電話番号</label><input type="tel" id="f-phone" autocomplete="off"></div>
             <div class="field full"><label for="f-purpose">利用内容<span class="req">必須</span></label><input type="text" id="f-purpose" placeholder="例）社内研修のあと、同じ会場で懇親会" required autocomplete="off"></div>
+            <div class="field"><label for="f-pay">お支払い方法</label><select id="f-pay"><option value="">未定</option><option value="onsite">当日の現地払い（現金・カード）</option><option value="invoice">請求書払い（振込）</option></select></div>
+            <div class="field"><label for="f-inv-to">請求書の宛名</label><input type="text" id="f-inv-to" autocomplete="off" placeholder="請求書払いのとき"></div>
+            <div class="field full"><label for="f-inv-note">但し書き</label><input type="text" id="f-inv-note" autocomplete="off" placeholder="空欄なら「レンタルスペース利用料として」"></div>
           </div>
         </div>
         <div class="card">
@@ -515,24 +543,37 @@ body.login-open .bottom-nav{display:none!important}
             <label class="plan-opt"><input type="radio" name="qplan" value="party"><b>パーティー</b><span>お一人様 ¥3,000〜</span></label>
           </div>
           <label class="check"><input type="checkbox" id="q-drink"><span>飲み放題を付ける<small>お一人様 ¥2,000（税込）で追加できます。スペースのみのご利用でも付けられます</small></span></label>
+          <div class="alert alert-info" id="q-drink-note" hidden><span>飲み放題をお付けの場合、お食事の時間帯は1階のカフェスペースのご利用となります。</span></div>
           <label class="check"><input type="checkbox" id="q-trash"><span>ゴミの回収をお願いする<small>¥1,100</small></span></label>
           <div class="field"><label for="q-food">アレルギー・苦手な食材・ご要望</label><textarea id="q-food" placeholder="例）ベジタリアン2名、乾杯用にスパークリング希望"></textarea></div>
         </section>
         <section class="card">
           <h2>お客様情報</h2>
           <div class="field"><label for="q-name">お名前<span class="req">必須</span></label><input type="text" id="q-name" autocomplete="name" required></div>
-          <div class="field"><label for="q-org">会社・団体名</label><input type="text" id="q-org" autocomplete="organization"><span class="hint">請求書の宛名になります。個人でのご利用は空欄のままで構いません。</span></div>
-          <div class="field"><label for="q-email">メールアドレス<span class="req">必須</span></label><input type="email" id="q-email" autocomplete="email" inputmode="email" required><span class="hint">確認のご連絡と、ご利用後の請求書をお送りします。</span></div>
+          <div class="field"><label for="q-org">会社・団体名</label><input type="text" id="q-org" autocomplete="organization"><span class="hint">個人でのご利用は空欄のままで構いません。</span></div>
+          <div class="field"><label for="q-email">メールアドレス<span class="req">必須</span></label><input type="email" id="q-email" autocomplete="email" inputmode="email" required><span class="hint">確認のご連絡をお送りします。請求書払いの場合は、請求書もこのアドレスへお送りします。</span></div>
           <div class="field"><label for="q-phone">電話番号<span class="req">必須</span></label><input type="tel" id="q-phone" autocomplete="tel" inputmode="tel" required></div>
           <div class="field"><label for="q-note">その他ご要望</label><textarea id="q-note" placeholder="例）プロジェクター接続あり、事前に見学したい"></textarea></div>
           <label class="check"><input type="checkbox" id="q-tour"><span>事前に会場を見学したい</span></label>
+        </section>
+        <section class="card">
+          <h2>お支払い方法 <small>どちらかをお選びください</small></h2>
+          <div class="plan-opts pay-opts" role="radiogroup" aria-label="お支払い方法">
+            <label class="plan-opt"><input type="radio" name="qpay" value="onsite" id="q-pay-onsite"><b>当日の現地払い</b><span>現金・クレジットカード</span></label>
+            <label class="plan-opt"><input type="radio" name="qpay" value="invoice" id="q-pay-invoice"><b>請求書払い</b><span>ご利用後にメールでお送りします。お振込でお支払い</span></label>
+          </div>
+          <div class="form" id="q-inv-wrap" hidden>
+            <div class="field full"><label for="q-inv-to">請求書の宛名<span class="req">必須</span></label><input type="text" id="q-inv-to" placeholder="例）株式会社〇〇 ／ 〇〇 太郎"><span class="hint">会社・団体名か、お名前。敬称（御中・様）は不要です</span></div>
+            <div class="field full"><label for="q-inv-note">但し書き</label><input type="text" id="q-inv-note" placeholder="例）会場利用料として"><span class="hint">空欄の場合は「レンタルスペース利用料として」になります</span></div>
+          </div>
+          <p class="small muted" style="margin:0">確定金額はご利用後にお知らせします。</p>
         </section>
         <section class="card">
           <h2>ご利用にあたって</h2>
           <ul class="rules">
             <li>会場は2階です。エレベーターはありません。</li>
             <li>設備（無料）：75V型モニター・スピーカー・マイク4本・Wi-Fi・各席電源・簡易キッチン</li>
-            <li>お支払いは、当日のお支払い（現金・クレジットカード）か、ご利用後にメールでお送りする請求書でのお振込のいずれかです。確定金額はご利用後にお知らせします。</li>
+            <li>お支払いは「当日の現地払い（現金・クレジットカード）」か「請求書払い（ご利用後にメールでお送りします。お振込）」からお選びください。確定金額はご利用後にお知らせします。</li>
           </ul>
           <label class="check" id="q-agree-wrap"><input type="checkbox" id="q-agree" required><span>利用条件を確認しました <span class="req">必須</span></span></label>
           <div class="field"><span class="lbl">お見積（税込・目安）</span><div class="est" id="q-est"></div><span class="hint">お食事の内容により変わります。確定金額はご利用後にお知らせします。</span></div>
@@ -574,7 +615,7 @@ body.login-open .bottom-nav{display:none!important}
           <li><i>1</i><span>店舗から2営業日以内にご連絡します<small>日程の空き状況と、お食事の内容を確認します</small></span></li>
           <li><i>2</i><span>日程が確定したらご連絡します<small>確定内容をメールでお送りします</small></span></li>
           <li><i>3</i><span>ご予約の日時にご来場ください<small>ご利用人数に変更がある場合は、ご利用日の前日までにお知らせください</small></span></li>
-          <li><i>4</i><span>ご利用後にお支払い<small>当日（現金・クレジットカード）か、後日メールでお送りする請求書でのお振込</small></span></li>
+          <li><i>4</i><span>ご利用後にお支払い<small>当日の現地払い（現金・クレジットカード）か、請求書払い（後日メールでお送りし、お振込）</small></span></li>
         </ol>
       </section>
       <p class="apply-foot"><b>bokashi Base</b><br>札幌市中央区南2条西1-7-1 二番館ビル 2F（大通駅35番出口すぐ）<br>011-596-7770</p>
@@ -592,6 +633,7 @@ body.login-open .bottom-nav{display:none!important}
         <li><i>1</i><span>「設定」で店舗名・発行者名・登録番号・振込先を入れる<small>請求書に印字されます。発行者名と振込先は必須です</small></span></li>
         <li><i>2</i><span>「設定」でサンプルデータを消す<small>上部の「サンプルデータ表示中」が消えれば完了</small></span></li>
         <li><i>3</i><span>お客様用フォームのURLをホームページや案内に載せる<small>このツールとは別の画面として開けます</small></span></li>
+        <li><i>4</i><span>「顧客」タブは予約から自動でまとまる<small>同じ会社・団体名（個人は同じメール・電話）を同一のお客様として、利用回数・前回の内容・累計を表示。作業シートにも「この方の利用履歴」が出ます</small></span></li>
       </ol>
       <div class="actions"><button type="button" class="btn btn-sm" data-nav="settings">設定を開く</button><button type="button" class="btn btn-sm" id="copy-apply-url">お客様用フォームのURLをコピー</button><button type="button" class="btn btn-sm btn-ghost" data-nav="apply">お客様用フォームを開く</button></div>
     </div>
@@ -664,6 +706,7 @@ body.login-open .bottom-nav{display:none!important}
 </main>
 <nav class="bottom-nav" aria-label="画面（スマホ）">
   <button type="button" data-nav="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>予約一覧</button>
+  <button type="button" data-nav="customers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>顧客</button>
   <button type="button" data-nav="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>登録</button>
   <button type="button" data-nav="flow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>使い方</button>
   <button type="button" data-nav="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3"/><path d="M14 2v4M8 10v4M16 18v4"/></svg>設定</button>
@@ -740,6 +783,11 @@ try {
 const PRICE = { spaceHour:15400, spaceDay:154000, light:2000, party:3000, drink:2000, trash:1100, extension30:10000 };
 const PLAN_LABEL = { space:'スペースのみ', light:'軽食', party:'パーティー' };
 const planLabel = p => PLAN_LABEL[p] || 'スペースのみ';
+const PAY_LABEL = { onsite:'当日の現地払い（現金・クレジットカード）', invoice:'請求書払い（お振込）' };
+const DEFAULT_INV_NOTE = 'レンタルスペース利用料として';
+// お支払い方法の表示。HTML用（payText）とメール用（payPlain）
+function payPlain(x){ if(!x||!x.payment) return '未定'; let t=PAY_LABEL[x.payment]||String(x.payment); if(x.payment==='invoice') t+=`（宛名：${x.invoiceTo||'—'}／但し書き：${x.invoiceNote||DEFAULT_INV_NOTE}）`; return t; }
+function payText(x){ if(!x||!x.payment) return '未定'; let t=esc(PAY_LABEL[x.payment]||String(x.payment)); if(x.payment==='invoice') t+=`<br><span class="muted">宛名：${esc(x.invoiceTo||'—')}／但し書き：${esc(x.invoiceNote||DEFAULT_INV_NOTE)}</span>`; return t; }
 const STATUS = {
   draft:    { label:'仮予約',   cls:'st-draft',     next:'日程を確定する' },
   confirmed:{ label:'日程確定', cls:'st-confirmed', next:'確認メールを送る' },
@@ -821,8 +869,9 @@ function sanitize(r){
   if(o.actual&&typeof o.actual==='object'){ const a=o.actual; o.actual={ people:Math.max(1,Math.floor(Number(a.people)||1)), end:String(a.end||''), ext30:Math.max(0,Math.floor(Number(a.ext30)||0)), trash:!!a.trash, extras:Array.isArray(a.extras)?a.extras.map(x=>({label:String(x&&x.label||''),amount:Math.max(0,Number(x&&x.amount)||0)})).filter(x=>x.label&&x.amount):[] }; } else o.actual=null;
   if(o.invoice&&typeof o.invoice!=='object') o.invoice=null;
   if(o.billing&&typeof o.billing!=='object') o.billing=null;
+  o.payment=['onsite','invoice'].includes(o.payment)?o.payment:''; o.invoiceTo=s('invoiceTo'); o.invoiceNote=s('invoiceNote');
   if(ORDER.indexOf(o.status)>=3&&!o.actual) o.status='shared';           // 実績がないのに利用終了以降 → 共有済みに戻す
-  if(ORDER.indexOf(o.status)>=4&&!(o.invoice&&o.billing)) o.status='done'; // 請求書がないのに請求済み以降 → 利用終了に戻す
+  if(ORDER.indexOf(o.status)>=4&&!(o.invoice&&o.billing)&&!(o.billing&&o.billing.method==='onsite'&&o.paidAt)) o.status='done'; // 現地払いで受領した予約は請求書なしで入金済み // 請求書がないのに請求済み以降 → 利用終了に戻す
   return o;
 }
 function localLoad(){
@@ -991,18 +1040,65 @@ const b64e = o => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const b64d = s => JSON.parse(decodeURIComponent(escape(atob(s))));
 
 let view='list', currentId=null, filter='all', search='', customerOnly=false;
-const VIEWS=['list','new','detail','apply','flow','settings'];
+const VIEWS=['list','customers','new','detail','apply','flow','settings'];
 function show(v, id){
   view=v; if(id) currentId=id;
   VIEWS.forEach(k=>{ $('#view-'+k).hidden = k!==v; });
   document.querySelectorAll('.nav [data-nav],.bottom-nav [data-nav]').forEach(b=>{ const cur = b.dataset.nav===v || (v==='detail'&&b.dataset.nav==='list'); if(cur) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
   $('#brand-sub').textContent = v==='apply' ? '札幌・大通　レンタルスペース' : 'レンタルスペース管理';
   document.body.classList.toggle('has-bar', v==='apply');
-  if(v==='list') renderList(); if(v==='new') renderEstimate(); if(v==='detail') renderDetail(); if(v==='apply') renderApplyEstimate(); if(v==='settings') renderSettings();
+  if(v==='list') renderList(); if(v==='customers') renderCustomers(); if(v==='new') renderEstimate(); if(v==='detail') renderDetail(); if(v==='apply') renderApplyEstimate(); if(v==='settings') renderSettings();
   window.scrollTo({top:0});
   const h=$('#view-'+v).querySelector('h1'); if(h){ h.tabIndex=-1; h.focus({preventScroll:true}); }
 }
 document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.nav==='apply'){ customerOnly=false; $('#apply-staff-link').hidden=false; } show(b.dataset.nav); }));
+
+// ---------- 顧客（予約から自動集計。別の保存先は持たない） ----------
+// 同じ会社・団体名 → 同一顧客。会社名が無ければメール、無ければ電話、最後に名前で束ねる
+const normKey = v => String(v||'').normalize('NFKC').replace(/\s+/g,'').toLowerCase();
+function customerKey(r){ if(normKey(r.org)) return 'org:'+normKey(r.org); if(normKey(r.email)) return 'mail:'+normKey(r.email); const tel=String(r.phone||'').replace(/\D/g,''); if(tel) return 'tel:'+tel; return 'name:'+normKey(r.name); }
+const byDateDesc=(a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1);
+// その予約と同じお客様の、他の予約（キャンセル除く・新しい順）
+function history(r){ const k=customerKey(r); return data.filter(o=>o.id!==r.id&&o.status!=='cancelled'&&customerKey(o)===k).sort(byDateDesc); }
+function pastOf(r){ const today=todayStr(); return history(r).filter(o=>o.date<r.date||(o.date<today&&isActualStage(o))); }
+function customers(){
+  const m=new Map(); const today=todayStr();
+  data.filter(r=>r.status!=='cancelled').forEach(r=>{ const k=customerKey(r); if(!m.has(k)) m.set(k,{key:k,org:'',names:[],emails:[],phones:[],bookings:[]}); const c=m.get(k);
+    if(r.org&&!c.org) c.org=r.org; if(r.name&&!c.names.includes(r.name)) c.names.push(r.name); if(r.email&&!c.emails.includes(r.email)) c.emails.push(r.email); if(r.phone&&!c.phones.includes(r.phone)) c.phones.push(r.phone); c.bookings.push(r); });
+  return [...m.values()].map(c=>{ c.bookings.sort(byDateDesc); c.past=c.bookings.filter(r=>r.date<today||isActualStage(r)); c.future=c.bookings.filter(r=>!(r.date<today||isActualStage(r))).sort((a,b)=>-byDateDesc(a,b));
+    c.last=c.past[0]||null; c.next=c.future[0]||null; c.total=c.past.reduce((s,r)=>s+amountOf(r),0); c.label=c.org||c.names[0]||'（名前なし）'; return c; })
+    .sort((a,b)=>{ const al=a.last?a.last.date:'', bl=b.last?b.last.date:''; if(al!==bl) return al<bl?1:-1; const an=a.next?a.next.date:'9', bn=b.next?b.next.date:'9'; return an<bn?-1:an>bn?1:0; });
+}
+function histItem(o){ const st=STATUS[o.status]||STATUS.draft; const act=isActualStage(o)&&o.actual; return `<li><div><div class="h-main"><b class="num">${fmtDate(o.date)}</b><span>${esc(o.purpose||'')}</span><span class="status ${st.cls}">${st.label}</span></div><span class="h-sub num">${act?o.actual.people:o.people}名・${planLabel(o.plan)}${o.drink?'＋飲み放題':''}${o.trash?'＋ゴミ回収':''}・${yen(amountOf(o))}${isActualStage(o)?'':'（見積）'}${o.payment?'・'+(PAY_LABEL[o.payment]||'').replace(/（.*/,''):''}${o.name?'・'+esc(o.name)+' 様':''}</span></div><button type="button" class="btn btn-sm" data-open="${esc(o.id)}">開く</button></li>`; }
+// 作業シート用：同じお客様の過去の利用をまとめた1枚
+function historyCard(r){
+  const past=pastOf(r); const other=history(r).filter(o=>!past.includes(o));
+  if(!past.length&&!other.length) return `<div class="card"><h2>この方の利用履歴</h2><p class="small muted" style="margin:0">初めてのご利用です（同じ会社・団体名、または同じメール・電話の予約はありません）。</p></div>`;
+  const last=past[0];
+  return `<div class="card"><h2>この方の利用履歴 <small>${esc(r.org||r.name)}</small></h2>
+    ${last?`<div class="alert alert-ok">${ICON_OK}<span><b>リピーター：過去 ${past.length} 回</b>　前回 ${fmtDate(last.date)}「${esc(last.purpose||'')}」${(isActualStage(last)&&last.actual?last.actual.people:last.people)}名・${planLabel(last.plan)}${last.drink?'＋飲み放題':''}・${yen(amountOf(last))}${last.payment?'・'+esc((PAY_LABEL[last.payment]||'').replace(/（.*/,'')):''}</span></div>`:''}
+    ${past.length?`<ul class="hist">${past.slice(0,8).map(histItem).join('')}</ul>${past.length>8?`<p class="small muted" style="margin:0">ほか ${past.length-8} 件は顧客リストで</p>`:''}`:''}
+    ${other.length?`<p class="small muted" style="margin:8px 0 0">このほかに、これからの予約が ${other.length} 件あります。</p>`:''}
+    <div class="actions"><button type="button" class="btn btn-sm" data-nav="customers">顧客リストで見る</button></div></div>`;
+}
+let customerSearch='';
+function renderCustomers(){
+  if(mode==='loading'){ $('#customers-body').innerHTML=`<div class="card"><p class="small muted" style="margin:0">読み込んでいます…</p></div>`; return; }
+  const q=customerSearch.trim().toLowerCase();
+  const all=customers();
+  const list=all.filter(c=>!q||[c.org,...c.names,...c.emails,...c.phones].some(v=>String(v||'').toLowerCase().includes(q)));
+  const repeaters=all.filter(c=>c.past.length>=2).length;
+  $('#customers-summary').textContent=`${all.length} 件のお客様（うち2回以上のご利用 ${repeaters} 件）`;
+  if(!all.length){ $('#customers-body').innerHTML=`<div class="card"><p class="small muted" style="margin:0">まだ予約がないため、お客様もいません。予約が入ると自動でここに並びます。</p></div>`; return; }
+  if(!list.length){ $('#customers-body').innerHTML=`<div class="card"><p class="small muted" style="margin:0">「${esc(customerSearch)}」に当てはまるお客様はいません。</p></div>`; return; }
+  $('#customers-body').innerHTML=list.map(c=>`<details class="card cust" ${q?'open':''}>
+    <summary><div class="cust-sum"><div class="cust-head"><h2>${esc(c.label)}${c.org&&c.names.length?' <small>'+c.names.map(esc).join('・')+' 様</small>':''}${c.past.length>=2?'<span class="src rep">リピーター</span>':''}</h2>
+      <div class="cust-stats"><span>利用 <b>${c.past.length}</b> 回</span><span>前回 <b class="num">${c.last?fmtDate(c.last.date):'—'}</b>${c.last?' '+esc(c.last.purpose||''):''}</span><span>次回 <b class="num">${c.next?fmtDate(c.next.date):'—'}</b>${c.next?' <span class="status '+(STATUS[c.next.status]||STATUS.draft).cls+'">'+(STATUS[c.next.status]||STATUS.draft).label+'</span>':''}</span><span>累計 <b class="num">${yen(c.total)}</b></span></div></div>
+      <div class="small muted num">${[...c.emails,...c.phones].map(esc).join('　')||'連絡先なし'}</div><span class="open-hint"></span></div></summary>
+    <div style="margin-top:12px"><ul class="hist">${c.bookings.map(histItem).join('')}</ul></div></details>`).join('');
+  $('#customers-body').querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',e=>{ e.preventDefault(); show('detail',b.dataset.open); }));
+}
+$('#customers-search').addEventListener('input',e=>{ customerSearch=e.target.value; renderCustomers(); });
 
 // ---------- 一覧 ----------
 function renderList(){
@@ -1018,15 +1114,15 @@ function renderList(){
   // 数字のタイルは押すと、その状態で絞り込む
   $('#kpis').innerHTML = [
     { l:'仮予約（日程未確定）', v:live.filter(r=>r.status==='draft').length+'件', s:'うちWeb申込 '+newWeb.length+'件', hot:newWeb.length>0, f:'draft' },
-    { l:'今月の予約', v:thisMonth.length+'件', s:'売上見込 '+yen(thisMonth.reduce((s,r)=>s+amountOf(r),0)) },
-    { l:'これからの予約', v:upcoming.length+'件', s:upcoming.filter(r=>r.status==='draft').length+'件が日程未確定' },
+    { l:'今月の予約', v:thisMonth.length+'件', s:'売上見込 '+yen(thisMonth.reduce((s,r)=>s+amountOf(r),0)), f:'month' },
+    { l:'これからの予約', v:upcoming.length+'件', s:upcoming.filter(r=>r.status==='draft').length+'件が日程未確定', f:'upcoming' },
     { l:'請求書 未発行', v:unbilled.length+'件', s:yen(unbilled.reduce((s,r)=>s+amountOf(r),0)), f:'done' },
     { l:'入金待ち', v:unpaid.length+'件', s:yen(unpaid.reduce((s,r)=>s+amountOf(r),0))+(overdue.length?'・期限超過 '+overdue.length+'件':''), hot:overdue.length>0, f:'invoiced' }
   ].map(k=>k.f?`<button type="button" class="kpi ${k.hot?'hot':''}" data-f="${k.f}" aria-label="${k.l} ${k.v}。この状態で絞り込む"><span class="l">${k.l}</span><span class="v num">${k.v}</span><span class="s num">${k.s}</span></button>`:`<div class="kpi ${k.hot?'hot':''}"><span class="l">${k.l}</span><span class="v num">${k.v}</span><span class="s num">${k.s}</span></div>`).join('');
   $('#kpis').querySelectorAll('button.kpi').forEach(b=>b.addEventListener('click',()=>{ filter=b.dataset.f; renderList(); $('#filters').scrollIntoView({block:'nearest'}); const c=$('#filters .chip[data-f="'+filter+'"]'); if(c) c.focus(); }));
 
   const counts = {}; data.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
-  const chips=[['all','すべて',live.length],...ORDER.map(s=>[s,STATUS[s].label,counts[s]||0])]; if(counts.cancelled) chips.push(['cancelled','キャンセル',counts.cancelled]);
+  const chips=[['all','すべて',live.length],['month','今月',thisMonth.length],['upcoming','これから',upcoming.length],...ORDER.map(s=>[s,STATUS[s].label,counts[s]||0])]; if(counts.cancelled) chips.push(['cancelled','キャンセル',counts.cancelled]);
   const focusedChip = document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('chip') ? document.activeElement.dataset.f : null;
   $('#filters').innerHTML = chips.map(([k,l,n])=>`<button type="button" class="chip" data-f="${k}" aria-pressed="${filter===k}">${l} <span class="num muted">${n}</span></button>`).join('');
   $('#filters').querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{ filter=c.dataset.f; renderList(); }));
@@ -1034,7 +1130,7 @@ function renderList(){
 
   const q=search.trim().toLowerCase();
   const hit = r => !q || [r.name,r.org,r.purpose,r.id,r.receipt,r.email,r.phone].some(v=>String(v||'').toLowerCase().includes(q));
-  const base = data.filter(r=> filter==='all' ? r.status!=='cancelled' : r.status===filter).filter(hit);
+  const base = data.filter(r=> filter==='all' ? r.status!=='cancelled' : filter==='month' ? (r.status!=='cancelled'&&String(r.date).startsWith(month)) : filter==='upcoming' ? (r.status!=='cancelled'&&r.date>=todayStr()&&r.status!=='paid') : r.status===filter).filter(hit);
   const today=todayStr();
   const future = base.filter(r=>r.date>=today).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.id<b.id?-1:1));
   const past = base.filter(r=>r.date<today).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1));
@@ -1043,7 +1139,7 @@ function renderList(){
     const st=STATUS[r.status]||STATUS.draft; const isActual = isActualStage(r); const isNew = r.status==='draft'&&r.source==='web';
     return `<tr data-id="${esc(r.id)}" tabindex="0" class="${isNew?'new':''} ${r.status==='cancelled'?'cancelled':''}" aria-label="${esc(r.org||r.name)} ${fmtDate(r.date)} ${st.label}">
       <td class="num c-date">${fmtDate(r.date)}<span class="sub num">${esc(r.start)}〜${esc(isActual&&r.actual?r.actual.end:r.end)}${r.date2&&r.status==='draft'?'<br>第2希望 '+fmtDate(r.date2):''}</span></td>
-      <td class="c-who">${esc(r.name)}${r.source==='web'?'<span class="src">Web</span>':''}<span class="sub">${esc(r.org||'個人')}</span></td>
+      <td class="c-who">${esc(r.name)}${r.source==='web'?'<span class="src">Web</span>':''}${pastOf(r).length?'<span class="src rep" title="過去に利用あり">'+(pastOf(r).length+1)+'回目</span>':''}<span class="sub">${esc(r.org||'個人')}</span></td>
       <td class="c-what">${esc(r.purpose)}</td>
       <td class="c-plan">${planLabel(r.plan)}${r.drink?'<span class="sub">＋飲み放題</span>':''}</td>
       <td class="r num c-people">${isActual&&r.actual?r.actual.people:r.people}名</td>
@@ -1085,7 +1181,8 @@ $('#seg-manual').addEventListener('click',()=>segNew('manual'));
 function readForm(){
   return { date:$('#f-date').value, start:$('#f-start').value, end:$('#f-end').value, people:Number($('#f-people').value)||0,
     name:$('#f-name').value.trim(), org:$('#f-org').value.trim(), email:$('#f-email').value.trim(), phone:$('#f-phone').value.trim(), purpose:$('#f-purpose').value.trim(),
-    plan:(formNew.querySelector('input[name=plan]:checked')||{}).value||'space', drink:$('#f-drink').checked, trash:$('#f-trash').checked, note:$('#f-note').value.trim() };
+    plan:(formNew.querySelector('input[name=plan]:checked')||{}).value||'space', drink:$('#f-drink').checked, trash:$('#f-trash').checked, note:$('#f-note').value.trim(),
+    payment:$('#f-pay').value, invoiceTo:$('#f-inv-to').value.trim(), invoiceNote:$('#f-inv-note').value.trim() };
 }
 function estHTML(c, approx){
   return c.lines.map(l=>`<div class="row"><span>${esc(l.label)}</span><span>${yen(l.amount)}</span></div>`).join('')
@@ -1129,7 +1226,8 @@ function parseImport(text){
   const str=(k,n=500)=>String(o[k]==null?'':o[k]).slice(0,n);
   const note=[str('note',4000), o.food?'食事：'+str('food',2000):''].filter(Boolean).join('／');
   const rec={ receipt:str('receipt',40), date:str('date',10), date2:str('date2',10), start:str('start',5), end:str('end',5), people:Number(o.people), kind:str('kind'), purpose:str('purpose'),
-    plan:PLAN_LABEL[o.plan]?o.plan:'space', drink:!!o.drink, trash:!!o.trash, name:str('name'), org:str('org'), email:str('email'), phone:str('phone'), note, tour:!!o.tour };
+    plan:PLAN_LABEL[o.plan]?o.plan:'space', drink:!!o.drink, trash:!!o.trash, name:str('name'), org:str('org'), email:str('email'), phone:str('phone'), note, tour:!!o.tour,
+    payment:['onsite','invoice'].includes(o.payment)?o.payment:'', invoiceTo:str('invoiceTo',200), invoiceNote:str('invoiceNote',200) };
   if(!validDate(rec.date)||(rec.date2&&!validDate(rec.date2))||!validTime(rec.start,rec.end)||!validPeople(rec.people)||!emailOk(rec.email)||!rec.name) return null;
   return rec;
 }
@@ -1149,9 +1247,11 @@ function readApply(){ return {
   date:$('#q-date1').value, date2:$('#q-date2').value, start:$('#q-start').value, end:$('#q-end').value, people:Number($('#q-people').value)||0,
   kind:$('#q-kind').value, purpose:$('#q-purpose').value.trim(), plan:(formApply.querySelector('input[name=qplan]:checked')||{}).value||'space',
   drink:$('#q-drink').checked, trash:$('#q-trash').checked, foodNote:$('#q-food').value.trim(),
-  name:$('#q-name').value.trim(), org:$('#q-org').value.trim(), email:$('#q-email').value.trim(), phone:$('#q-phone').value.trim(), note:$('#q-note').value.trim(), tour:$('#q-tour').checked, agree:$('#q-agree').checked }; }
+  name:$('#q-name').value.trim(), org:$('#q-org').value.trim(), email:$('#q-email').value.trim(), phone:$('#q-phone').value.trim(), note:$('#q-note').value.trim(), tour:$('#q-tour').checked, agree:$('#q-agree').checked,
+  payment:(formApply.querySelector('input[name=qpay]:checked')||{}).value||'', invoiceTo:$('#q-inv-to').value.trim(), invoiceNote:$('#q-inv-note').value.trim() }; }
 function renderApplyEstimate(){
   const f=readApply(); const c=calc(f,false);
+  $('#q-drink-note').hidden=!f.drink; $('#q-inv-wrap').hidden=f.payment!=='invoice';
   $('#q-est').innerHTML=estHTML(c,true); $('#q-bar-amt').textContent=yen(c.total)+'〜';
   const msgs=hourMsgs(f,'date');
   if(f.date&&f.date<todayStr()) msgs.push('第1希望日が過去の日付です。');
@@ -1172,19 +1272,19 @@ $('#q-to-confirm').addEventListener('click',()=>{
   if(!validTime(f.start,f.end)) need(false,'開始・終了時刻','q-end'); else if(f.date&&!withinHours(f.date,f.start,f.end)) need(false,'ご利用時間（営業時間内でご指定ください）','q-start');
   if(f.date2&&f.date2<todayStr()) need(false,'第2希望日（過去の日付）','q-date2'); else if(f.date2&&validTime(f.start,f.end)&&!withinHours(f.date2,f.start,f.end)) need(false,'第2希望日のご利用時間（営業時間内でご指定ください）','q-date2');
   need(validPeople(f.people),'人数','q-people');
-  need(f.kind,'ご利用の種類','q-kind'); need(f.purpose,'具体的な内容','q-purpose'); need(f.name,'お名前','q-name'); need(emailOk(f.email),'メールアドレス','q-email'); need(f.phone,'電話番号','q-phone'); need(f.agree,'「利用条件を確認しました」のチェック','q-agree');
+  need(f.kind,'ご利用の種類','q-kind'); need(f.purpose,'具体的な内容','q-purpose'); need(f.name,'お名前','q-name'); need(emailOk(f.email),'メールアドレス','q-email'); need(f.phone,'電話番号','q-phone'); need(f.payment,'お支払い方法','q-pay-onsite'); if(f.payment==='invoice') need(f.invoiceTo,'請求書の宛名','q-inv-to'); need(f.agree,'「利用条件を確認しました」のチェック','q-agree');
   if(miss.length){ $('#q-err').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>${miss.join('・')}をご確認ください。赤枠の項目を直してから、もう一度「確認画面へ」を押してください。</span></div>`; flagInvalid(formApply,ids); return; }
   $('#q-err').innerHTML=''; const c=calc(f,false);
   $('#qc-when').innerHTML=`<dt>第1希望</dt><dd class="num">${fmtDate(f.date)} ${esc(f.start)}〜${esc(f.end)}（${c.hours}時間）</dd>${f.date2?`<dt>第2希望</dt><dd class="num">${fmtDate(f.date2)} ${esc(f.start)}〜${esc(f.end)}</dd>`:''}<dt>人数</dt><dd>${f.people}名</dd><dt>用途</dt><dd>${esc(f.kind)}</dd><dt>内容</dt><dd>${esc(f.purpose)}</dd>`;
-  $('#qc-est').innerHTML=`<div class="row"><span><b>${planLabel(f.plan)}${f.drink?'＋飲み放題':''}${f.trash?'＋ゴミ回収':''}</b></span><span></span></div>`+estHTML(c,true)+(f.foodNote?`<div class="row muted"><span>ご要望：${esc(f.foodNote)}</span><span></span></div>`:'');
-  $('#qc-who').innerHTML=`<dt>お名前</dt><dd>${esc(f.name)}</dd>${f.org?`<dt>会社・団体</dt><dd>${esc(f.org)}</dd>`:''}<dt>メール</dt><dd>${esc(f.email)}</dd><dt>電話</dt><dd>${esc(f.phone)}</dd>${f.note?`<dt>ご要望</dt><dd>${esc(f.note)}</dd>`:''}<dt>見学</dt><dd>${f.tour?'希望する':'希望しない'}</dd>`;
+  $('#qc-est').innerHTML=`<div class="row"><span><b>${planLabel(f.plan)}${f.drink?'＋飲み放題':''}${f.trash?'＋ゴミ回収':''}</b></span><span></span></div>`+estHTML(c,true)+(f.drink?`<div class="row muted"><span>飲み放題：お食事の時間帯は1階のカフェスペースのご利用となります</span><span></span></div>`:'')+(f.foodNote?`<div class="row muted"><span>ご要望：${esc(f.foodNote)}</span><span></span></div>`:'');
+  $('#qc-who').innerHTML=`<dt>お名前</dt><dd>${esc(f.name)}</dd>${f.org?`<dt>会社・団体</dt><dd>${esc(f.org)}</dd>`:''}<dt>メール</dt><dd>${esc(f.email)}</dd><dt>電話</dt><dd>${esc(f.phone)}</dd>${f.note?`<dt>ご要望</dt><dd>${esc(f.note)}</dd>`:''}<dt>見学</dt><dd>${f.tour?'希望する':'希望しない'}</dd><dt>お支払い</dt><dd>${payText(f)}</dd>`;
   $('#q-send').textContent = mode==='db' ? 'この内容で申し込む' : storeEmail() ? 'メールアプリを開いて申し込む' : '申込内容を表示する';
   $('#qc-howto').textContent = mode==='db' ? '押すと申込内容が店舗に送られ、受付番号が表示されます。店舗から2営業日以内にメールでご連絡します。' : storeEmail() ? '押すと、お使いのメールアプリが申込内容入りで開きます。メールを送信した時点でお申し込みとなります。' : '押すと、申込内容と受付番号が表示されます。店舗までお電話でお伝えください。';
   applyScreen('confirm');
 });
 $('#q-back').addEventListener('click',()=>applyScreen('form'));
 function applyMailBody(f, receipt, c){
-  const payload={ receipt, date:f.date, date2:f.date2||'', start:f.start, end:f.end, people:f.people, kind:f.kind, purpose:f.purpose, plan:f.plan, drink:f.drink, trash:f.trash, name:f.name, org:f.org, email:f.email, phone:f.phone, note:f.note, food:f.foodNote, tour:f.tour };
+  const payload={ receipt, date:f.date, date2:f.date2||'', start:f.start, end:f.end, people:f.people, kind:f.kind, purpose:f.purpose, plan:f.plan, drink:f.drink, trash:f.trash, name:f.name, org:f.org, email:f.email, phone:f.phone, note:f.note, food:f.foodNote, tour:f.tour, payment:f.payment, invoiceTo:f.invoiceTo, invoiceNote:f.invoiceNote };
   return `【レンタルスペース申込】受付番号 ${receipt}
 
 ■ 第1希望：${fmtDate(f.date)} ${f.start}〜${f.end}
@@ -1202,6 +1302,7 @@ function applyMailBody(f, receipt, c){
 ■ 電話：${f.phone}
 ■ その他ご要望：${f.note||'なし'}
 ■ 会場見学：${f.tour?'希望する':'希望しない'}
+■ お支払い：${payPlain(f)}
 
 ----- 店舗用（このまま残してください。内容を変更する場合はフォームに戻って修正してください）-----
 取込コード: BK1.${b64e(payload)}.KB1`;
@@ -1215,7 +1316,7 @@ $('#q-send').addEventListener('click',async()=>{
   const note=[f.note, f.foodNote?'食事：'+f.foodNote:'', f.tour?'見学希望':''].filter(Boolean).join('／');
   // 共有DBでは受付番号をそのまま文書IDにする（お客様側は一覧を読めないので連番は振れない）。ルール rentalWebRequest と同じ項目だけを送る
   const r={ id: mode==='db'?receipt:nextId(), source:'web', receipt, status:'draft', date:f.date, date2:f.date2||'', start:f.start, end:f.end, people:f.people, kind:f.kind, purpose:f.purpose, plan:f.plan, drink:f.drink, trash:f.trash,
-    name:f.name, org:f.org, email:f.email, phone:f.phone, note, tour:f.tour, estimate:c.total, calendar:null, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null,
+    name:f.name, org:f.org, email:f.email, phone:f.phone, note, tour:f.tour, estimate:c.total, payment:f.payment, invoiceTo:f.payment==='invoice'?f.invoiceTo:'', invoiceNote:f.payment==='invoice'?f.invoiceNote:'', calendar:null, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null,
     log:[{at:nowStr(),text:`Web申込フォームから受付（${receipt}）`}] };
   let saved=false, errCode='';
   if(mode==='db'){ try{ await fb.set(r.id, Object.assign(clone(r),{createdAt:fb.serverTimestamp()})); saved=true; }catch(e){ errCode=(e&&e.code)||'error'; console.warn('申込を保存できませんでした', e); } }
@@ -1280,11 +1381,12 @@ ${settings.name} です。
 ■ 内容：${r.purpose}
 ■ プラン：${planLabel(r.plan)}${r.drink?'＋飲み放題':''}${r.trash?'＋ゴミ回収':''}
 ■ 人数：${r.people}名
+■ お支払い：${payPlain(r)}
 ■ お見積（税込）：${yen(c.total)}
 ${c.lines.map(l=>'　・'+l.label+'　'+yen(l.amount)).join('\n')}
 
 ・ご利用人数に変更がある場合は、ご利用日の前日までにお知らせください。
-・お支払いは、当日（現金・クレジットカード）か、ご利用後にこのメールアドレス宛にお送りする請求書でのお振込のいずれかです。
+${r.drink?'・飲み放題をお付けのため、お食事の時間帯は1階のカフェスペースのご利用となります。\n':''}${r.payment?'・お支払いは上記の方法で承っております。変更がある場合はお知らせください。':'・お支払いは、当日の現地払い（現金・クレジットカード）か、請求書払い（お振込）からお選びいただけます。'}
 
 ご不明な点がございましたら、お気軽にご連絡ください。
 当日お会いできるのを楽しみにしております。
@@ -1349,7 +1451,8 @@ function renderDetail(){
         ${r.date2?`<dt>第2希望</dt><dd class="num">${fmtDate(r.date2)}</dd>`:''}
         <dt>利用者</dt><dd>${esc(r.name)}${r.org?'／'+esc(r.org):''}</dd><dt>連絡先</dt><dd><a href="mailto:${esc(r.email)}">${esc(r.email)}</a>${r.phone?'<br><a href="tel:'+esc(String(r.phone).replace(/[^\d+]/g,''))+'">'+esc(r.phone)+'</a>':''}</dd>
         ${r.kind?`<dt>用途</dt><dd>${esc(r.kind)}</dd>`:''}<dt>利用内容</dt><dd>${esc(r.purpose)}</dd><dt>プラン</dt><dd>${planLabel(r.plan)}${r.drink?'＋飲み放題':''}　${r.people}名</dd>
-        <dt>ゴミ回収</dt><dd>${r.trash?'あり（¥1,100）':'なし'}</dd><dt>備考</dt><dd>${esc(r.note||'—')}</dd>${r.tour?'<dt>見学</dt><dd>希望あり</dd>':''}</dl>
+        <dt>お支払い</dt><dd>${payText(r)}</dd><dt>ゴミ回収</dt><dd>${r.trash?'あり（¥1,100）':'なし'}</dd><dt>備考</dt><dd>${esc(r.note||'—')}</dd>${r.tour?'<dt>見学</dt><dd>希望あり</dd>':''}</dl>
+      ${historyCard(r)}
         ${!cancelled&&idx<3?`<div class="actions"><button type="button" class="btn btn-sm" id="edit-draft">予約内容を修正</button><button type="button" class="btn btn-sm btn-ghost" id="cancel">キャンセルにする</button></div>`:''}
         <div id="edit-area"></div>
       </div>
@@ -1359,6 +1462,7 @@ function renderDetail(){
   </div>`;
   const el=$('#view-detail'); el.innerHTML=html;
   el.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.nav)));
+  el.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>show('detail',b.dataset.open)));
   bindDetail(r,idx);
 }
 
@@ -1425,6 +1529,7 @@ function readActual(r){
 }
 function stepInvoice(r,idx,act){
   if(idx<3||redoId===r.id) return `<div class="card locked"><h2><span class="step-no">STEP 5</span>請求先の確認・請求書発行</h2><p class="small muted">実績入力後に、請求書を発行してメールで送れます。</p></div>`;
+  if(idx>=4&&!r.invoice) return `<div class="card"><h2><span class="step-no">STEP 5</span>請求書</h2><p class="small muted">当日の現地払い（現金・カード）で受領したため、請求書は発行していません。</p></div>`;
   if(idx>=4) return fold(4,idx,'<span class="step-no">STEP 5</span>請求書発行済み', `${ICON_OK} ${esc(r.invoice.no)}・${yen(r.invoice.total)}`, `
     <div class="alert alert-ok">${ICON_OK}<span>${esc(r.invoice.sentAt)} に請求書 ${esc(r.invoice.no)}（${yen(r.invoice.total)}）を発行しました。宛先 ${esc(r.billing.email)}</span></div>
     <p class="small muted">送り方：① PDF を保存 → ② 開いたメールに PDF を添付して送信。発行しただけでは、お客様にはまだ届いていません。</p>
@@ -1432,14 +1537,18 @@ function stepInvoice(r,idx,act){
     <details><summary class="small muted" style="cursor:pointer">メールの内容と請求書を見る</summary>
       <div class="mail" style="margin-top:8px"><dl class="mh"><dt>宛先</dt><dd>${esc(r.billing.email)}</dd><dt>件名</dt><dd>${esc(invoiceSubject(r))}</dd><dt>添付（手動）</dt><dd>${esc(r.invoice.no)}.pdf を保存して添付する</dd></dl><pre>${esc(invoiceMailBody(r))}</pre></div>
       <div class="invoice-wrap" style="margin-top:12px">${invoiceHTML(r,act)}</div></details>`);
-  const b=r.billing||{org:r.org,name:r.name,email:r.email};
+  const b=r.billing||{org:r.invoiceTo||r.org,name:r.name,email:r.email,note:r.invoiceNote||''};
   const missing=settingsMissing();
-  return `<div class="card focus"><h2><span class="step-no">STEP 5</span>請求先を確認して請求書を発行する</h2>
+  return `<div class="card focus"><h2><span class="step-no">STEP 5</span>お支払いの確認・請求書の発行</h2>
+    <div class="alert alert-info">${ICON_DOC}<span>お客様のご希望：<b>${esc(PAY_LABEL[r.payment]||'未定')}</b>${r.payment==='invoice'?'　宛名：'+esc(r.invoiceTo||'—')+'／但し書き：'+esc(r.invoiceNote||DEFAULT_INV_NOTE):''}</span></div>
+    <div class="actions"><button type="button" class="btn ${r.payment==='onsite'?'btn-primary':''}" id="paid-onsite">${ICON_OK} 当日の現地払いで受領済みにする（請求書なしで完了）</button></div>
+    <p class="small muted" style="margin:0">請求書払いの場合は、下の宛名・但し書きを確認して発行する。</p>
     ${missing.length?`<div class="alert alert-warn">${ICON_WARN}<span>「設定」の ${missing.join('・')} が未入力です。${(!settings.corp||!settings.bank)?'発行者名と振込先を入れるまで発行できません。':'登録番号は請求書に赤字で表示されます。'} <button type="button" class="btn btn-sm" data-nav="settings" style="margin-left:6px">設定を開く</button></span></div>`:''}
     <form id="form-billing" novalidate><div class="form">
       <div class="field"><label for="b-org">宛名（会社・団体）</label><input type="text" id="b-org" value="${esc(b.org||'')}" placeholder="空欄なら個人名宛"></div>
       <div class="field"><label for="b-name">担当者名</label><input type="text" id="b-name" value="${esc(b.name||'')}"></div>
       <div class="field full"><label for="b-email">送付先メールアドレス</label><input type="email" id="b-email" value="${esc(b.email||'')}"><span class="hint">予約時のアドレス：${esc(r.email)}</span></div>
+      <div class="field full"><label for="b-note">但し書き</label><input type="text" id="b-note" value="${esc(b.note||'')}" placeholder="空欄なら「${DEFAULT_INV_NOTE}」"></div>
     </div>
     <div class="est" style="margin-top:12px"><div class="row total" style="border:0;margin:0;padding:0"><span>ご請求金額（税込）</span><span>${yen(act.total)}</span></div><div class="row small muted"><span>うち消費税 10%</span><span>${yen(act.tax)}</span></div></div>
     <details style="margin-top:12px"><summary class="small muted" style="cursor:pointer">請求書プレビュー</summary><div class="invoice-wrap" style="margin-top:8px">${invoiceHTML(Object.assign({},r,{billing:b,invoice:{no:nextInvoiceNo(),issued:todayStr(),due:dueDate(todayStr()),total:act.total}}),act)}</div></details>
@@ -1448,7 +1557,7 @@ function stepInvoice(r,idx,act){
 }
 function stepPaid(r,idx){
   if(idx<4) return `<div class="card locked"><h2><span class="step-no">STEP 6</span>入金確認</h2></div>`;
-  if(idx>=5) return `<div class="card"><h2><span class="step-no">STEP 6</span>入金確認</h2><div class="alert alert-ok">${ICON_OK}<span>${fmtDate(r.paidAt)} 入金を確認。この予約は完了です。</span></div><div class="actions"><button type="button" class="btn btn-sm btn-ghost" id="unpaid">入金確認を取り消す（押し間違え用）</button></div></div>`;
+  if(idx>=5) return `<div class="card"><h2><span class="step-no">STEP 6</span>入金確認</h2><div class="alert alert-ok">${ICON_OK}<span>${fmtDate(r.paidAt)} ${r.billing&&r.billing.method==='onsite'?'当日の現地払いで受領（現金・カード）':'入金を確認'}。この予約は完了です。</span></div><div class="actions"><button type="button" class="btn btn-sm btn-ghost" id="unpaid">${r.billing&&r.billing.method==='onsite'?'受領':'入金確認'}を取り消す（押し間違え用）</button></div></div>`;
   const over = todayStr()>r.invoice.due;
   return `<div class="card focus"><h2><span class="step-no">STEP 6</span>入金を確認する</h2>
     ${over?`<div class="alert alert-warn">${ICON_WARN}<span>支払期限 ${fmtDate(r.invoice.due)} を過ぎています。</span></div>`:`<div class="alert alert-info">${ICON_CAL}<span>支払期限 ${fmtDate(r.invoice.due)}</span></div>`}
@@ -1464,7 +1573,7 @@ function invoiceHTML(r,c){
     <div class="inv-top"><div><div class="to">${esc(b.org||b.name)} ${b.org?'御中':'様'}</div>${b.org?`<div class="small" style="margin-top:4px">ご担当：${esc(b.name)} 様</div>`:''}</div>
       <div class="small num" style="text-align:right">請求書番号　${esc(inv.no)}<br>発行日　${fmtDate(inv.issued)}<br>お支払期限　${fmtDate(inv.due)}</div></div>
     <div class="total-box"><span>ご請求金額</span><span class="num">${yen(total)}</span><span class="small">（税込）</span></div>
-    <div class="small">件名：${fmtDate(r.date)} レンタルスペースご利用分（${esc(r.purpose)}）</div>
+    <div class="small">但し書き：${esc(b.note||DEFAULT_INV_NOTE)}（${fmtDate(r.date)} ご利用分）</div>
     <table><thead><tr><th>摘要</th><th class="r">金額（税込）</th></tr></thead>
       <tbody>${lines.map(l=>`<tr><td>${esc(l.label)}</td><td class="r num">${yen(l.amount)}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td class="r">10%対象 小計（税抜）</td><td class="r num">${yen(total-tax)}</td></tr><tr><td class="r">消費税（10%）</td><td class="r num">${yen(tax)}</td></tr><tr><td class="r" style="font-weight:700">合計</td><td class="r num" style="font-weight:700">${yen(total)}</td></tr></tfoot></table>
@@ -1499,10 +1608,13 @@ function bindDetail(r,idx){
       <div class="field"><label for="e-plan">プラン</label><select id="e-plan">${Object.entries(PLAN_LABEL).map(([k,v])=>`<option value="${k}" ${r.plan===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="field"><span class="lbl">オプション</span><label class="check"><input type="checkbox" id="e-drink" ${r.drink?'checked':''}><span>飲み放題</span></label><label class="check"><input type="checkbox" id="e-trash" ${r.trash?'checked':''}><span>ゴミ回収</span></label></div>
       <div class="field full"><label for="e-note">備考</label><textarea id="e-note">${esc(r.note||'')}</textarea></div>
+      <div class="field"><label for="e-pay">お支払い方法</label><select id="e-pay"><option value="" ${!r.payment?'selected':''}>未定</option><option value="onsite" ${r.payment==='onsite'?'selected':''}>当日の現地払い（現金・カード）</option><option value="invoice" ${r.payment==='invoice'?'selected':''}>請求書払い（振込）</option></select></div>
+      <div class="field"><label for="e-inv-to">請求書の宛名</label><input type="text" id="e-inv-to" value="${esc(r.invoiceTo||'')}"></div>
+      <div class="field full"><label for="e-inv-note">但し書き</label><input type="text" id="e-inv-note" value="${esc(r.invoiceNote||'')}"></div>
       <div class="actions full"><button type="submit" class="btn btn-primary btn-sm">保存</button><button type="button" class="btn btn-sm" id="e-cancel">やめる</button></div><div class="full" id="e-error"></div></form>`;
     area.querySelector('#e-cancel').addEventListener('click',()=>area.innerHTML='');
     area.querySelector('#form-edit').addEventListener('submit',e=>{ e.preventDefault();
-      const v={date:$('#e-date').value,people:Number($('#e-people').value),start:$('#e-start').value,end:$('#e-end').value,name:$('#e-name').value.trim(),org:$('#e-org').value.trim(),email:$('#e-email').value.trim(),phone:$('#e-phone').value.trim(),purpose:$('#e-purpose').value.trim(),plan:$('#e-plan').value,drink:$('#e-drink').checked,trash:$('#e-trash').checked,note:$('#e-note').value.trim()};
+      const v={date:$('#e-date').value,people:Number($('#e-people').value),start:$('#e-start').value,end:$('#e-end').value,name:$('#e-name').value.trim(),org:$('#e-org').value.trim(),email:$('#e-email').value.trim(),phone:$('#e-phone').value.trim(),purpose:$('#e-purpose').value.trim(),plan:$('#e-plan').value,drink:$('#e-drink').checked,trash:$('#e-trash').checked,note:$('#e-note').value.trim(),payment:$('#e-pay').value,invoiceTo:$('#e-inv-to').value.trim(),invoiceNote:$('#e-inv-note').value.trim()};
       const miss=[], ids=[]; const need=(ok,label,id)=>{ if(!ok){ miss.push(label); ids.push(id); } };
       need(v.date,'利用日','e-date'); need(validTime(v.start,v.end),'開始・終了時刻','e-end'); need(validPeople(v.people),'人数','e-people'); need(v.name,'お名前','e-name'); need(emailOk(v.email),'メール','e-email'); need(v.purpose,'利用内容','e-purpose');
       if(miss.length){ area.querySelector('#e-error').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>${miss.join('・')}を確認してください。</span></div>`; flagInvalid(area,ids); return; }
@@ -1531,14 +1643,15 @@ function bindDetail(r,idx){
   const fb=el.querySelector('#form-billing');
   if(fb){ fb.addEventListener('submit',e=>{ e.preventDefault(); const email=$('#b-email').value.trim(); if(!emailOk(email)){ fb.querySelector('#b-error').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>送付先メールアドレスを name@example.com の形式で入力してください。</span></div>`; flagInvalid(fb,['b-email']); return; }
       if(!settings.corp||!settings.bank){ fb.querySelector('#b-error').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>「設定」で発行者名と振込先を入れてから発行してください。</span></div>`; return; }
-      r.billing={org:$('#b-org').value.trim(),name:$('#b-name').value.trim()||r.name,email}; const c=calc(r,true); const issued=todayStr();
+      r.billing={org:$('#b-org').value.trim(),name:$('#b-name').value.trim()||r.name,email,note:$('#b-note').value.trim()}; const c=calc(r,true); const issued=todayStr();
       r.invoice={no:nextInvoiceNo(),issued,due:dueDate(issued),sentAt:nowStr(),total:c.total,tax:c.tax,lines:clone(c.lines),billing:clone(r.billing),issuer:{name:settings.name,corp:settings.corp,regno:settings.regno,addr:settings.addr,tel:settings.tel,bank:settings.bank}}; r.status='invoiced';
       addLog(r,`請求書 ${r.invoice.no} を発行（${yen(c.total)}・宛先 ${email}）`); commit(`請求書 ${r.invoice.no} を発行しました。印刷／PDF保存のあとメールを作成してください`); }); }
   on('#print-invoice','click',()=>printInvoice(r,calc(r,true)));
   on('#mail-invoice','click',()=>{ openMail(r.billing.email,invoiceSubject(r),invoiceMailBody(r)); addLog(r,`請求書 ${r.invoice.no} のメールを作成（${r.billing.email}）`); commit('メールアプリを開きました。PDF を添付して送信してください'); });
   on('#copy-invoice','click',()=>copyText(invoiceMailBody(r)));
   on('#mark-paid','click',()=>{ if(!confirm(`${yen(r.invoice.total)} の入金を確認しましたか？`)) return; r.status='paid'; r.paidAt=todayStr(); addLog(r,'入金を確認'); commit('入金を確認しました。完了です'); });
-  on('#unpaid','click',()=>{ if(!confirm('入金確認を取り消して「請求書発行済み」に戻しますか？')) return; r.status='invoiced'; r.paidAt=null; addLog(r,'入金確認を取り消し'); commit('請求書発行済みに戻しました'); });
+  on('#paid-onsite','click',()=>{ const t=calc(r,true).total; if(!confirm(`${yen(t)} を当日の現地払い（現金・カード）で受領済みにしますか？\n請求書は発行しません。`)) return; r.billing={method:'onsite',org:r.org,name:r.name,email:r.email}; r.invoice=null; r.status='paid'; r.paidAt=todayStr(); addLog(r,`当日の現地払いで受領（${yen(t)}・請求書なし）`); commit('現地払いで受領済みにしました。完了です'); });
+  on('#unpaid','click',()=>{ if(r.billing&&r.billing.method==='onsite'){ if(!confirm('受領を取り消して「利用終了」に戻しますか？')) return; r.status='done'; r.paidAt=null; r.billing=null; addLog(r,'現地払いの受領を取り消し'); commit('利用終了に戻しました'); return; } if(!confirm('入金確認を取り消して「請求書発行済み」に戻しますか？')) return; r.status='invoiced'; r.paidAt=null; addLog(r,'入金確認を取り消し'); commit('請求書発行済みに戻しました'); });
   on('#reissue','click',()=>{ if(!confirm(`請求書 ${r.invoice.no} をこのツール上で取り下げて、実績からやり直しますか？\n送付済みの場合は、お客様にも訂正をご連絡ください。番号は再利用されません。`)) return; r.invoiceHistory=(r.invoiceHistory||[]).concat([Object.assign({},r.invoice,{voidedAt:nowStr()})]); addLog(r,`請求書 ${r.invoice.no} を取り下げ（再発行のため）`); r.invoice=null; r.status='done'; redoId=r.id; commit('取り下げました。実績を直して再発行してください'); });
 }
 

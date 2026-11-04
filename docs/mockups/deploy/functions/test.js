@@ -17,6 +17,11 @@ const msg2 = buildSlackMessage({ ...sample, date2: '2026-11-21', drink: true, pl
 assert.match(msg2.text, /第2希望：2026\/11\/21（土）/);
 assert.match(msg2.text, /パーティー＋飲み放題/);
 assert.match(msg2.text, /ご要望：ベジタリアン2名/);
+assert.match(msg.text, /支払い：未指定/);
+const msg3 = buildSlackMessage({ id: 'RQ-261104-TEST', payment: 'invoice', invoiceTo: '株式会社テスト', invoiceNote: '会場利用料として' });
+assert.match(msg3.text, /支払い：請求書払い（振込）　宛名：株式会社テスト／但し書き：会場利用料として/);
+const msg4 = buildSlackMessage({ id: 'RQ-261104-TEST', payment: 'onsite' });
+assert.match(msg4.text, /支払い：当日の現地払い（現金・カード）/);
 console.log('message OK');
 console.log('--- 本文プレビュー ---\n' + msg.text + '\n---');
 

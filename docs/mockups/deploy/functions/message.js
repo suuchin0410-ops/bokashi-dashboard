@@ -10,6 +10,14 @@ function fmtDate(s) {
 }
 const yen = (n) => '¥' + Math.round(Number(n) || 0).toLocaleString('ja-JP');
 
+const PAY_LABEL = { onsite: '当日の現地払い（現金・カード）', invoice: '請求書払い（振込）' };
+function payText(b) {
+  if (!b.payment) return '未指定';
+  const base = PAY_LABEL[b.payment] || String(b.payment);
+  if (b.payment !== 'invoice') return base;
+  return `${base}　宛名：${b.invoiceTo || '—'}／但し書き：${b.invoiceNote || 'レンタルスペース利用料として'}`;
+}
+
 /** 予約ドキュメント（rentalBookings の1件）から Slack 用の本文を作る */
 function buildSlackMessage(b) {
   const who = [b.org, b.name ? `${b.name} 様` : ''].filter(Boolean).join(' ') || '（名前なし）';
@@ -21,6 +29,7 @@ function buildSlackMessage(b) {
     `内容：${b.purpose || '（未記入）'}`,
     `${who}${b.email ? `（${b.email}${b.phone ? ' / ' + b.phone : ''}）` : ''}`,
     `プラン：${plan}　お見積：${yen(b.estimate)}〜`,
+    `支払い：${payText(b)}`,
     b.note ? `ご要望：${b.note}` : null,
     `→ 管理画面で確認: ${ADMIN_URL}`,
   ].filter(Boolean);

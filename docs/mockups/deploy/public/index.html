@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600&display=swap" rel="stylesheet">
 <style>
-/* Layout: a top bar with the brand and the staff views (予約一覧 / 予約を登録 / 使い方 / 設定) plus a customer view (#apply: the public request form). A reservation opens as a full-width work sheet with a 6-step pipeline. Data lives in this browser (localStorage); on claude.ai the artifact's shared db is used instead. Mail and calendar steps open the staff member's own mail app / Google Calendar with the content filled in. */
+/* Layout: a top bar with the brand and the staff views (予約一覧 / 予約を登録 / 使い方 / 設定) plus a customer view (#apply: the public request form). A reservation opens as a full-width work sheet with a 6-step pipeline. Data lives in Firestore (project bokashi-ops-app, stores/store_bokashi/rentalBookings) behind a staff password; customers may only create their own request. When Firebase cannot load (claude.ai copy, offline) the browser's localStorage is used instead. Mail and calendar steps open the staff member's own mail app / Google Calendar with the content filled in. */
 :root{
   --bg:#f6f5f0; --surface:#ffffff; --surface-2:#f0eee6; --fg:#1f1f1d; --muted:#66665f; --line:#d8d5ca; --line-strong:#1f1f1d;
   --accent:#3f5a3c; --accent-soft:#e4ebe1; --accent-fg:#ffffff;
@@ -371,6 +371,14 @@ input[type=number]{-moz-appearance:textfield}
   .has-bar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 }
 @media (prefers-reduced-motion: reduce){ .toast{transition:none} }
+/* スタッフ用ログイン（共有データベースに接続できたときだけ出す） */
+.login-gate{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:max(10vh,24px) 16px 24px;overflow:auto}
+.login-card{width:100%;max-width:420px;margin:0}
+.login-card .brand-mark{font-family:var(--font-display);font-size:13px;color:var(--muted);letter-spacing:.06em}
+.login-card h1{font-size:19px;margin:2px 0 6px}
+.login-card .field{margin-top:14px}
+.login-card .btn-block{margin-top:12px}
+body.login-open .bottom-nav{display:none!important}
 </style>
 </head><body>
 
@@ -392,7 +400,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- 予約一覧 -->
   <section class="view" id="view-list">
     <div class="view-head">
-      <div><h1>予約一覧</h1><p>行を押すと作業シートが開きます。Web申込はメールで届くので、「予約を登録」で取り込みます。</p></div>
+      <div><h1>予約一覧</h1><p>行を押すと作業シートが開きます。お客様がフォームから申し込むと、ここに「Web申込」の仮予約として自動で入ります。</p></div>
       <button type="button" class="btn btn-primary" data-nav="new">＋ 予約を登録</button>
     </div>
     <div class="kpis" id="kpis"></div>
@@ -411,16 +419,16 @@ input[type=number]{-moz-appearance:textfield}
 
   <!-- 新規予約（スタッフ入力） -->
   <section class="view" id="view-new" hidden>
-    <div class="view-head"><div><h1>予約を登録</h1><p>どちらで受けた申込かを選んでください。登録すると「仮予約」として一覧に載ります。</p></div>
-      <div class="seg" role="tablist" aria-label="申込の受け方"><button type="button" role="tab" id="seg-import" aria-selected="true" aria-controls="panel-import">Web申込メールから</button><button type="button" role="tab" id="seg-manual" aria-selected="false" aria-controls="panel-manual">電話・来店分を入力</button></div></div>
-    <div class="card" id="panel-import" role="tabpanel" aria-labelledby="seg-import">
-      <h2>Web申込メールを取り込む</h2>
-      <p class="small muted">申込フォームから届いたメールの本文をそのまま貼り付けてください。末尾の「取込コード」を読み取って仮予約を作ります。</p>
+    <div class="view-head"><div><h1>予約を登録</h1><p>電話・来店で受けた申込をここで入力します。フォームからのWeb申込は自動で一覧に入るので、入力は不要です。</p></div>
+      <div class="seg" role="tablist" aria-label="申込の受け方"><button type="button" role="tab" id="seg-manual" aria-selected="true" aria-controls="form-new">電話・来店分を入力</button><button type="button" role="tab" id="seg-import" aria-selected="false" aria-controls="panel-import">取込コードから（予備）</button></div></div>
+    <div class="card" id="panel-import" role="tabpanel" aria-labelledby="seg-import" hidden>
+      <h2>取込コードから登録する（予備）</h2>
+      <p class="small muted">フォームが共有データベースに保存できなかったとき、お客様にはメールでの申込を案内しています。届いたメール本文をそのまま貼り付けると、末尾の「取込コード」から仮予約を作ります。</p>
       <textarea class="copybox" id="import-text" style="min-height:140px" placeholder="メール本文をここに貼り付け（取込コード BK1.… を含む部分だけでも可）" aria-label="Web申込メールの本文"></textarea>
       <div class="actions"><button type="button" class="btn btn-primary" id="import-btn">仮予約として取り込む</button></div>
       <div id="import-err" role="alert"></div>
     </div>
-    <form id="form-new" class="grid-2" novalidate hidden role="tabpanel" aria-labelledby="seg-manual">
+    <form id="form-new" class="grid-2" novalidate role="tabpanel" aria-labelledby="seg-manual">
       <div class="stack">
         <div class="card">
           <h2>日時</h2>
@@ -547,13 +555,13 @@ input[type=number]{-moz-appearance:textfield}
       <section class="card"><h2>プラン・お見積</h2><div class="est" id="qc-est"></div></section>
       <section class="card"><h2>お客様情報</h2><dl class="dl" id="qc-who"></dl></section>
       <p class="small muted" id="qc-howto" style="margin:0"></p>
-      <div class="stack"><button type="button" class="btn btn-primary btn-block" id="q-send">メールアプリを開いて申し込む</button><button type="button" class="btn btn-block" id="q-back">入力に戻る</button></div>
+      <div class="stack"><button type="button" class="btn btn-primary btn-block" id="q-send">この内容で申し込む</button><button type="button" class="btn btn-block" id="q-back">入力に戻る</button></div>
       <div id="q-send-err" role="alert"></div>
     </div>
 
     <div class="apply" id="apply-done-screen" hidden>
       <div class="steps" aria-hidden="true"><span>1 入力</span><span>2 確認</span><span class="on">3 送信</span></div>
-      <div class="intro"><h1 id="qd-title">メールの送信が必要です</h1></div>
+      <div class="intro"><h1 id="qd-title">お申し込みを受け付けました</h1></div>
       <section class="card">
         <div id="qd-lead"></div>
         <div class="actions" id="qd-mail-actions"><a class="btn btn-primary btn-block" id="qd-mail-link" href="#">メールアプリを開く</a></div>
@@ -594,8 +602,8 @@ input[type=number]{-moz-appearance:textfield}
       <div class="actions"><button type="button" class="btn btn-sm" data-nav="settings">設定を開く</button><button type="button" class="btn btn-sm" id="copy-apply-url">お客様用フォームのURLをコピー</button><button type="button" class="btn btn-sm btn-ghost" data-nav="apply">お客様用フォームを開く</button></div>
     </div>
     <div class="flow">
-      <div class="card"><span class="who who-cust">お客様</span><h2>0. 申込フォーム</h2><p>Webフォームに希望日時・プラン・連絡先を入力して確認すると、お客様のメールアプリが開く。お客様がそのメールを送信すると、申込内容が店舗のメールアドレスに届く。</p><ul><li>受付番号を自動で付ける</li><li>メール末尾に「取込コード」が付く</li></ul></div>
-      <div class="card"><span class="who who-human">店舗</span><h2>1. 仮予約にする</h2><p>届いた申込メールの本文を「予約を登録」に貼り付けて取り込む。電話・来店分は同じ画面で直接入力。見積は自動計算。</p></div>
+      <div class="card"><span class="who who-cust">お客様</span><h2>0. 申込フォーム</h2><p>Webフォームに希望日時・プラン・連絡先を入力して送信すると、申込が共有データベースに保存され、予約一覧に「Web申込」の仮予約として自動で載る。お客様の画面には受付番号が出る。</p><ul><li>受付番号（RQ-…）を自動で付ける</li><li>通知は届かないので、朝と夕方に予約一覧の「仮予約」を確認する</li><li>保存できなかったときだけ、メール（取込コード付き）か電話での申込を案内する</li></ul></div>
+      <div class="card"><span class="who who-human">店舗</span><h2>1. 仮予約にする</h2><p>Web申込は一覧の「仮予約」に入っているので、内容を確認して日程調整へ進む。電話・来店分は「予約を登録」で直接入力。見積は自動計算。</p></div>
       <div class="card"><span class="who who-human">店舗</span><h2>2. 日程を確定する</h2><p>空きとお食事の内容をお客様に返信して決める。「日程を確定」を押すと Googleカレンダーの登録画面が内容入りで開くので、保存する。</p><ul><li>件名：【貸切】利用者名・人数</li><li>説明：内容・プラン・連絡先・備考</li></ul></div>
       <div class="card"><span class="who who-human">店舗</span><h2>3. 確認メールを送る</h2><p>「メールアプリを開いて送る」を押すと、宛先・件名・本文が入った状態でメールアプリが開く。内容を見て送信する。</p></div>
       <div class="card"><span class="who who-human">店舗</span><h2>4. 当日終了 → 実績入力</h2><p>実際の人数・終了時刻・追加分を入れる。確定額が再計算される。</p></div>
@@ -605,17 +613,18 @@ input[type=number]{-moz-appearance:textfield}
     <div class="card">
       <h2>データの保存場所と注意</h2>
       <dl class="dl">
-        <dt>保存先</dt><dd>このブラウザの中だけに保存されます。別の端末や別のブラウザでは同じ一覧は見えません。店舗の決まった端末・ブラウザで使ってください。</dd>
-        <dt>バックアップ</dt><dd>「設定」からJSONファイルで保存できます。週1回を目安に保存し、端末を替えるときは「復元」で読み込みます。ブラウザのデータ消去をすると予約も消えます。</dd>
-        <dt>設定</dt><dd>請求書の発行者名・登録番号・振込先と、店舗のメールアドレスを「設定」で入れておきます。空欄のままだと請求書に赤字で表示されます。</dd>
-        <dt>今後</dt><dd>メール送信・カレンダー登録の完全自動化と、複数端末での共有は次の段階で対応します（管理者向け：<a href="design.html">設計書</a>）。</dd>
+        <dt>保存先</dt><dd>共有データベース（bokashi OPSアプリと同じ Firebase）に保存され、ログインしたスタッフの端末すべてで同じ一覧が見えます。お客様の申込もここに入ります。</dd>
+        <dt>ログイン</dt><dd>管理画面はスタッフ用パスワードが必要です（一度入れると、その端末では次回から不要）。お客様用フォームにログインは要りません。ログアウトは「設定」から。</dd>
+        <dt>バックアップ</dt><dd>「設定」からJSONファイルで保存できます。月1回を目安に保存しておくと、誤って削除したときに「復元」で戻せます。</dd>
+        <dt>設定</dt><dd>請求書の発行者名・登録番号・振込先と、店舗のメールアドレスを「設定」で入れておきます（共有データベースに保存され、全端末で共通）。空欄のままだと請求書に赤字で表示されます。</dd>
+        <dt>今後</dt><dd>メール送信・カレンダー登録の完全自動化と、請求書PDFの自動添付は次の段階で対応します（管理者向け：<a href="design.html">設計書</a>）。</dd>
       </dl>
     </div>
   </section>
 
   <!-- 設定 -->
   <section class="view" id="view-settings" hidden>
-    <div class="view-head"><div><h1>設定</h1><p>請求書に印字する発行者情報と、店舗の連絡先。このブラウザに保存されます。</p></div></div>
+    <div class="view-head"><div><h1>設定</h1><p>請求書に印字する発行者情報と、店舗の連絡先。共有データベースに保存され、スタッフ全員で共通です。</p></div></div>
     <form id="form-settings" class="grid-2" novalidate>
       <div class="stack">
         <div class="card">
@@ -626,17 +635,23 @@ input[type=number]{-moz-appearance:textfield}
             <div class="field"><label for="s-regno">適格請求書発行事業者 登録番号<span class="req">請求書に必要</span></label><input type="text" id="s-regno" placeholder="T0000000000000" inputmode="numeric"></div>
             <div class="field"><label for="s-tel">電話番号</label><input type="tel" id="s-tel"></div>
             <div class="field full"><label for="s-addr">住所</label><input type="text" id="s-addr"></div>
-            <div class="field full"><label for="s-email">店舗メールアドレス</label><input type="email" id="s-email"><span class="hint">確認メール・請求書メールの署名に入ります。お客様用フォームの送信先は公開時にファイル側で固定します（管理者作業）。</span></div>
+            <div class="field full"><label for="s-email">店舗メールアドレス</label><input type="email" id="s-email"><span class="hint">確認メール・請求書メールの署名に入ります。</span></div>
             <div class="field full"><label for="s-bank">振込先<span class="req">請求書に必要</span></label><textarea id="s-bank" placeholder="例）○○銀行 ○○支店 普通 1234567 カ）○○" style="min-height:64px"></textarea></div>
           </div>
           <div class="actions"><button type="submit" class="btn btn-primary">設定を保存</button></div>
         </div>
       </div>
       <div class="stack">
+        <div class="card" id="auth-card" hidden>
+          <h2>ログイン</h2>
+          <dl class="dl" id="auth-stats"></dl>
+          <div class="actions"><button type="button" class="btn" id="s-logout">ログアウト</button></div>
+          <p class="small muted">ログアウトすると、この端末で次に開くときにパスワードが必要になります。</p>
+        </div>
         <div class="card">
           <h2>データ</h2>
           <dl class="dl" id="data-stats"></dl>
-          <div class="actions"><button type="button" class="btn" id="s-backup">バックアップを保存（JSON）</button><button type="button" class="btn" id="s-restore">復元（JSONを読み込む）</button><input type="file" id="s-restore-file" accept="application/json,.json" hidden></div>
+          <div class="actions"><button type="button" class="btn" id="s-backup">バックアップを保存（JSON）</button><button type="button" class="btn" id="s-restore">復元（JSONを読み込む）</button><input type="file" id="s-restore-file" accept="application/json,.json" hidden><button type="button" class="btn btn-sm btn-ghost" id="s-migrate" hidden>この端末に残っている予約を共有データベースへ移す</button></div>
           <p class="small muted">復元は同じIDの予約を上書きし、それ以外は追加します。</p>
         </div>
         <div class="card">
@@ -646,7 +661,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="card">
           <h2>予約データの削除</h2>
-          <p class="small muted">この端末に保存されている予約をすべて消します。元に戻せないので、先にバックアップを保存してください。</p>
+          <p class="small muted">保存されている予約をすべて消します（共有データベースの場合は全端末から消えます）。元に戻せないので、先にバックアップを保存してください。</p>
           <div class="actions"><button type="button" class="btn btn-danger" id="s-wipe">すべての予約を削除</button></div>
         </div>
       </div>
@@ -659,9 +674,71 @@ input[type=number]{-moz-appearance:textfield}
   <button type="button" data-nav="flow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>使い方</button>
   <button type="button" data-nav="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3"/><path d="M14 2v4M8 10v4M16 18v4"/></svg>設定</button>
 </nav>
+<div class="login-gate" id="login-gate" hidden>
+  <form class="card login-card" id="form-login" novalidate>
+    <div class="brand-mark">bokashi Base</div>
+    <h1>レンタルスペース管理</h1>
+    <p class="small muted" style="margin:0">スタッフ用パスワードを入力してください。この端末では次回から入力不要です。</p>
+    <div class="field"><label for="login-pw">パスワード</label><input type="password" id="login-pw" autocomplete="current-password" required></div>
+    <div id="login-err" role="alert"></div>
+    <button type="submit" class="btn btn-primary btn-block" id="login-btn">ログイン</button>
+    <p class="small muted" style="margin:14px 0 0">パスワードが分からないときは店長・管理者に聞いてください。お客様用の申込フォームにログインは要りません。</p>
+  </form>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="print-area" aria-hidden="true"></div>
 
+<script type="module">
+// 共有データベース（Firebase bokashi-ops-app）。読み込めない環境（claude.ai のコピー・オフライン）では null を渡し、本体はブラウザ保存で動く。
+// localhost で ?emu=1 を付けると Firebase エミュレータ（auth 9099 / firestore 8080）につなぐ（動作確認用。本番データに触れない）
+const EMU = location.hostname === 'localhost' && new URLSearchParams(location.search).has('emu');
+const CFG = EMU
+  ? { apiKey: 'demo', authDomain: 'localhost', projectId: 'demo-rental' }
+  : { apiKey: 'AIzaSyBBlm7iGzV6EmpuEztE5uPc15QkgIftEPE', authDomain: 'bokashi-ops-app.firebaseapp.com', projectId: 'bokashi-ops-app', appId: '1:469986257512:web:86df8b3b2ddd4e1980a9dd' };
+// ログインを試す共有アカウント（firestore.rules の rentalStaff と同じ。パスワードは OPS アプリと共通）
+const STAFF_EMAILS = ['crew@bokashi-ops.app', 'staff@es-marketing.app'];
+const V = '10.12.0';
+try {
+  const [{ initializeApp }, A, F] = await Promise.all([
+    import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
+    import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`),
+    import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`),
+  ]);
+  const app = initializeApp(CFG);
+  const auth = A.getAuth(app);
+  const db = F.getFirestore(app);
+  if (EMU) { A.connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true }); F.connectFirestoreEmulator(db, 'localhost', 8080); }
+  const col = F.collection(db, 'stores/store_bokashi/rentalBookings');
+  const settingsDoc = F.doc(db, 'stores/store_bokashi/rentalSettings/store');
+  window.__rentalFbResolve({
+    emu: EMU,
+    staffEmails: STAFF_EMAILS,
+    onAuth: cb => A.onAuthStateChanged(auth, cb),
+    // パスワード1つで crew → admin の順に試す（OPS アプリと同じ流儀）。成功なら null、失敗なら理由
+    async signIn(password) {
+      let failure = 'wrong';
+      for (const email of STAFF_EMAILS) {
+        try { await A.signInWithEmailAndPassword(auth, email, password); return null; }
+        catch (e) {
+          const code = (e && e.code) || '';
+          if (code === 'auth/too-many-requests') return 'too-many';
+          if (code === 'auth/network-request-failed') return 'network';
+          if (/configuration-not-found|operation-not-allowed|admin-restricted-operation/.test(code)) return 'not-enabled';
+          if (!/invalid-credential|invalid-login-credentials|wrong-password|user-not-found/.test(code)) failure = code || 'unknown';
+        }
+      }
+      return failure;
+    },
+    signOut: () => A.signOut(auth),
+    set: (id, data) => F.setDoc(F.doc(col, id), data),
+    del: id => F.deleteDoc(F.doc(col, id)),
+    onSnapshot: (cb, err) => F.onSnapshot(col, cb, err),
+    getSettings: async () => { const s = await F.getDoc(settingsDoc); return s.exists() ? s.data() : null; },
+    setSettings: data => F.setDoc(settingsDoc, data),
+    serverTimestamp: () => F.serverTimestamp(),
+  });
+} catch (e) { console.warn('Firebase を読み込めませんでした。このブラウザ保存で動きます', e); window.__rentalFbResolve(null); }
+</script>
 <script>
 (function(){
 'use strict';
@@ -683,6 +760,12 @@ const ORDER = ['draft','confirmed','shared','done','invoiced','paid'];
 const DEFAULTS = { name:'bokashi Base', corp:'', regno:'', addr:'札幌市中央区南2条西1-7-1 二番館ビル 2F', tel:'011-596-7770', email:'', bank:'' };
 const STORE_KEY = 'bokashi-rental-mock-v2';
 const SETTINGS_KEY = 'bokashi-rental-settings-v1';
+
+// ---------- 共有データベース（Firebase）の受け取り。上の <script type="module"> が解決する ----------
+let fbResolve; const fbReady = new Promise(res=>{ fbResolve=res; });
+window.__rentalFbResolve = api => fbResolve(api||null);
+setTimeout(()=>fbResolve(null), 15000); // 読み込めない環境ではこのブラウザ保存で動く
+let fb = null, authUser = null, unsub = null;
 
 // ---------- サンプルデータ ----------
 function seed(){
@@ -720,7 +803,13 @@ function seed(){
 // ---------- 設定 ----------
 let settings = loadSettings();
 function loadSettings(){ let s={}; try{ s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')||{}; }catch(e){ s={}; } const out=Object.assign({},DEFAULTS); Object.keys(DEFAULTS).forEach(k=>{ if(typeof s[k]==='string'&&s[k].trim()) out[k]=s[k].trim(); }); return out; }
-function saveSettings(s){ const clean={}; Object.keys(DEFAULTS).forEach(k=>{ if(s&&typeof s[k]==='string') clean[k]=s[k].trim(); }); settings=Object.assign({},DEFAULTS,clean); try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(clean)); return true; }catch(e){ toast('設定を保存できませんでした。もう一度お試しください',true); return false; } }
+function saveSettings(s){ const clean={}; Object.keys(DEFAULTS).forEach(k=>{ if(s&&typeof s[k]==='string') clean[k]=s[k].trim(); }); settings=Object.assign({},DEFAULTS,clean);
+  let localOk=true; try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(clean)); }catch(e){ localOk=false; }
+  if(mode==='db'&&fb&&authUser){ fb.setSettings(clean).catch(e=>toast('設定を共有データベースに保存できませんでした（'+(e&&e.code||'error')+'）。通信環境を確認し、もう一度保存してください',true)); return true; }
+  if(!localOk){ toast('設定を保存できませんでした。もう一度お試しください',true); return false; }
+  return true; }
+// 共有DBの設定を読む（ログイン後）。あればこの端末の控えも更新する
+async function loadRemoteSettings(){ try{ const s=await fb.getSettings(); if(s&&typeof s==='object'){ const clean={}; Object.keys(DEFAULTS).forEach(k=>{ if(typeof s[k]==='string'&&s[k].trim()) clean[k]=s[k].trim(); }); settings=Object.assign({},DEFAULTS,clean); try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(clean)); }catch(e){} if(view==='settings') renderSettings(); } }catch(e){ console.warn('設定を読めませんでした', e); } }
 const storeEmail = () => DEFAULTS.email || settings.email || '';
 
 // ---------- 保存先（共有DB → 使えなければブラウザ保存） ----------
@@ -771,23 +860,45 @@ async function seedAll(){
   if(mode==='db'){ for(const r of rows){ await dbCol.doc(r.id).set(r); } }
   else { const ids=new Set(data.map(r=>r.id)); rows.forEach(r=>{ if(!ids.has(r.id)) data.push(r); }); localSave(); renderCurrent(); }
 }
-function setStoreTag(){ const t=$('#store-tag'); if(!t) return; t.className='store-tag'+(mode==='db'?' db':''); t.textContent = mode==='db'?'保存先：共有データベース（このリンクを開く全員で共有）': mode==='local'?'保存先：このブラウザ':'読み込み中'; }
+function setStoreTag(){ const t=$('#store-tag'); if(!t) return; t.className='store-tag'+(mode==='db'?' db':''); t.textContent = mode==='db'?'保存先：共有データベース（スタッフ全員で共有）': mode==='local'?'保存先：このブラウザ':'読み込み中'; }
 function setSampleTag(){ const has=data.some(r=>r.sample); $('#sample-tag').hidden=!has; }
-async function initStore(){
-  let db=null;
-  try{ if(window.claude && typeof window.claude.use==='function') db=await window.claude.use('db'); }catch(e){ db=null; }
-  if(!db){ mode='local'; data=localLoad(); setStoreTag(); renderCurrent(); return; }
-  mode='db'; dbCol=db.collection('reservations'); setStoreTag();
+function fmtStamp(d){ return localDate(d)+' '+d.toTimeString().slice(0,5); }
+// この端末の localStorage に残っている（共有DBに無い）本物の予約。共有DBへ移す候補
+function localLeftovers(){ let raw=null; try{ raw=localStorage.getItem(STORE_KEY); }catch(e){} if(!raw) return []; try{ const d=JSON.parse(raw); if(!Array.isArray(d)) return []; const ids=new Set(data.map(r=>r.id)); return d.map(sanitize).filter(r=>r&&!r.sample&&!ids.has(r.id)); }catch(e){ return []; } }
+function unsubscribe(){ if(unsub){ try{ unsub(); }catch(e){} unsub=null; } }
+function subscribe(){
+  unsubscribe(); data=[]; lastDetailJSON=''; renderCurrent();
   let delivered=false;
-  const timer=setTimeout(()=>{ if(!delivered){ toast('共有データにまだ接続できません。しばらくしてから再読み込みしてください'); } },10000);
-  dbCol.onSnapshot(snap=>{
-    const next=snap.docs.map(d=>{ const x=d.data(); return x?sanitize(clone(x)):null; }).filter(Boolean);
+  const timer=setTimeout(()=>{ if(!delivered) toast('共有データにまだ接続できません。しばらくしてから再読み込みしてください'); },10000);
+  unsub = fb.onSnapshot(snap=>{
+    const next=snap.docs.map(d=>{ const x=d.data(); if(!x) return null; if(x.createdAt&&typeof x.createdAt.toDate==='function') x.createdAt=fmtStamp(x.createdAt.toDate()); return sanitize(clone(x)); }).filter(Boolean);
     if(delivered){
       const known=new Set(data.map(r=>r.id));
       snap.docChanges().forEach(ch=>{ const d=ch.doc.data(); if(ch.type==='added'&&d&&!known.has(d.id)&&d.source==='web'&&!ch.doc.metadata.hasPendingWrites) toast('新しいWeb申込が届きました：'+(d.org||d.name)+' 様'); });
     }
-    data=next; if(!snap.metadata.fromCache){ clearTimeout(timer); } delivered=true; renderCurrent();
-  }, err=>{ clearTimeout(timer); mode='local'; data=localLoad(); setStoreTag(); renderCurrent(); toast('共有データに接続できないため、この端末の保存に切り替えました'); });
+    data=next; if(!snap.metadata.fromCache) clearTimeout(timer);
+    if(!delivered){ const left=localLeftovers().length; if(left) setTimeout(()=>toast(`この端末に以前の予約が ${left}件 残っています。「設定」→「データ」から共有データベースへ移せます`,true),800); }
+    delivered=true; lastDetailJSON=''; renderCurrent();
+  }, err=>{ clearTimeout(timer); console.warn(err); toast('共有データを読めませんでした（'+(err&&err.code||'error')+'）。ログインし直すか、管理者に連絡してください',true); });
+}
+function showLogin(on){ const g=$('#login-gate'); g.hidden=!on; document.body.classList.toggle('login-open',on); if(on){ $('#login-err').innerHTML=''; setTimeout(()=>{ const i=$('#login-pw'); if(i) i.focus({preventScroll:true}); },50); } }
+async function initStore(){
+  fb = await fbReady;
+  if(!fb){
+    mode='local'; data=localLoad(); setStoreTag(); renderCurrent();
+    if(/\.web\.app$|\.firebaseapp\.com$/.test(location.hostname)) toast('共有データベースに接続できませんでした。通信環境を確認して再読み込みしてください（この間はこの端末だけの保存で動きます）',true);
+    return;
+  }
+  mode='db'; setStoreTag();
+  dbCol = { doc:id=>({ set:d=>fb.set(id,d), delete:()=>fb.del(id) }) };
+  if(customerOnly){ renderCurrent(); return; } // お客様用フォームはログイン不要（申込の作成だけできる）
+  fb.onAuth(user=>{
+    const ok = !!(user && fb.staffEmails.includes(user.email));
+    if(user && !ok){ fb.signOut(); return; } // 対応表に無いアカウント
+    authUser = ok ? user : null;
+    if(!authUser){ unsubscribe(); data=[]; lastDetailJSON=''; currentId=null; showLogin(true); show('list'); return; } // 一覧に戻して空にしておく（ログアウト後に前の画面が残らないように）
+    showLogin(false); subscribe(); loadRemoteSettings();
+  });
 }
 function renderCurrent(){
   setSampleTag();
@@ -933,7 +1044,7 @@ function renderList(){
   const today=todayStr();
   const future = base.filter(r=>r.date>=today).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.id<b.id?-1:1));
   const past = base.filter(r=>r.date<today).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1));
-  if(!data.length){ $('#rows').innerHTML=`<tr class="single"><td colspan="8"><div class="empty"><span>まだ予約がありません。「予約を登録」から、Web申込メールの取り込みか手入力で登録してください。</span><button type="button" class="btn btn-sm" id="seed-btn">サンプルデータを入れて試す</button></div></td></tr>`; $('#seed-btn').addEventListener('click',async()=>{ await seedAll(); toast('サンプルデータを入れました'); }); return; }
+  if(!data.length){ $('#rows').innerHTML=`<tr class="single"><td colspan="8"><div class="empty"><span>まだ予約がありません。お客様のWeb申込は自動でここに入ります。電話・来店分は「予約を登録」から入力してください。</span><button type="button" class="btn btn-sm" id="seed-btn">サンプルデータを入れて試す</button></div></td></tr>`; $('#seed-btn').addEventListener('click',async()=>{ await seedAll(); toast('サンプルデータを入れました'); }); return; }
   const row = r => {
     const st=STATUS[r.status]||STATUS.draft; const isActual = isActualStage(r); const isNew = r.status==='draft'&&r.source==='web';
     return `<tr data-id="${esc(r.id)}" tabindex="0" class="${isNew?'new':''} ${r.status==='cancelled'?'cancelled':''}" aria-label="${esc(r.org||r.name)} ${fmtDate(r.date)} ${st.label}">
@@ -1073,8 +1184,8 @@ $('#q-to-confirm').addEventListener('click',()=>{
   $('#qc-when').innerHTML=`<dt>第1希望</dt><dd class="num">${fmtDate(f.date)} ${esc(f.start)}〜${esc(f.end)}（${c.hours}時間）</dd>${f.date2?`<dt>第2希望</dt><dd class="num">${fmtDate(f.date2)} ${esc(f.start)}〜${esc(f.end)}</dd>`:''}<dt>人数</dt><dd>${f.people}名</dd><dt>用途</dt><dd>${esc(f.kind)}</dd><dt>内容</dt><dd>${esc(f.purpose)}</dd>`;
   $('#qc-est').innerHTML=`<div class="row"><span><b>${planLabel(f.plan)}${f.drink?'＋飲み放題':''}${f.trash?'＋ゴミ回収':''}</b></span><span></span></div>`+estHTML(c,true)+(f.foodNote?`<div class="row muted"><span>ご要望：${esc(f.foodNote)}</span><span></span></div>`:'');
   $('#qc-who').innerHTML=`<dt>お名前</dt><dd>${esc(f.name)}</dd>${f.org?`<dt>会社・団体</dt><dd>${esc(f.org)}</dd>`:''}<dt>メール</dt><dd>${esc(f.email)}</dd><dt>電話</dt><dd>${esc(f.phone)}</dd>${f.note?`<dt>ご要望</dt><dd>${esc(f.note)}</dd>`:''}<dt>見学</dt><dd>${f.tour?'希望する':'希望しない'}</dd>`;
-  $('#q-send').textContent = storeEmail() ? 'メールアプリを開いて申し込む' : '申込内容を表示する';
-  $('#qc-howto').textContent = storeEmail() ? '押すと、お使いのメールアプリが申込内容入りで開きます。メールを送信した時点でお申し込みとなります。' : '押すと、申込内容と受付番号が表示されます。店舗までお電話でお伝えください。';
+  $('#q-send').textContent = mode==='db' ? 'この内容で申し込む' : storeEmail() ? 'メールアプリを開いて申し込む' : '申込内容を表示する';
+  $('#qc-howto').textContent = mode==='db' ? '押すと申込内容が店舗に送られ、受付番号が表示されます。店舗から2営業日以内にメールでご連絡します。' : storeEmail() ? '押すと、お使いのメールアプリが申込内容入りで開きます。メールを送信した時点でお申し込みとなります。' : '押すと、申込内容と受付番号が表示されます。店舗までお電話でお伝えください。';
   applyScreen('confirm');
 });
 $('#q-back').addEventListener('click',()=>applyScreen('form'));
@@ -1101,24 +1212,38 @@ function applyMailBody(f, receipt, c){
 ----- 店舗用（このまま残してください。内容を変更する場合はフォームに戻って修正してください）-----
 取込コード: BK1.${b64e(payload)}.KB1`;
 }
+const CODE_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function randCode(n){ const a=new Uint32Array(n); crypto.getRandomValues(a); return Array.from(a,x=>CODE_ALPHABET[x%CODE_ALPHABET.length]).join(''); }
 $('#q-send').addEventListener('click',async()=>{
-  const btn=$('#q-send'); const btnLabel=btn.textContent; btn.disabled=true; btn.textContent='準備しています…';
+  const btn=$('#q-send'); const btnLabel=btn.textContent; btn.disabled=true; btn.textContent='送信しています…';
   const f=readApply(); const c=calc(f,false); const d=new Date();
-  const receipt='RQ-'+localDate(d).replace(/-/g,'').slice(2)+'-'+Math.random().toString(36).slice(2,6).toUpperCase().padEnd(4,'X');
+  const receipt='RQ-'+localDate(d).replace(/-/g,'').slice(2)+'-'+randCode(4);
   const note=[f.note, f.foodNote?'食事：'+f.foodNote:'', f.tour?'見学希望':''].filter(Boolean).join('／');
-  const r={ id:nextId(), source:'web', receipt, status:'draft', date:f.date, date2:f.date2||'', start:f.start, end:f.end, people:f.people, kind:f.kind, purpose:f.purpose, plan:f.plan, drink:f.drink, trash:f.trash,
-    name:f.name, org:f.org, email:f.email, phone:f.phone, note, tour:f.tour, calendar:null, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null,
+  // 共有DBでは受付番号をそのまま文書IDにする（お客様側は一覧を読めないので連番は振れない）。ルール rentalWebRequest と同じ項目だけを送る
+  const r={ id: mode==='db'?receipt:nextId(), source:'web', receipt, status:'draft', date:f.date, date2:f.date2||'', start:f.start, end:f.end, people:f.people, kind:f.kind, purpose:f.purpose, plan:f.plan, drink:f.drink, trash:f.trash,
+    name:f.name, org:f.org, email:f.email, phone:f.phone, note, tour:f.tour, estimate:c.total, calendar:null, sharedAt:null, actual:null, billing:null, invoice:null, paidAt:null,
     log:[{at:nowStr(),text:`Web申込フォームから受付（${receipt}）`}] };
-  // 控えとしてこの端末にも残す（失敗してもメール作成は続ける）
-  if(mode==='db'){ try{ await dbCol.doc(r.id).set(r); }catch(e){} } else { data.unshift(r); if(!localSave()) data=data.filter(x=>x!==r); }
+  let saved=false, errCode='';
+  if(mode==='db'){ try{ await fb.set(r.id, Object.assign(clone(r),{createdAt:fb.serverTimestamp()})); saved=true; }catch(e){ errCode=(e&&e.code)||'error'; console.warn('申込を保存できませんでした', e); } }
+  else { data.unshift(r); saved=localSave(); if(!saved) data=data.filter(x=>x!==r); }
   btn.disabled=false; btn.textContent=btnLabel;
   $('#q-send-err').innerHTML='';
   const body=applyMailBody(f,receipt,c); const to=storeEmail(); const subject=`【レンタルスペース申込】${f.org||f.name} 様 ${fmtDate(f.date)}（${receipt}）`;
   $('#qd-no').textContent=receipt; $('#qd-body').value=body;
   $('#qd-sum').innerHTML=`<dt>第1希望</dt><dd class="num">${fmtDate(f.date)} ${esc(f.start)}〜${esc(f.end)}</dd><dt>内容</dt><dd>${esc(f.purpose)}（${f.people}名）</dd><dt>プラン</dt><dd>${planLabel(f.plan)}${f.drink?'＋飲み放題':''}</dd><dt>お見積</dt><dd class="num">${yen(c.total)}〜（税込・目安）</dd>`;
-  if(to){
+  const fallbackNote = (mode==='db'&&!saved) ? `<div class="alert alert-warn">${ICON_WARN}<span>申込を自動で受け付けられませんでした（${esc(errCode)}）。お手数ですが、以下の方法でお申し込みください。</span></div>` : '';
+  $('#qd-mailcard').querySelector('h2').textContent='申込内容';
+  if(mode==='db'&&saved){
+    $('#qd-title').textContent='お申し込みを受け付けました';
+    $('#qd-lead').innerHTML=`<div class="alert alert-ok">${ICON_OK}<span>店舗で内容を確認し、2営業日以内に ${esc(f.email)} へご連絡します。この時点では予約は確定していません。受付番号を控えておいてください。</span></div>`;
+    $('#qd-mail-actions').hidden=true;
+    $('#qd-no-label').textContent='受付番号（お問い合わせの際にお伝えください）';
+    $('#qd-mailcard').querySelector('h2').textContent='申込内容の控え';
+    $('#qd-mailnote').textContent='必要であればコピーして保管してください。店舗への送信は済んでいます。';
+    $('#qd-next-title').textContent='この後の流れ';
+  } else if(to){
     $('#qd-title').textContent='メールの送信が必要です';
-    $('#qd-lead').innerHTML=`<div class="alert alert-info">${ICON_MAIL}<span>開いたメールアプリで「送信」を押してください。送信された時点でお申し込みとなります（この画面では送信の完了を確認できません）。</span></div>`;
+    $('#qd-lead').innerHTML=fallbackNote+`<div class="alert alert-info">${ICON_MAIL}<span>開いたメールアプリで「送信」を押してください。送信された時点でお申し込みとなります（この画面では送信の完了を確認できません）。</span></div>`;
     $('#qd-mailnote').textContent=`メールアプリが開かない場合は、下の内容をコピーして ${to} までお送りください。`;
     $('#qd-mail-link').href=mailtoUrl(to,subject,body); $('#qd-mail-link').textContent='メールアプリをもう一度開く'; $('#qd-mail-actions').hidden=false;
     $('#qd-no-label').textContent='受付番号（メール本文にも入っています）';
@@ -1126,7 +1251,7 @@ $('#q-send').addEventListener('click',async()=>{
     setTimeout(()=>openMail(to,subject,body),300);
   } else {
     $('#qd-title').textContent='お電話でお申し込みください';
-    $('#qd-lead').innerHTML=`<div class="alert alert-info">${ICON_MAIL}<span>店舗（<a href="tel:${esc(String(settings.tel).replace(/[^\d+]/g,''))}">${esc(settings.tel)}</a>）へお電話で、ご希望日時・人数・お名前をお伝えください。受付番号は控えとしてお手元に残してください。下の内容はメモとしてコピーできます。</span></div>`;
+    $('#qd-lead').innerHTML=fallbackNote+`<div class="alert alert-info">${ICON_MAIL}<span>店舗（<a href="tel:${esc(String(settings.tel).replace(/[^\d+]/g,''))}">${esc(settings.tel)}</a>）へお電話で、ご希望日時・人数・お名前をお伝えください。受付番号は控えとしてお手元に残してください。下の内容はメモとしてコピーできます。</span></div>`;
     $('#qd-mailnote').textContent='受付番号と内容がすべて入っています。';
     $('#qd-no-label').textContent='受付番号（お電話の際にお伝えください）';
     $('#qd-mail-actions').hidden=true;
@@ -1428,7 +1553,9 @@ function bindDetail(r,idx){
 function renderSettings(){
   $('#s-name').value=settings.name; $('#s-corp').value=settings.corp; $('#s-regno').value=settings.regno; $('#s-tel').value=settings.tel; $('#s-addr').value=settings.addr; $('#s-email').value=settings.email; $('#s-bank').value=settings.bank;
   const live=data.filter(r=>!r.sample).length, samples=data.filter(r=>r.sample).length;
-  $('#data-stats').innerHTML=`<dt>保存先</dt><dd>${mode==='db'?'共有データベース':'このブラウザ'}</dd><dt>予約件数</dt><dd class="num">${live}件${samples?`（ほかにサンプル ${samples}件）`:''}</dd><dt>最終バックアップ</dt><dd class="num">${esc(localStorage.getItem('bokashi-rental-backup-at')||'まだ保存していません')}</dd>`;
+  const ac=$('#auth-card'); ac.hidden = mode!=='db'; if(mode==='db'){ $('#auth-stats').innerHTML=`<dt>ログイン中</dt><dd>${authUser?esc(authUser.email==='staff@es-marketing.app'?'管理者':'現場スタッフ')+'（'+esc(authUser.email)+'）':'未ログイン'}</dd><dt>データベース</dt><dd>Firebase bokashi-ops-app${fb&&fb.emu?'（エミュレータ）':''}</dd>`; }
+  $('#s-migrate').hidden = !(mode==='db' && localLeftovers().length);
+  $('#data-stats').innerHTML=`<dt>保存先</dt><dd>${mode==='db'?'共有データベース（スタッフ全員で共有）':'このブラウザ'}</dd><dt>予約件数</dt><dd class="num">${live}件${samples?`（ほかにサンプル ${samples}件）`:''}</dd><dt>最終バックアップ</dt><dd class="num">${esc(localStorage.getItem('bokashi-rental-backup-at')||'まだ保存していません')}</dd>`;
   $('#s-clear-sample').disabled=!samples; $('#s-seed').disabled=!!samples;
 }
 $('#form-settings').addEventListener('submit',e=>{ e.preventDefault();
@@ -1455,6 +1582,20 @@ $('#s-restore-file').addEventListener('change',async e=>{
 $('#s-clear-sample').addEventListener('click',async()=>{ if(!confirm('サンプルデータをすべて消します。よろしいですか？')) return; await removeWhere(r=>r.sample); toast('サンプルデータを消しました'); renderCurrent(); });
 $('#s-seed').addEventListener('click',async()=>{ await seedAll(); toast('サンプルデータを入れました'); renderCurrent(); });
 $('#s-wipe').addEventListener('click',async()=>{ if(!confirm('すべての予約を削除します。元に戻せません。先にバックアップを保存しましたか？')) return; if(!confirm('本当に削除しますか？')) return; await removeWhere(()=>true); toast('すべて削除しました'); renderCurrent(); });
+
+// ---------- ログイン・ログアウト・この端末からの移行（$ が定義されたあとに登録する） ----------
+$('#form-login').addEventListener('submit',async e=>{ e.preventDefault(); const pw=$('#login-pw').value; if(!pw||!fb) return;
+  const btn=$('#login-btn'); btn.disabled=true; btn.textContent='ログイン中…'; $('#login-err').innerHTML='';
+  const fail=await fb.signIn(pw); btn.disabled=false; btn.textContent='ログイン';
+  if(!fail){ $('#login-pw').value=''; return; }
+  const msg = fail==='wrong' ? 'パスワードが違います' : fail==='too-many' ? '試行回数が多すぎます。しばらく待ってからもう一度お試しください' : fail==='network' ? 'ネットワークに接続できません。電波のある場所でもう一度お試しください' : fail==='not-enabled' ? 'ログイン機能がまだ有効になっていません。管理者（鈴木）に連絡してください' : 'ログインできませんでした（'+fail+'）。時間をおいてもう一度お試しください';
+  $('#login-err').innerHTML=`<div class="alert alert-warn">${ICON_WARN}<span>${esc(msg)}</span></div>`; $('#login-pw').select(); });
+$('#s-logout').addEventListener('click',async()=>{ if(!fb) return; if(!confirm('ログアウトしますか？次に開くときにパスワードが必要になります。')) return; try{ await fb.signOut(); toast('ログアウトしました'); }catch(e){ toast('ログアウトできませんでした（'+(e&&e.code||'error')+'）',true); } });
+$('#s-migrate').addEventListener('click',async()=>{ const rows=localLeftovers(); if(!rows.length){ toast('移す予約はありません'); renderSettings(); return; }
+  if(!confirm(`この端末に残っている ${rows.length}件の予約を共有データベースへ移します。よろしいですか？`)) return;
+  let n=0; for(const r of rows){ if(await save(r)) n++; }
+  if(n===rows.length){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
+  toast(`${n}件を共有データベースへ移しました`); renderSettings(); });
 
 // ---------- 初期化 ----------
 (function init(){

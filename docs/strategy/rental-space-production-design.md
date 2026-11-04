@@ -2,13 +2,18 @@
 date: 2026-11-02
 type: 設計書（本番化の方針。コードは含まない）
 subject: bokashi Base レンタルスペース予約管理（申込フォーム〜請求書送信）の本番化
-status: 案。オーナー・舜さんの判断待ち
+status: 案。オーナー・舜さんの判断待ち。2026-11-04 に中間段階（A案）を公開済み（下記「現状」）
 related:
   - docs/mockups/rental-space-tool.html（モック。https://claude.ai/artifact/KffbGYKm1YMN6ZaTTXmCnj、お客様用フォームは同URLの #apply）
   - ops-app/CLAUDE.md・ops-app/docs/AUTH_DESIGN.md・ops-app/docs/AUTH_ROLLOUT.md（OPSアプリ側の運用ルールと認証の切替手順）
 ---
 
 # bokashi Base レンタルスペース予約管理 本番化設計書
+
+> **現状（2026-11-04）:** この設計書の全面実装（B案）の前段として、**A案＝お客様の申込を Firestore に直接保存＋スタッフのパスワードログイン**を
+> https://bokashi-rental.web.app で公開しました。申込は `stores/store_bokashi/rentalBookings` に自動で入り、スタッフ全端末で共有されます。
+> メール・カレンダー・請求書PDFの自動化（5〜7章）と Cloud Functions（採番・通知）は未着手で、この設計書のとおり次段階で実装します。
+> ルールは 4-4 の表と違い「お客様は未ログインで create のみ（内容を検査）」としています（Functions が無いため）。運用手順は `docs/mockups/deploy/README.md`。
 
 ## 0. 結論（先に）
 

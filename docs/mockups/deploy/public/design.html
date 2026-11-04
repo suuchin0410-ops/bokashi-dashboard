@@ -45,10 +45,11 @@ nav.toc a:hover{color:var(--fg)}
 </style>
 </head><body>
 <div class="wrap">
-<header><div class="brand">bokashi Base</div><h1>レンタルスペース予約管理 本番化設計書</h1><div class="meta">date: 2026-11-02 ・ type: 設計書（本番化の方針。コードは含まない） ・ status: 案。オーナー・舜さんの判断待ち</div></header>
+<header><div class="brand">bokashi Base</div><h1>レンタルスペース予約管理 本番化設計書</h1><div class="meta">date: 2026-11-02 ・ type: 設計書（本番化の方針。コードは含まない） ・ status: 案。オーナー・舜さんの判断待ち。2026-11-04 に中間段階（A案）を公開済み</div></header>
 <nav class="toc" aria-label="目次"><b>目次</b><a href="#s0">0. 結論（先に）</a><a href="#s1">1. この文書の前提</a><a href="#s2">2. 全体構成</a><a href="#s3">3. 画面と状態遷移</a><a href="#s4">4. Firestore の設計</a><a href="#s5">5. 公開フォームからの書き込みの受け方</a><a href="#s6">6. Google Calendar 連携</a><a href="#s7">7. メール送信</a><a href="#s8">8. 請求書 PDF</a><a href="#s9">9. 段階分けと工数の目安</a><a href="#s10">10. 未確定事項（決めていただきたいこと）</a><a href="#s11">11. 運用ルール（開発・デプロイ時に守ること）</a><a href="#s12">付録 A. モックとの対応</a><a href="#s13">付録 B. 参照した資料</a></nav>
 <article>
 <h1>bokashi Base レンタルスペース予約管理 本番化設計書</h1>
+<blockquote><p><strong>現状（2026-11-04）:</strong> この設計書の全面実装（B案）の前段として、<strong>A案＝お客様の申込を Firestore に直接保存＋スタッフのパスワードログイン</strong>を <a href="https://bokashi-rental.web.app">bokashi-rental.web.app</a> で公開しました。申込は <code>stores/store_bokashi/rentalBookings</code> に自動で入り、スタッフ全端末で共有されます。メール・カレンダー・請求書PDFの自動化（5〜7章）と Cloud Functions（採番・通知）は未着手で、この設計書のとおり次段階で実装します。ルールは 4-4 の表と違い「お客様は未ログインで create のみ（内容を検査）」としています（Functions が無いため）。運用手順は <code>docs/mockups/deploy/README.md</code>。</p></blockquote>
 <h2 id="s0">0. 結論（先に）</h2>
 <ul>
 <li><strong>アプリは OPSアプリとは別に作り、サーバー（Firebase プロジェクト <code>bokashi-ops-app</code>）は共通にします。</strong>

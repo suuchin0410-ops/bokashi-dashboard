@@ -129,6 +129,12 @@ bokashi/
 └── CLAUDE.md
 ```
 
+## レンタルスペース予約ツール（別フォルダ）
+- bokashi Base（2F）のレンタルスペース予約管理ツール・お客様用申込フォーム・Slack 通知・告知用POPは
+  **`/Users/suzukishinya/Desktop/Claude Code/Projects/bokashi/rental/`** にある（2026-11-04 に `docs/mockups/` から移動。このリポジトリには残っていない）
+- 公開先 https://bokashi-rental.web.app（Firebase プロジェクト `bokashi-ops-app`・サイト `bokashi-rental`）。手順は `Projects/bokashi/rental/deploy/README.md`
+- Firestore ルールは引き続き es-ops（`ops-app/`）の `firestore.rules` と `docs/rollback/firestore.rules.before-auth` で管理
+
 ## 合言葉ワークフロー
 
 ### 「会議フロー」「MTG」→ 定例会議の全フロー管理

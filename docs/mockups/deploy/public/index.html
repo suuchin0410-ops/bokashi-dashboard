@@ -12,13 +12,9 @@
   --ok:#2f6b3a; --ok-soft:#e2efe4; --warn:#9a5a00; --warn-soft:#fbefd9; --info:#2d4f6e; --info-soft:#e1eaf2; --danger:#9b2b2b; --danger-soft:#f8e3e3;
   --font-body:'Noto Sans JP',"Hiragino Sans","Yu Gothic",sans-serif; --font-display:'Noto Serif JP',"Hiragino Mincho ProN",serif;
   --radius:8px; --shadow:0 1px 2px rgba(31,31,29,.06),0 8px 24px rgba(31,31,29,.06);
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#161614; --surface:#1f1f1c; --surface-2:#262623; --fg:#ecebe4; --muted:#a6a59b; --line:#3a3a35; --line-strong:#ecebe4;
-  --accent:#9bbd95; --accent-soft:#263226; --accent-fg:#101510;
-  --money:#dcb860; --money-soft:#2d2716; --money-fg:#1f1f1d;
-  --ok:#8fcf9a; --ok-soft:#1e2f22; --warn:#e6b25c; --warn-soft:#332714; --info:#9cc0e0; --info-soft:#1c2a38; --danger:#f0978f; --danger-soft:#3a1d1b;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark } }
+/* 端末のダークモード設定には追従しない（店舗・お客様とも明るい配色で統一）。data-theme="dark" を付けたときだけ暗くなる */
 :root[data-theme="dark"]{
   --bg:#161614; --surface:#1f1f1c; --surface-2:#262623; --fg:#ecebe4; --muted:#a6a59b; --line:#3a3a35; --line-strong:#ecebe4;
   --accent:#9bbd95; --accent-soft:#263226; --accent-fg:#101510;
@@ -434,7 +430,7 @@ body.login-open .bottom-nav{display:none!important}
           <h2>日時</h2>
           <div class="form">
             <div class="field"><label for="f-date">利用日<span class="req">必須</span></label><input type="date" id="f-date" required></div>
-            <div class="field"><label for="f-people">人数<span class="req">必須</span></label><input type="number" id="f-people" min="1" step="1" inputmode="numeric" value="20" required><span class="hint">テーブル18席・カウンター10席（28席）</span></div>
+            <div class="field"><label for="f-people">人数<span class="req">必須</span></label><input type="number" id="f-people" min="1" step="1" inputmode="numeric" value="20" required></div>
             <div class="field"><label for="f-start">開始<span class="req">必須</span></label><input type="time" id="f-start" value="13:00" step="1800" required></div>
             <div class="field"><label for="f-end">終了<span class="req">必須</span></label><input type="time" id="f-end" value="16:00" step="1800" required></div>
             <div class="full" id="f-hours-alert"></div>
@@ -495,16 +491,15 @@ body.login-open .bottom-nav{display:none!important}
         <section class="card">
           <h2>ご希望の日時</h2>
           <div class="form">
-            <div class="field"><label for="q-date1">第1希望日<span class="req">必須</span></label><input type="date" id="q-date1" required aria-describedby="q-date1-hint"><span class="hint" id="q-date1-hint">平日は 18:00〜21:00、土日祝は 10:00〜21:00 でご利用いただけます</span></div>
+            <div class="field"><label for="q-date1">第1希望日<span class="req">必須</span></label><input type="date" id="q-date1" required aria-describedby="q-date1-hint"><span class="hint" id="q-date1-hint">平日は 12:00〜21:00、土日祝は 10:00〜21:00 でご利用いただけます</span></div>
             <div class="field"><label for="q-date2">第2希望日</label><input type="date" id="q-date2" aria-describedby="q-date2-hint"><span class="hint" id="q-date2-hint">あれば。時間は第1希望と同じで承ります</span></div>
             <div class="field"><label for="q-start">開始<span class="req">必須</span></label><input type="time" id="q-start" value="13:00" step="1800" required></div>
             <div class="field"><label for="q-end">終了<span class="req">必須</span></label><input type="time" id="q-end" value="16:00" step="1800" required></div>
             <div class="field full"><label for="q-people">人数<span class="req">必須</span></label>
-              <div class="stepper"><button type="button" id="q-minus" aria-label="1人減らす">−</button><input type="number" id="q-people" min="1" step="1" value="20" inputmode="numeric" required><button type="button" id="q-plus" aria-label="1人増やす">＋</button></div>
-              <span class="hint">テーブル18席・カウンター10席（28席）。立食の場合はご相談ください。</span></div>
+              <div class="stepper"><button type="button" id="q-minus" aria-label="1人減らす">−</button><input type="number" id="q-people" min="1" step="1" value="20" inputmode="numeric" required><button type="button" id="q-plus" aria-label="1人増やす">＋</button></div></div>
             <div class="full" id="q-alert"></div>
           </div>
-          <ul class="rules"><li>ご利用時間：月〜金 18:00〜21:00 ／ 土日祝 10:00〜21:00</li><li>スペース利用料：1時間 ¥15,400（税込）。1時間未満の端数は1時間として計算します。1日上限 ¥154,000</li></ul>
+          <ul class="rules"><li>ご利用時間：月〜金 12:00〜21:00 ／ 土日祝 10:00〜21:00</li><li>スペース利用料：1時間 ¥15,400（税込）。1時間未満の端数は1時間として計算します。1日上限 ¥154,000</li></ul>
         </section>
         <section class="card">
           <h2>ご利用内容</h2>
@@ -535,13 +530,12 @@ body.login-open .bottom-nav{display:none!important}
         <section class="card">
           <h2>ご利用にあたって</h2>
           <ul class="rules">
-            <li>当日の延長はできません。無断延長は30分ごとに ¥10,000 を申し受けます。</li>
             <li>会場は2階です。エレベーターはありません。</li>
             <li>設備（無料）：75V型モニター・スピーカー・マイク4本・Wi-Fi・各席電源・簡易キッチン</li>
-            <li>ご利用後、確定金額の請求書をメールでお送りします。お振込でお支払いください。</li>
+            <li>お支払いは、当日のお支払い（現金・クレジットカード）か、ご利用後にメールでお送りする請求書でのお振込のいずれかです。確定金額はご利用後にお知らせします。</li>
           </ul>
           <label class="check" id="q-agree-wrap"><input type="checkbox" id="q-agree" required><span>利用条件を確認しました <span class="req">必須</span></span></label>
-          <div class="field"><span class="lbl">お見積（税込・目安）</span><div class="est" id="q-est"></div><span class="hint">お食事の内容により変わります。確定金額はご利用後の請求書でお知らせします。</span></div>
+          <div class="field"><span class="lbl">お見積（税込・目安）</span><div class="est" id="q-est"></div><span class="hint">お食事の内容により変わります。確定金額はご利用後にお知らせします。</span></div>
           <div id="q-err" role="alert"></div>
         </section>
       </form>
@@ -580,7 +574,7 @@ body.login-open .bottom-nav{display:none!important}
           <li><i>1</i><span>店舗から2営業日以内にご連絡します<small>日程の空き状況と、お食事の内容を確認します</small></span></li>
           <li><i>2</i><span>日程が確定したらご連絡します<small>確定内容をメールでお送りします</small></span></li>
           <li><i>3</i><span>ご予約の日時にご来場ください<small>ご利用人数に変更がある場合は、ご利用日の前日までにお知らせください</small></span></li>
-          <li><i>4</i><span>ご利用後に請求書をメールでお送りします<small>お振込でお支払いください</small></span></li>
+          <li><i>4</i><span>ご利用後にお支払い<small>当日（現金・クレジットカード）か、後日メールでお送りする請求書でのお振込</small></span></li>
         </ol>
       </section>
       <p class="apply-foot"><b>bokashi Base</b><br>札幌市中央区南2条西1-7-1 二番館ビル 2F（大通駅35番出口すぐ）<br>011-596-7770</p>
@@ -942,7 +936,7 @@ function isOffDay(dateStr){ const dow=new Date(dateStr+'T00:00:00').getDay(); re
 function hoursBetween(s,e){ if(!s||!e) return 0; const [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number); return ((eh*60+em)-(sh*60+sm))/60; }
 function dowJa(dateStr){ const d=new Date(dateStr+'T00:00:00'); return isNaN(d)?'':['日','月','火','水','木','金','土'][d.getDay()]+(isHoliday(dateStr)?'・祝':''); }
 function fmtDate(dateStr){ if(!dateStr) return ''; const [y,m,d]=dateStr.split('-'); if(!y||!m||!d) return dateStr; return `${y}/${Number(m)}/${Number(d)}（${dowJa(dateStr)}）`; }
-function withinHours(dateStr,s,e){ if(!dateStr||!s||!e) return true; const open = isOffDay(dateStr)?'10:00':'18:00'; return s>=open && e<='21:00'; }
+function withinHours(dateStr,s,e){ if(!dateStr||!s||!e) return true; const open = isOffDay(dateStr)?'10:00':'12:00'; return s>=open && e<='21:00'; }
 const TIME_RE=/^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const validTime=(s,e)=>TIME_RE.test(s||'')&&TIME_RE.test(e||'')&&hoursBetween(s,e)>0;
 const validPeople=n=>Number.isSafeInteger(n)&&n>=1;
@@ -1100,7 +1094,7 @@ function estHTML(c, approx){
 function hourMsgs(f, dateKey){
   const msgs=[]; const d=f[dateKey];
   if(f.start&&f.end&&hoursBetween(f.start,f.end)<=0) msgs.push('終了時刻が開始時刻より前になっています。');
-  if(d&&!withinHours(d,f.start,f.end)) msgs.push(`ご利用時間外です。${isOffDay(d)?'土日祝は 10:00〜21:00':'平日は 18:00〜21:00'} の範囲でご指定ください。`);
+  if(d&&!withinHours(d,f.start,f.end)) msgs.push(`ご利用時間外です。${isOffDay(d)?'土日祝は 10:00〜21:00':'平日は 12:00〜21:00'} の範囲でご指定ください。`);
   if(f.people>28) msgs.push(`席数28席を超えています（${f.people}名）。立食か人数調整のご相談が必要です。`);
   return msgs;
 }
@@ -1164,7 +1158,7 @@ function renderApplyEstimate(){
   if(f.date2&&f.date2<todayStr()) msgs.push('第2希望日が過去の日付です。');
   if(f.date2&&!withinHours(f.date2,f.start,f.end)) msgs.push('第2希望日がご利用時間外です。');
   $('#q-alert').innerHTML=msgs.map(m=>`<div class="alert alert-warn">${ICON_WARN}<span>${m}</span></div>`).join('');
-  $('#q-date1-hint').textContent = validDate(f.date) ? `${fmtDate(f.date)} は ${isOffDay(f.date)?'土日祝のため 10:00〜21:00':'平日のため 18:00〜21:00'} でご利用いただけます` : '平日は 18:00〜21:00、土日祝は 10:00〜21:00 でご利用いただけます';
+  $('#q-date1-hint').textContent = validDate(f.date) ? `${fmtDate(f.date)} は ${isOffDay(f.date)?'土日祝のため 10:00〜21:00':'平日のため 12:00〜21:00'} でご利用いただけます` : '平日は 12:00〜21:00、土日祝は 10:00〜21:00 でご利用いただけます';
   $('#q-minus').disabled = (Number($('#q-people').value)||1)<=1;
 }
 formApply.addEventListener('input',renderApplyEstimate); formApply.addEventListener('change',renderApplyEstimate);
@@ -1290,8 +1284,7 @@ ${settings.name} です。
 ${c.lines.map(l=>'　・'+l.label+'　'+yen(l.amount)).join('\n')}
 
 ・ご利用人数に変更がある場合は、ご利用日の前日までにお知らせください。
-・当日の延長はできません。無断延長は30分ごとに ¥10,000 を申し受けます。
-・ご利用後、確定金額の請求書をこのメールアドレス宛にお送りします。
+・お支払いは、当日（現金・クレジットカード）か、ご利用後にこのメールアドレス宛にお送りする請求書でのお振込のいずれかです。
 
 ご不明な点がございましたら、お気軽にご連絡ください。
 当日お会いできるのを楽しみにしております。
@@ -1383,7 +1376,7 @@ function stepCalendar(r,idx){
   }
   return `<div class="card focus"><h2><span class="step-no">STEP 2</span>日程を確定する</h2>
     <p class="small muted">確定すると Googleカレンダーの予定作成画面が内容入りで開きます。店舗用のカレンダーを選んで「保存」を押してください。</p>
-    ${!withinHours(r.date,r.start,r.end)?`<div class="alert alert-warn">${ICON_WARN}<span>ご利用時間外の予約です（${isOffDay(r.date)?'土日祝 10:00〜21:00':'平日 18:00〜21:00'}）。確定前に時間を調整してください。</span></div>`:''}
+    ${!withinHours(r.date,r.start,r.end)?`<div class="alert alert-warn">${ICON_WARN}<span>ご利用時間外の予約です（${isOffDay(r.date)?'土日祝 10:00〜21:00':'平日 12:00〜21:00'}）。確定前に時間を調整してください。</span></div>`:''}
     ${r.people>28?`<div class="alert alert-warn">${ICON_WARN}<span>席数28席を超えています（${r.people}名）。立食か人数調整の相談が必要です。</span></div>`:''}
     ${r.date<todayStr()?`<div class="alert alert-warn">${ICON_WARN}<span>利用日が過去の日付です。</span></div>`:''}
     ${overlaps(r).length?`<div class="alert alert-danger">${ICON_WARN}<span>同じ日時に確定済みの予約があります：${overlapText(overlaps(r))}。日程を調整してから確定してください。</span></div>`:''}

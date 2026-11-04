@@ -55,20 +55,21 @@ cd "$(mktemp -d)" && cp "/Users/suzukishinya/Desktop/Claude Code/Projects/es/es-
 2. ~~スタッフ用アカウントを作る~~ **済（2026-11-04）**: `crew@bokashi-ops.app` を作成。パスワードは鈴木の PC の `~/.config/bokashi-rental/staff-password.txt`（リポジトリ外・本人のみ読める）。
    店長には口頭か電話で伝える。変更は es-ops で `node scripts/auth/create-shared-accounts.cjs --project bokashi-ops-app --email crew@bokashi-ops.app --apply --reset`
    （OPSアプリの認証切替でも同じアカウントを使う予定なので、このパスワードがそのまま OPS のパスワードになる）
-3. 店舗の端末で https://bokashi-rental.web.app を開き、パスワードでログイン → 「設定」で店舗名・発行者名・登録番号・住所・電話・店舗メール・振込先を保存（全端末で共通になる）
-4. 「設定」→「サンプルデータを消す」（上部の「サンプルデータ表示中」が消えればOK）。旧ブラウザ保存版の予約があれば「この端末に残っている予約を共有データベースへ移す」
-5. 試しにお客様用フォーム（/#apply）から1件申し込み → 予約一覧に「Web申込」の仮予約が出る → 日程確定（Googleカレンダーの保存先を店舗用カレンダーにする）→ 確認メール作成、まで一度通す
-6. お客様には https://bokashi-rental.web.app/#apply を案内（bokashi.ink の Rental ページからリンク）。朝と夕方に予約一覧の「仮予約」を確認する運用にする（新着の通知はまだ無い）
+3. ご利用時間は平日 12:00〜21:00／土日祝 10:00〜21:00（フォームの判定も同じ）。変えるときは `rental-space-tool.html` の `withinHours` と文言を直す
+4. 店舗の端末で https://bokashi-rental.web.app を開き、パスワードでログイン → 「設定」で店舗名・発行者名・登録番号・住所・電話・店舗メール・振込先を保存（全端末で共通になる）
+5. 「設定」→「サンプルデータを消す」（上部の「サンプルデータ表示中」が消えればOK）。旧ブラウザ保存版の予約があれば「この端末に残っている予約を共有データベースへ移す」
+6. 試しにお客様用フォーム（/#apply）から1件申し込み → 予約一覧に「Web申込」の仮予約が出る → 日程確定（Googleカレンダーの保存先を店舗用カレンダーにする）→ 確認メール作成、まで一度通す
+7. お客様には https://bokashi-rental.web.app/#apply を案内（bokashi.ink の Rental ページからリンク）。新着は Slack の `#予約通知` に届くので、通知を見たら予約一覧で対応する
 
 ## Slack 通知（Cloud Functions・codebase `rental`）
 
 - `functions/` に Firestore トリガー `notifyRentalRequest` がある。`stores/store_bokashi/rentalBookings` に **Web 申込（source: web）** が作られたら、
   Slack の Incoming Webhook（`#予約通知`）に受付番号・希望日時・人数・内容・連絡先・見積・管理画面リンクを投稿し、文書に `slackNotifiedAt` を記録する（二重投稿防止）。
   スタッフが「予約を登録」で入れた分は通知しない
-- 前提: bokashi-ops-app が **Blaze プラン**（Functions と Secret Manager を使うため。es-ops-app と同じ請求先に紐づける。月数十件なら無料枠内）
+- 前提: bokashi-ops-app が **Blaze プラン**（Functions と Secret Manager を使うため。2026-11-04 に Blaze 化・Secret 登録・デプロイ済み。月数十件なら無料枠内）
 - Slack 側は **済（2026-11-04）**: ワークスペース「bokashiと丸大の情報共有」に Slack アプリ `bokashi Rental Notify`（App ID A0CE8U2NRHV、https://api.slack.com/apps/A0CE8U2NRHV/incoming-webhooks）を作り、
   Incoming Webhook を `#予約通知` に追加。テスト投稿で 200 を確認。URL は鈴木の PC の `~/.config/bokashi-rental/slack-webhook-rental.txt`（リポジトリ外・本人のみ読める）
-- Webhook URL は Secret Manager の `SLACK_WEBHOOK_RENTAL` に入れる（リポジトリ・チャットには書かない）。Blaze にした後に:
+- Webhook URL は Secret Manager の `SLACK_WEBHOOK_RENTAL` に入れてある（version 1。リポジトリ・チャットには書かない）。作り直すときは:
 
 ```bash
 cd docs/mockups/deploy && firebase functions:secrets:set SLACK_WEBHOOK_RENTAL --project bokashi-ops-app --data-file ~/.config/bokashi-rental/slack-webhook-rental.txt
@@ -92,7 +93,7 @@ cd docs/mockups/deploy && firebase deploy --only functions:rental --project boka
 
 ## 既知の制約（本番化で解消）
 
-- 新着の Web 申込の Slack 通知は Functions を出すまで動かない（bokashi-ops-app の Blaze 化待ち）。それまでは一覧の「仮予約」タイルと、開いているときのトーストで気づく
+- 新着の Web 申込は `#予約通知`（Slack）に届く（2026-11-04 に Functions をデプロイ・通し確認済み）。Slack を見ない時間帯は一覧の「仮予約」タイルでも分かる
 - 申込の作成は未ログインで許しているため、いたずら投稿は防げない（内容の検査と長さ制限のみ）。増えるようなら App Check か Functions 経由（設計書 5章）
 - メール・カレンダーの完全自動化、請求書 PDF の自動添付は `design.html` の本番化で実装する
 - Codex（OpenAI）によるレビュー（ロジック2回・UI/UX 2回）は `../codex-review-2026-11-03.md` に保存。未対応の指摘もそこに残っている

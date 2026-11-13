@@ -105,12 +105,18 @@ html.js-motion .btn{transition:background var(--dur) var(--ease)}
 
 /* ヘッダー: ワードマーク + 主ボタン 1 つ */
 .header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--c-bg);border-bottom:var(--border-1)}
-.header.dark{background:rgba(15,27,40,.78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom-color:rgba(255,255,255,.12)}
+.header.dark{background:rgba(15,27,40,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom-color:rgba(255,255,255,.12)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:#0F1B28}
 .header .wrap{display:flex;align-items:center;justify-content:space-between;min-height:56px;gap:var(--s-3)}
 .wordmark{display:flex;align-items:center;gap:var(--s-2);text-decoration:none;color:var(--c-text);font-family:var(--f-en);font-stretch:75%;font-weight:700;font-size:1rem;letter-spacing:.04em;white-space:nowrap}
 .wordmark .mark{width:18px;height:18px}
 .header .btn{min-height:44px;padding:0 var(--s-5);font-size:var(--t-small)}
+/* ヘッダーのタグ（2026-11-13 鈴木さん「前回の様子」「登壇者紹介」）: 文字だけ・押す場所 44px・いまのページは青 */
+.nav{display:flex;align-items:center;gap:var(--s-2);margin-left:auto;margin-right:var(--s-2)}
+.nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 var(--s-2);font-size:var(--t-small);font-weight:700;color:var(--c-text);text-decoration:none;white-space:nowrap;border-bottom:2px solid transparent}
+.nav a[aria-current]{color:var(--c-accent);border-bottom-color:var(--c-accent)}
+@media (hover:hover) and (pointer:fine){ .nav a:hover{color:var(--c-accent)} }
+@media (max-width:559px){ .wordmark{font-size:0} .header .btn{padding:0 var(--s-4)} .nav{margin-right:0;gap:0} .nav a{padding:0 var(--s-2)} }
 
 /* 暗い面（表紙・前回・申込・ヘッダー）: 暗い配色のトークンをその要素だけに当てる（28_TYPO_PHOTO_LP.md「3 か所だけ暗い面に」） */
 .dark{--c-bg:#0F1B28; --c-surface:#172637; --c-accent:#5FB8E8; --c-soft:#1F3A52; --c-line:#2C4258;
@@ -292,71 +298,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 @media (min-width:768px){ .pc-only{display:inline} }
 
 /* ===== 登壇者ページ（speakers/）===== 一覧は行、紹介は 1 列。カードにしない（10）。写真が届くまで写真の枠は出さない（19） */
-.sp-hero{padding-block:var(--s-10) var(--s-8);min-height:0;display:block;isolation:auto} /* LP の表紙（写真いっぱい・白い字）の指定を登壇者ページでは戻す */
-.sp-hero h1{color:var(--c-text);letter-spacing:var(--ls-heading);line-height:var(--lh-heading)}
-.sp-hero .lead{color:var(--c-text-body);font-size:var(--t-lead);max-width:22em}
-.sp-hero .btn-ghost{color:var(--c-accent);border-color:var(--c-accent)}
-.sp-hero .btn-note{color:var(--c-text-sub)}
-.sp-hero .wrap{display:grid;gap:var(--s-6)}
-.sp-hero .kana{font-size:var(--t-small);color:var(--c-text-sub);margin:0 0 var(--s-2)}
-.sp-hero h1{font-size:var(--t-h1);margin-bottom:var(--s-3)}
-.sp-hero .role{font-size:var(--t-lead);line-height:var(--lh-lead);color:var(--c-text);max-width:30em;margin-bottom:var(--s-2)}
-.sp-hero .role b{font-weight:700}
-/* 登壇者ページの半島マーク（LP の表紙は写真に替えたので、基本の指定はここに） */
-.sp-hero .hero-visual{position:relative;height:30vw;max-height:200px}
-.sp-hero .hero-mark{position:absolute;top:0;aspect-ratio:1;color:var(--c-accent);pointer-events:none}
-.sp-hero .hero-mark .line{stroke-dasharray:100;stroke-dashoffset:0}
-.sp-hero .hero-visual{height:30vw;max-height:200px}
-.sp-hero .hero-mark{width:64vw;max-width:400px;right:-26vw}
-@media (min-width:768px){
-  .sp-hero{padding-block:var(--s-16) var(--s-10)}
-  .sp-hero .wrap{grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);align-items:center;min-height:0}
-  .sp-hero h1{font-size:var(--t-display);line-height:1.15}
-  .sp-hero .hero-visual{height:auto;min-height:360px;max-height:none}
-  .sp-hero .hero-mark{right:-18vw;top:50%;margin-top:min(-19vw,-230px);width:min(38vw,460px)}
-}
-.sp-session{display:inline-flex;align-items:center;gap:var(--s-2);font-family:var(--f-en);font-stretch:75%;font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:var(--t-small);color:var(--c-accent);text-decoration:none;margin-bottom:var(--s-3)}
-.sp-session .ja{font-family:var(--f-heading);letter-spacing:0;text-transform:none;color:var(--c-text)}
-.sp-body{display:grid;gap:var(--s-10)}
-.sp-body h2{font-size:var(--t-h3);margin-bottom:var(--s-3);padding-left:var(--s-4);border-left:3px solid var(--c-accent)}
-.sp-body .q{font-family:var(--f-heading);font-weight:700;color:var(--c-text);font-size:1.125rem;line-height:1.8;max-width:30em;font-feature-settings:"palt"}
-.sp-quote{font-family:var(--f-heading);font-weight:700;font-size:var(--t-h2);line-height:1.5;color:var(--c-text);max-width:22em;margin:0;font-feature-settings:"palt"}
-.sp-quote .h{color:var(--c-accent)}
-.sp-quote-src{font-size:var(--t-caption);color:var(--c-text-sub);margin-top:var(--s-3)}
-.links{list-style:none;margin:0;padding:0;border-top:var(--border-1);max-width:36em}
-.links li{display:grid;grid-template-columns:14px 1fr;gap:var(--s-3);align-items:start;padding-block:var(--s-3);border-bottom:var(--border-1)}
-.links .mark{margin-top:.55em}
-.links a{color:var(--c-accent);word-break:break-all}
-.links .sub{display:block}
-.sources{font-size:var(--t-caption);color:var(--c-text-sub);max-width:40em}
-.sources ol{margin:var(--s-2) 0 0;padding-left:1.4em}
-.sources li{margin-bottom:var(--s-1);word-break:break-all}
-.sources a{color:var(--c-text-sub)}
-.sp-nav{display:grid;gap:var(--s-3);border-top:var(--border-1);padding-top:var(--s-6)}
-.sp-nav a{display:grid;grid-template-columns:auto 1fr;gap:var(--s-3);align-items:center;text-decoration:none;color:var(--c-text);min-height:44px}
-.sp-nav .lbl{font-family:var(--f-en);font-stretch:75%;font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:var(--t-caption);color:var(--c-text-sub)}
-.sp-nav .nm{font-family:var(--f-heading);font-weight:700;font-size:1.125rem}
-.sp-nav a.next{text-align:right;grid-template-columns:1fr auto}
-.sp-nav a.next .mark{transform:rotate(180deg)}
-@media (min-width:768px){ .sp-nav{grid-template-columns:1fr 1fr} .sp-nav a{min-height:52px} }
-.pending{font-size:var(--t-small);color:var(--c-text-sub);border-top:var(--border-1);padding-top:var(--s-4);max-width:36em}
-
-/* 一覧: セッションごとに行で */
-.sp-group{margin-top:var(--s-16)}
-.sp-group:first-of-type{margin-top:0}
-.sp-group .day-head{margin-bottom:var(--s-4)}
-.sp-group .day-head .en{font-size:2rem}
-.sp-group .q{font-family:var(--f-heading);font-weight:700;color:var(--c-text);font-size:1.125rem;line-height:1.7;max-width:30em;margin-bottom:var(--s-5);font-feature-settings:"palt"}
-.sp-list{list-style:none;margin:0;padding:0;border-top:var(--border-1)}
-.sp-list li{border-bottom:var(--border-1)}
-.sp-list a{display:grid;grid-template-columns:1fr auto;gap:var(--s-1) var(--s-4);align-items:center;padding-block:var(--s-5);text-decoration:none;color:var(--c-text)}
-.sp-list .nm{font-family:var(--f-heading);font-weight:700;font-size:1.5rem;line-height:1.3}
-.sp-list .nm small{display:block;font-family:var(--f-body);font-weight:400;font-size:var(--t-small);line-height:1.4;color:var(--c-text-sub);margin-top:.15em}
-.sp-list .org{grid-column:1;color:var(--c-text-body);font-size:var(--t-small)}
-.sp-list .sum{grid-column:1;color:var(--c-text-body);max-width:36em}
-.sp-list .mark{grid-column:2;grid-row:1/span 3;width:18px;height:18px;transform:rotate(180deg);transition:transform .35s var(--ease)}
-@media (hover:hover) and (pointer:fine){ .sp-list a:hover .mark{transform:rotate(360deg)} .sp-list a:hover .nm{color:var(--c-accent)} }
-@media (min-width:768px){ .sp-list a{grid-template-columns:14em 1fr auto;padding-block:var(--s-6)} .sp-list .org{grid-column:2;grid-row:1} .sp-list .sum{grid-column:2;grid-row:2} .sp-list .nm{grid-row:1/span 2;font-size:1.75rem} .sp-list .mark{grid-column:3;grid-row:1/span 2} }
+/* 登壇者ページの見た目は assets/speakers.css（2026-11-13 に 28 の型で作り直し） */
 
 /* 前回の様子（第 2 回 in 岩内）: 報告書の写真 6 枚 + 2 日の流れ + 残ったもの。写真は .curtain で左から開く（motion.js） */
 .recap-lead{max-width:36em;margin-bottom:var(--s-8)}
@@ -413,6 +355,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 <header class="header dark">
   <div class="wrap">
     <a class="wordmark" href="#top" aria-label="シャコタニアンサミット 3 in 余市 ページの先頭へ"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>SHAKOTANIAN SUMMIT 3</a>
+    <nav class="nav" aria-label="ページ"><a href="https://shakotanian-summit-3.vercel.app/iwanai.html" target="_blank" rel="noopener">前回の様子</a><a href="https://shakotanian-summit-3.vercel.app/speakers/index.html">登壇者紹介</a></nav>
     <a class="btn btn-primary" href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener" data-cta-type="apply" data-cta-section="header">申し込む</a>
   </div>
 </header>

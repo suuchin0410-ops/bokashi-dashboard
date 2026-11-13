@@ -14,58 +14,71 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zalando+Sans:wdth,wght@75,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/speakers.css">
 </head>
-<body>
+<body class="sp-index">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="hanto" viewBox="0 0 24 24">
     <path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/>
     <path d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.8"/>
   </symbol>
 </svg>
-<header class="header">
+<div class="progress" aria-hidden="true"></div>
+<header class="header dark">
   <div class="wrap">
     <a class="wordmark" href="../index.html" aria-label="シャコタニアンサミット 3 in 余市 のトップへ"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>SHAKOTANIAN SUMMIT 3</a>
+    <nav class="nav" aria-label="ページ"><a href="../iwanai.html" target="_blank" rel="noopener">前回の様子</a><a href="index.html" aria-current="page">登壇者紹介</a></nav>
     <a class="btn btn-primary" href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener" data-cta-type="apply" data-cta-section="header">申し込む</a>
   </div>
 </header>
 <main id="top">
-  <section class="hero sp-hero" aria-labelledby="h-title">
+  <section class="hero dark" aria-labelledby="h-title">
+    <div class="hero-bg" aria-hidden="true"><img src="../assets/img/iwanai-talk2.webp" alt="" width="1600" height="1200" fetchpriority="high" decoding="async"></div>
     <div class="wrap">
       <div class="hero-in">
         <p class="one">Eight voices, <span class="hi">one peninsula.</span></p>
-        <h1 id="h-title"><span class="nb">登壇者</span></h1>
-        <p class="lead">11 月 21 日（土）14:00 からの 3 つのセッションに登壇する 8 人。土地、人と共同、未来と進化の順に、視点を広げていきます。</p>
-        <p class="btn-note">ゲストは順次発表です。名前を押すと紹介ページが開きます。</p>
-      </div>
-      <div class="hero-visual" aria-hidden="true">
-        <svg class="hero-mark" viewBox="0 0 24 24"><path class="fill" d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path class="line" d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width=".5" pathLength="100"/></svg>
+        <h1 id="h-title"><span class="nb">登壇する、</span><span class="nb"><span class="h">8</span> 人。</span></h1>
+        <p class="lead">11 月 21 日（土）14:00 からの 3 つのセッション。土地、人と共同、未来と進化の順に、視点を広げていきます。名前を押すと紹介ページが開きます。</p>
       </div>
     </div>
+    <p class="credit">写真: 第 2 回 in 岩内（2025 年 11 月）のトークセッション</p>
   </section>
-  <section class="section" aria-label="登壇者一覧">
+  <section class="section" aria-label="登壇者一覧" id="sessions">
     <div class="wrap">
       <div class="sp-group" id="session1">
-        <div class="day-head"><span class="en">Session 1</span><h2>この土地で、生きる。</h2><span class="sub">土地・生業・一次産業</span></div>
+        <span class="en">Session 1</span>
+        <h2><span class="nb">この土地で、生きる。</span></h2>
+        <p class="theme">土地・生業・一次産業</p>
         <p class="q">私たちは、この土地の何によって生きているのか。海、山、森、畑、水、農林水産業、食などから足元を見る。</p>
         <ul class="sp-list"><li><a href="murata.html"><span class="nm">村田 均</span><span class="org">じきの畑（じき）　園主</span><span class="sum">余市町登町で、全圃場が有機 JAS 認証のワイン用ぶどうを育て、野生酵母だけで醸す人。2026 年、自分の醸造所を建てて初めての仕込みを迎えました。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li><li><a href="otsuka.html"><span class="nm">大塚 英治<small>おおつか えいじ</small></span><span class="org">株式会社キットブルー　代表取締役</span><span class="sum">神恵内・岩内・泊の 3 町村がつくった地域商社「キットブルー」の代表。乾燥ナマコ「宮比」や白菜で育てる「冬ウニ」で、積丹半島の海の幸を「売れる」形にし、漁村のまちづくりを続けています。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li><li><a href="maruyama.html"><span class="nm">丸山 厚</span><span class="org">里山農園なかのさわ　代表</span><span class="sum">仁木町東町で、農薬・化学肥料を使わずにブルーベリー、ハスカップ、樹齢 80 年を超える利平栗を育てる農園。土の微生物と、生き物が棲める里山そのものをつくっています。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li><li><a href="shiratori.html"><span class="nm">白鳥 翔大<small>しらとり しょうた</small></span><span class="org">馳走オーベルジュ Lift Up 余市　料理人</span><span class="sum">表参道の三つ星フレンチとデンマーク、フェロー諸島で修業し、昆虫食レストランを経て北海道へ。2026 年、余市 SAGRA の場所を受け継いで、海・山・畑を自分で回って食材を集める「馳走」のオーベルジュを始めました。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li></ul>
       </div>
       <div class="sp-group" id="session2">
-        <div class="day-head"><span class="en">Session 2</span><h2>ここで、誰と生きる？</h2><span class="sub">人・移住・教育・共同</span></div>
+        <span class="en">Session 2</span>
+        <h2><span class="nb">ここで、誰と生きる？</span></h2>
+        <p class="theme">人・移住・教育・共同</p>
         <p class="q">誰が「この土地の人」なのか。どんな共同が生まれ得るのか。移住、教育、世代、地域コミュニティから人と人の関係を見る。</p>
         <ul class="sp-list"><li><a href="sakamoto.html"><span class="nm">坂本 純科<small>さかもと じゅんか</small></span><span class="org">NPO 法人 北海道エコビレッジ推進プロジェクト（余市エコビレッジ）　理事長</span><span class="sum">余市町登町の丘、約 6ha に農場・果樹園・ワインぶどう畑・道産材の学び舎・シェアハウスをつくり、年間およそ 1,000 人が学びに訪れる「余市エコビレッジ」を 2012 年から率いています。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li><li><a href="mizushima.html"><span class="nm">水嶼 直滉<small>みずしま なおあき</small></span><span class="org">ミチタル株式会社（MICHITAL）　代表取締役・古平町地域おこし協力隊（林業推進員）</span><span class="sum">積丹半島・古平町で、道産材からウイスキーやワインの洋酒樽をつくる人。職人の勘に頼らない工程で、シラカバなど「樽に向かない」とされてきた木も使い、北海道の森の価値を北海道の中で完結させようとしています。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li><li><a href="igarashi.html"><span class="nm">五十嵐 慎一郎<small>いがらし しんいちろう</small></span><span class="org">株式会社 SHAKOTAN GO　代表取締役・シャコタニアンサミット 運営統括</span><span class="sum">閉館が決まっていた積丹町の温泉「岬の湯しゃこたん」を 2022 年に引き継ぎ、サウナ・食堂・宿を足して立て直した人。シャコタニアンサミットの言い出しっぺで、今回も運営統括です。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li></ul>
       </div>
       <div class="sp-group" id="session3">
-        <div class="day-head"><span class="en">Session 3</span><h2>この土地は、どう進化する？</h2><span class="sub">適応・創造・デザイン・未来</span></div>
+        <span class="en">Session 3</span>
+        <h2><span class="nb">この土地は、どう進化する？</span></h2>
+        <p class="theme">適応・創造・デザイン・未来</p>
         <p class="q">人口減少、気候変動、産業変化、人の移動など環境が変わる中で、地域はどう適応し、関係性を組み替え、次の姿へ進めるか。「半島を一つの生態系として見る」視点を DAY 2 の共創プログラムへつなぎます。</p>
         <ul class="sp-list"><li><a href="tachikawa.html"><span class="nm">太刀川 英輔<small>たちかわ えいすけ</small></span><span class="org">NOSIGNER　代表・デザインストラテジスト</span><span class="sum">創造性を「変異と選択」で学べる形にした『進化思考』の著者。東京防災、2025 年大阪・関西万博 日本館の基本構想など、社会の仕組みを組み替えるデザインを続けています。</span><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg></a></li></ul>
       </div>
     </div>
   </section>
-  <section class="section section-alt" aria-label="申込">
+  <section class="section dark photo-scene sp-cta" aria-labelledby="h-cta">
+    <div class="scene-bg" aria-hidden="true"><img src="../assets/img/iwanai-dusk.webp" alt="" width="1600" height="1200" loading="lazy" decoding="async"></div>
     <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-cta"><span class="nb">会いに、</span><span class="nb">来てください。</span></h2>
+        <p class="one">Yoichi, <span class="hi">Nov. 21–22.</span></p>
+      </div>
       <div class="btn-row"><a class="btn btn-primary" href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener" data-cta-type="apply" data-cta-section="speakers"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>参加を申し込む</a><a class="btn btn-ghost" href="../index.html#program">2 日間の流れを見る</a></div>
       <p class="btn-note">申込フォーム（Google フォーム）が別のタブで開きます。</p>
     </div>
+    <p class="credit">写真: 第 2 回 in 岩内、夕暮れの会場前</p>
   </section>
 </main>
 <footer class="footer">
@@ -79,6 +92,7 @@
       <span>シャコタニアンサミット in 余市実行委員会</span>
       <span>2026.11.21 SAT – 11.22 SUN</span>
       <a href="index.html">登壇者一覧</a>
+      <a href="../iwanai.html" target="_blank" rel="noopener">前回の様子</a>
       <a href="../index.html#program">2 日間の流れ</a>
     </div>
   </div>
@@ -87,5 +101,6 @@
 <script src="../js/ScrollTrigger.min.js" defer></script>
 <script src="../js/ScrollToPlugin.min.js" defer></script>
 <script src="../js/motion.js" defer></script>
+<script src="../js/speakers.js" defer></script>
 </body>
 </html>

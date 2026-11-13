@@ -1,0 +1,98 @@
+/* 登壇者ページ（一覧 + 8 人）— 28_TYPO_PHOTO_LP.md の型: 表紙は暗い面に大きな名前ひとつ、読む段は明るい面。
+   決まり: 02_BRANDS.md シャコタニアン・07 タイポ（clamp で画面幅に）・12 React Bits（Blur Text を素の JS）・21 GSAP・23 半島マーク
+   共通の見た目は site.css、動きは js/motion.js + js/speakers.js。JS が止まっても全部見える */
+
+/* 読み進みの線 */
+.progress{position:fixed;top:0;left:0;height:3px;width:100%;background:var(--c-accent);transform-origin:0 50%;transform:scaleX(0);z-index:60}
+html:not(.js-motion) .progress{display:none}
+
+/* 1. 表紙（紹介ページ）: 暗い面に、名前を画面いっぱいの大きさで。半島マークは右下に大きく薄く、線が描かれて塗られる */
+.sp-cover{min-height:88svh;display:grid;align-items:end;padding-block:calc(var(--s-20) + 56px) var(--s-16);overflow:clip;isolation:isolate}
+.sp-cover .wrap{width:100%;position:relative;z-index:1}
+.sp-cover .big{position:absolute;right:-24vw;bottom:-14vw;width:78vw;aspect-ratio:1;color:var(--c-accent);opacity:.28;z-index:0;pointer-events:none}
+.sp-cover .big .fill{transform-origin:100% 50%}
+.sp-cover .big .line{stroke-dasharray:100;stroke-dashoffset:0}
+.sp-session{display:inline-flex;align-items:center;gap:var(--s-2);font-family:var(--f-en);font-stretch:75%;font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:var(--t-small);color:var(--c-accent);text-decoration:none;margin-bottom:var(--s-5);min-height:44px}
+.sp-session .ja{font-family:var(--f-heading);letter-spacing:0;text-transform:none;color:#fff;font-size:1.0625rem}
+.sp-cover .kana{font-family:var(--f-en);font-stretch:75%;font-weight:700;letter-spacing:.08em;font-size:var(--t-body);color:#C9D4DD;margin:0 0 var(--s-2)}
+.sp-cover h1{font-size:clamp(3.5rem,15vw,10rem);line-height:1;letter-spacing:-.02em;color:#fff;margin:0 0 var(--s-5);font-feature-settings:"palt"}
+.sp-cover h1 .ch{display:inline-block}
+.sp-cover .role{font-family:var(--f-heading);font-weight:700;font-size:clamp(1.25rem,3.2vw,2rem);line-height:1.4;color:#fff;max-width:24em;margin:0 0 var(--s-4);font-feature-settings:"palt"}
+.sp-cover .role small{display:block;font-family:var(--f-body);font-weight:400;font-size:.6em;color:#C9D4DD;margin-top:.3em}
+.sp-cover .lead{color:#E8EEF2;max-width:28em;font-size:clamp(1.0625rem,2.4vw,1.375rem);line-height:1.7}
+@media (min-width:768px){
+  .sp-cover{padding-block:calc(var(--s-28) + 56px) var(--s-20);min-height:100svh}
+  .sp-cover .big{right:-6vw;top:50%;bottom:auto;width:min(62vw,620px);transform:translateY(-50%);opacity:.7}
+  .sp-cover .wrap{max-width:calc(var(--page-max));}
+  .sp-cover .hero-in{max-width:min(60rem,calc(100% - min(30vw,320px)))}
+}
+
+/* 2. 本人の言葉: 紺より少し明るい面に、大きな一文。1 文字ずつピントが合う（js/speakers.js） */
+.sp-quote-sec{background:var(--c-surface);padding-block:var(--s-20)}
+.sp-quote-sec .kicker{font-family:var(--f-en);font-stretch:75%;font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:var(--t-small);color:var(--c-accent);margin:0 0 var(--s-6);display:flex;align-items:center;gap:var(--s-3)}
+.sp-quote{font-family:var(--f-heading);font-weight:700;font-size:clamp(1.625rem,4.6vw,3.25rem);line-height:1.45;letter-spacing:-.01em;color:#fff;max-width:22em;margin:0;font-feature-settings:"palt";text-wrap:balance}
+.sp-quote .ch{display:inline-block}
+.sp-quote .h{color:var(--c-accent)}
+.sp-quote-src{font-size:var(--t-small);color:#C9D4DD;margin-top:var(--s-6)}
+.sp-quote-src a{color:#C9D4DD}
+@media (min-width:768px){ .sp-quote-sec{padding-block:var(--s-28)} }
+
+/* 3. 読む段（明るい面）: 左に大きな英字の見出し、右に本文。見出しの日本語は明朝で大きく */
+.sp-body{display:grid;gap:var(--s-16)}
+.sp-body > div{display:grid;gap:var(--s-4)}
+.sp-body .en{font-size:clamp(2.5rem,7vw,4.5rem);color:var(--c-accent);line-height:.9;letter-spacing:-.02em}
+.sp-body h2{font-size:clamp(1.5rem,3.6vw,2.25rem);line-height:1.25;margin:0 0 var(--s-2)}
+.sp-body p{max-width:36em}
+.sp-body .q{font-family:var(--f-heading);font-weight:700;color:var(--c-text);font-size:clamp(1.25rem,2.6vw,1.625rem);line-height:1.7;max-width:26em;font-feature-settings:"palt"}
+@media (min-width:900px){
+  .sp-body > div{grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr);gap:var(--s-10);align-items:start}
+  .sp-body > div > .en{grid-row:1;grid-column:1;position:sticky;top:calc(56px + var(--s-6))}
+  .sp-body > div > *:not(.en){grid-column:2}
+}
+.links{list-style:none;margin:0;padding:0;border-top:var(--border-1);max-width:36em}
+.links li{display:grid;grid-template-columns:14px 1fr;gap:var(--s-3);align-items:start;padding-block:var(--s-3);border-bottom:var(--border-1)}
+.links .mark{margin-top:.55em}
+.links a{color:var(--c-accent);word-break:break-all}
+.links .sub{display:block}
+.pending{font-size:var(--t-small);color:var(--c-text-sub);border-top:var(--border-1);padding-top:var(--s-4);max-width:36em}
+.sources{font-size:var(--t-caption);color:var(--c-text-sub);max-width:40em}
+.sources ol{margin:var(--s-2) 0 0;padding-left:1.4em}
+.sources li{margin-bottom:var(--s-1);word-break:break-all}
+.sources a{color:var(--c-text-sub)}
+
+/* 4. 前後の登壇者: 名前を大きく */
+.sp-nav{display:grid;gap:var(--s-3);border-top:var(--border-1)}
+.sp-nav a{display:grid;grid-template-columns:auto 1fr;gap:var(--s-4);align-items:center;text-decoration:none;color:var(--c-text);min-height:44px;padding-block:var(--s-5);border-bottom:var(--border-1)}
+.sp-nav .lbl{font-family:var(--f-en);font-stretch:75%;font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:var(--t-caption);color:var(--c-text-sub)}
+.sp-nav .nm{font-family:var(--f-heading);font-weight:700;font-size:clamp(1.5rem,4vw,2.5rem);line-height:1.2;transition:color var(--dur) var(--ease)}
+.sp-nav .mark{width:18px;height:18px;transition:transform .35s var(--ease)}
+.sp-nav a.next{text-align:right;grid-template-columns:1fr auto}
+.sp-nav a.next .mark{transform:rotate(180deg)}
+@media (hover:hover) and (pointer:fine){ .sp-nav a:hover .nm{color:var(--c-accent)} .sp-nav a:hover .mark{transform:rotate(360deg)} .sp-nav a.next:hover .mark{transform:rotate(540deg)} }
+@media (min-width:768px){ .sp-nav{grid-template-columns:1fr 1fr;gap:var(--s-10)} .sp-nav a{min-height:52px;padding-block:var(--s-8)} }
+
+/* 5. 一覧: セッションの題を大きな言葉に、名前を 1 行ずつ大きく */
+.sp-index .hero h1{font-size:clamp(3rem,12vw,7.5rem)}
+.sp-group{padding-block:var(--s-16);border-top:var(--border-1)}
+.sp-group:first-of-type{border-top:0;padding-top:0}
+.sp-group .en{display:block;font-size:clamp(1rem,2.4vw,1.25rem);letter-spacing:.14em;text-transform:uppercase;color:var(--c-accent);margin-bottom:var(--s-3)}
+.sp-group h2{font-size:clamp(2rem,6.4vw,4.5rem);line-height:1.1;letter-spacing:-.015em;margin-bottom:var(--s-3)}
+.sp-group .theme{font-size:var(--t-small);color:var(--c-text-sub);margin:0 0 var(--s-4)}
+.sp-group .q{font-family:var(--f-heading);font-weight:700;color:var(--c-text);font-size:clamp(1.125rem,2.4vw,1.5rem);line-height:1.7;max-width:28em;margin-bottom:var(--s-8);font-feature-settings:"palt"}
+.sp-list{list-style:none;margin:0;padding:0;border-top:var(--border-1)}
+.sp-list li{border-bottom:var(--border-1)}
+.sp-list a{display:grid;grid-template-columns:1fr auto;gap:var(--s-1) var(--s-4);align-items:center;padding-block:var(--s-6);text-decoration:none;color:var(--c-text)}
+.sp-list .nm{font-family:var(--f-heading);font-weight:700;font-size:clamp(2rem,7vw,3.75rem);line-height:1.1;letter-spacing:-.015em;transition:color var(--dur) var(--ease),transform .45s var(--ease)}
+.sp-list .nm small{display:block;font-family:var(--f-en);font-stretch:75%;font-weight:700;letter-spacing:.08em;font-size:var(--t-small);line-height:1.4;color:var(--c-text-sub);margin-top:.3em}
+.sp-list .org{grid-column:1;color:var(--c-text);font-weight:700;font-size:var(--t-body)}
+.sp-list .sum{grid-column:1;color:var(--c-text-body);max-width:36em;font-size:var(--t-small)}
+.sp-list .mark{grid-column:2;grid-row:1/span 3;width:22px;height:22px;transform:rotate(180deg);transition:transform .45s var(--ease)}
+@media (hover:hover) and (pointer:fine){ .sp-list a:hover .mark{transform:rotate(360deg)} .sp-list a:hover .nm{color:var(--c-accent);transform:translateX(.08em)} }
+@media (min-width:900px){ .sp-list a{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) auto;padding-block:var(--s-8)} .sp-list .org{grid-column:2;grid-row:1} .sp-list .sum{grid-column:2;grid-row:2} .sp-list .nm{grid-row:1/span 2} .sp-list .mark{grid-column:3;grid-row:1/span 2} }
+@media (min-width:768px){ .sp-group{padding-block:var(--s-20)} }
+
+/* 6. 締め（一覧の最後）: 写真いっぱいの暗い面に一文 */
+.sp-cta .credit{position:absolute;right:var(--gutter);bottom:var(--s-3)}
+
+/* 「視差効果を減らす」設定 */
+@media (prefers-reduced-motion:reduce){ .progress{display:none} }

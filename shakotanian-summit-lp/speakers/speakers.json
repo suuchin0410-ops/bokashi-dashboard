@@ -1,0 +1,475 @@
+{
+ "checked": "2026-11-13",
+ "sessions": [
+  {
+   "no": 1,
+   "title": "この土地で、生きる。",
+   "theme": "土地・生業・一次産業",
+   "q": "私たちは、この土地の何によって生きているのか。海、山、森、畑、水、農林水産業、食などから足元を見る。"
+  },
+  {
+   "no": 2,
+   "title": "ここで、誰と生きる？",
+   "theme": "人・移住・教育・共同",
+   "q": "誰が「この土地の人」なのか。どんな共同が生まれ得るのか。移住、教育、世代、地域コミュニティから人と人の関係を見る。"
+  },
+  {
+   "no": 3,
+   "title": "この土地は、どう進化する？",
+   "theme": "適応・創造・デザイン・未来",
+   "q": "人口減少、気候変動、産業変化、人の移動など環境が変わる中で、地域はどう適応し、関係性を組み替え、次の姿へ進めるか。「半島を一つの生態系として見る」視点を DAY 2 の共創プログラムへつなぎます。"
+  }
+ ],
+ "speakers": [
+  {
+   "slug": "murata",
+   "session": 1,
+   "name": "村田 均",
+   "kana": "",
+   "org": "じきの畑（じき）",
+   "title": "園主",
+   "summary": "余市町登町で、全圃場が有機 JAS 認証のワイン用ぶどうを育て、野生酵母だけで醸す人。2026 年、自分の醸造所を建てて初めての仕込みを迎えました。",
+   "desc": "村田均（じきの畑 園主）の紹介。余市町登町で有機 JAS のワインぶどう栽培と自然な醸造。銘柄「夕」「環」「霞」。シャコタニアンサミット 3 セッション 1 ゲスト。",
+   "now": [
+    "余市町登町の「じき」園主。ワイン用ぶどう（グリューナー・フェルトリーナなど）を主軸に野菜・梅・栗を育て、全圃場が有機 JAS 認証。化学農薬・化学肥料は使わず、土壌改良材は羊の糞などから自分で作ります。母羊 3 頭と、庭先の黒豚も 4 シーズン目。",
+    "ワインは野生酵母、清澄剤・培養酵母なし。岩見沢の 10R ワイナリーに毎冬 2 か月住み込んで醸造を学び、2024 ヴィンテージからは自園のぶどうだけで仕込んでいます。銘柄は「夕（ユウ）」「環（メグル）」「霞（カスミ）」「西風」。2026 年、自分の醸造所を建てて初めての仕込みを迎えました。",
+    "食と加工の「じきの台所」では、自園の野菜と、園主が採った山菜・きのこ・渓魚・鹿を使った自然食を、町内「余市テラス」を間借りして毎週金曜に出しています。ベジタリアン・ヴィーガン対応。"
+   ],
+   "past": [
+    "2015 年に家族で余市へ移住。「農業を一生の仕事にしたい」と 2 年間の農業研修を経て、2017 年 4 月にワインぶどう農家として独立しました。",
+    "2026 年 3 月、恵比寿 BLUE NOTE PLACE の「Le Voyage des Vignerons de YOICHI」に、余市の生産者 7 人の一人として参加。北海道新聞の連載「ワイン王国北海道の『新星』たち」（2023 年）でも取り上げられました。"
+   ],
+   "links": [
+    {
+     "label": "じき",
+     "url": "https://www.jiki.wine/",
+     "note": "公式サイト・オンラインショップ"
+    },
+    {
+     "label": "じきの畑のブログ",
+     "url": "https://blog.jiki.wine/"
+    },
+    {
+     "label": "Facebook",
+     "url": "https://www.facebook.com/jikinohatake"
+    },
+    {
+     "label": "余市町ふるさと納税 生産者ページ",
+     "url": "https://yoichi.furusato179.com/producer/jikinohatake/"
+    }
+   ],
+   "sources": [
+    "https://www.jiki.wine/about",
+    "https://blog.jiki.wine/",
+    "https://www.hokkaido-np.co.jp/article/924343/",
+    "https://yoichi.furusato179.com/producer/jikinohatake/",
+    "https://yoichi.furusato179.com/shungoyomi/2023/11/18/interview2023-jikinohatake/",
+    "https://www.bluenoteplace.jp/vignerons_yoichi/",
+    "https://prtimes.jp/main/html/rd/p/000000037.000050330.html"
+   ],
+   "quote": {
+    "text": "環境に負荷をかけない生き方をしたい。",
+    "src": "余市町ふるさと納税「余市ワイナリー訪問記」（2023 年 11 月）",
+    "url": "https://yoichi.furusato179.com/shungoyomi/2023/11/18/interview2023-jikinohatake/"
+   },
+   "pending": "お名前の読みは公開情報で確認できていません。写真は本人提供のものを待っています（北海道新聞・PR TIMES に掲載写真あり）。"
+  },
+  {
+   "slug": "otsuka",
+   "session": 1,
+   "name": "大塚 英治",
+   "kana": "おおつか えいじ",
+   "org": "株式会社キットブルー",
+   "title": "代表取締役",
+   "summary": "神恵内・岩内・泊の 3 町村がつくった地域商社「キットブルー」の代表。乾燥ナマコ「宮比」や白菜で育てる「冬ウニ」で、積丹半島の海の幸を「売れる」形にし、漁村のまちづくりを続けています。",
+   "desc": "大塚英治（株式会社キットブルー 代表取締役）の紹介。神恵内・岩内・泊の地域商社、ナマコ・ウニの商品開発、海業。シャコタニアンサミット 3 セッション 1 ゲスト。",
+   "now": [
+    "株式会社キットブルー 代表取締役。社名は神恵内（K）・岩内（I）・泊（T）の頭文字と積丹の海の「ブルー」。3 町村が連携して 2017 年 10 月に設立した地域商社で、本社は神恵内村。ミッションは「持続可能な漁村まちづくり」。",
+    "乾燥ナマコ「北海道 岩宇 なまこ『宮比』」、白菜を与えて育てる「冬ウニ」、泊村産ホタテの「帆立でPON」などの商品開発に加え、ウニの陸上養殖の実証、神恵内村の小水力発電の調査、海業（釣り施設）、学生ダイバーが回収したルアーを再生して売る「もぐって☆Reルアー」まで、海と村の仕事を広げています。2026 年 10 月には東京で「神恵内村 未来共創プロジェクト 2026」を企画・運営しました。",
+    "海洋調査・ダイビングの株式会社沿海調査エンジニアリング 代表取締役社長、有限会社北海屋大塚商店 代表取締役、東海大学 非常勤講師、ジェイアール東日本企画（jeki）地域プロデューサー、小樽観光協会・泊村観光協会 理事も務めます。第 1 回シャコタニアンサミットから協力団体です。"
+   ],
+   "past": [
+    "1969 年小樽生まれ。8 歳から日本泳法、高校はボート部、東海大学海洋学部でスクーバダイビングに出会い NAUI インストラクターに。卒業後、神恵内村と 40 年近い付き合いのある沿海調査エンジニアリングに入社しました。",
+    "2016 年、泊村の使われなくなった海の家を改装して海カフェ「さかずきテラス」を開業。2017 年、地方創生の事業としてキットブルーの経営に参画。講演の題はいつも「積丹半島からの挑戦」。ライフワークは「海のあるハッピーなマチづくり」。"
+   ],
+   "links": [
+    {
+     "label": "キットブルー",
+     "url": "https://www.kitblue.jp/",
+     "note": "公式サイト"
+    },
+    {
+     "label": "オンラインショップ",
+     "url": "https://kitbluenet.theshop.jp/"
+    },
+    {
+     "label": "Instagram @kitblue.jp",
+     "url": "https://www.instagram.com/kitblue.jp/"
+    },
+    {
+     "label": "くらしごと「地域商社キットブルー」の記事（2021 年 2 月）",
+     "url": "https://kurashigoto.hokkaido.jp/report/20210201094000.php"
+    }
+   ],
+   "sources": [
+    "https://www.kitblue.jp/new/",
+    "https://kurashigoto.hokkaido.jp/report/20210201094000.php",
+    "https://trace-info.com/wp-content/uploads/2024/07/R06_kouenkai_005.pdf",
+    "https://shigoto-hajime.com/archives/project/kitblue2024/",
+    "https://hokkaido.doyu.jp/20201115np10/",
+    "https://hokkaido.doyu.jp/20221015np19/",
+    "https://www.ecozzeria.jp/events/special/kamoenai2026.html",
+    "https://web.tsuribito.co.jp/north/relure",
+    "https://prtimes.jp/main/html/rd/p/000000009.000095917.html"
+   ],
+   "en": "Eiji Otsuka",
+   "quote": {
+    "text": "子どもたちが戻ってきて、働きたいと思う魅力的な地域と仕事づくりをしていきたい。",
+    "src": "北海道中小企業家同友会 報告（2022 年 10 月）",
+    "url": "https://hokkaido.doyu.jp/20221015np19/"
+   },
+   "pending": "写真は本人提供のものを待っています（くらしごと・同友会の記事に掲載写真あり）。"
+  },
+  {
+   "slug": "maruyama",
+   "session": 1,
+   "name": "丸山 厚",
+   "kana": "",
+   "org": "里山農園なかのさわ",
+   "title": "代表",
+   "summary": "仁木町東町で、農薬・化学肥料を使わずにブルーベリー、ハスカップ、樹齢 80 年を超える利平栗を育てる農園。土の微生物と、生き物が棲める里山そのものをつくっています。",
+   "desc": "丸山厚（里山農園なかのさわ 代表）の紹介。仁木町でブルーベリー・ハスカップ・利平栗を自然栽培。シャコタニアンサミット 3 セッション 1 ゲスト。",
+   "now": [
+    "余市湾を望む仁木町東町の「里山農園なかのさわ」で、ブルーベリー、ハスカップ、栗を育てています。農薬・化学肥料は使わず、園内の水は地元で飲まれている湧き水「美人の水」。毎朝手で摘んだハスカップは浜風のおかげで甘みが強い、と商品の説明にあります。",
+    "畑だけでなく、自ら山に入って多種多様な生き物が棲める里山づくりに取り組んでいます。栗は樹齢 80 年を超える利平栗の木から収穫し、ブルーベリーとハスカップのミックスベリーソースも作っています。産直サイト「食べチョク」で販売中。",
+    "農園の言葉は「農園は山、里、海が詰まった楽園」「持続可能な循環型農業を目指して」。"
+   ],
+   "past": [
+    "アメリカでワインアドバイザー、レストランプロデューサーとして長くレストランに携わり、食材を探し続けた末に「最終的に自ら美味しい食材を生産したい」と就農しました（食べチョクの生産者プロフィールより）。",
+    "シャコタニアンサミット 3 の協力団体の一つです。"
+   ],
+   "links": [
+    {
+     "label": "食べチョク 生産者ページ",
+     "url": "https://www.tabechoku.com/producers/29521",
+     "note": "プロフィールと商品"
+    }
+   ],
+   "sources": [
+    "https://www.tabechoku.com/producers/29521",
+    "https://www.tabechoku.com/products/311140",
+    "https://www.tabechoku.com/products/273038",
+    "https://www.tabechoku.com/products/282225"
+   ],
+   "quote": {
+    "text": "農園は山、里、海が詰まった楽園。",
+    "src": "食べチョク 商品ページ（農園のこだわり）",
+    "url": "https://www.tabechoku.com/products/311140"
+   },
+   "pending": "お名前の読みは公開情報で確認できていません。写真は本人提供のものを待っています。公式サイト・SNS は見つかりませんでした。"
+  },
+  {
+   "slug": "shiratori",
+   "session": 1,
+   "name": "白鳥 翔大",
+   "kana": "しらとり しょうた",
+   "org": "馳走オーベルジュ Lift Up 余市",
+   "title": "料理人",
+   "summary": "表参道の三つ星フレンチとデンマーク、フェロー諸島で修業し、昆虫食レストランを経て北海道へ。2026 年、余市 SAGRA の場所を受け継いで、海・山・畑を自分で回って食材を集める「馳走」のオーベルジュを始めました。",
+   "desc": "白鳥翔大（馳走オーベルジュ Lift Up 余市 料理人）の紹介。L'Effervescence、Relæ、KOKS、ANTCICADA を経て余市へ。シャコタニアンサミット 3 セッション 1 ゲスト。",
+   "now": [
+    "余市町登町の「馳走オーベルジュ Lift Up 余市」の料理人。「馳走」はお客様をもてなすために食材を集めて走り回ること。余市の sunny side farm で農業を学びながら、海・山・川・畑を自ら回って食材を集め、二十四節気に余市独自の季語を重ねてコースを組みます。",
+    "2026 年、ディスティネーションレストランに選ばれた「余市 SAGRA」（村井啓人シェフ）の建物とバトンを引き継いで始動。ドメーヌ・タカヒコ、Domaine Mont、えこふぁーむなど余市・仁木の約 30 軒の生産者の名前を公式サイトに掲げ、ワイナリーとのメーカーズディナーを続けています。",
+    "最大 12 名、水〜土の 18:00 一斉スタート。宿泊は 1 泊 2 食。"
+   ],
+   "past": [
+    "1992 年、静岡県生まれ。子どものころから魚が好きで、自分で獲った魚を料理したのが始まり。服部栄養専門学校を出て、表参道の三つ星フレンチ「L'Effervescence」に約 7 年。",
+    "サステナビリティへの関心からデンマークへ渡り「Manfreds」「Relæ」、フェロー諸島の「KOKS」で修業。2020 年に東京・馬喰町で昆虫食レストラン「ANTCICADA」を仲間と開業し、約 3 年ヘッドシェフを務めました。",
+    "2023 年 8 月、札幌・大通の bokashi 1 階にカジュアルダイニング「Lift Up」を開業。余市の畑に通って野菜やハーブを自分で摘み、「数年後に余市にファームレストランを」と準備を進めてきました。"
+   ],
+   "links": [
+    {
+     "label": "Lift Up 余市",
+     "url": "https://www.liftup-yoichi.com/",
+     "note": "公式サイト"
+    },
+    {
+     "label": "Instagram @liftup_41",
+     "url": "https://www.instagram.com/liftup_41/",
+     "note": "お店のアカウント"
+    },
+    {
+     "label": "予約（TableCheck）",
+     "url": "https://www.tablecheck.com/ja/liftup-yoichi/reserve/message"
+    },
+    {
+     "label": "開業のお知らせ（PR TIMES・2026 年 6 月）",
+     "url": "https://prtimes.jp/main/html/rd/p/000000002.000181612.html"
+    }
+   ],
+   "sources": [
+    "https://prtimes.jp/main/html/rd/p/000000002.000181612.html",
+    "https://hotelbank.jp/new-hotels/hokkaido-lift-up-yoichi-2026open/",
+    "https://hitosara.com/0004046521/",
+    "https://girlspremium.jp/articles/view/5954",
+    "https://www.poroco.co.jp/newsreport/2378/",
+    "https://moula.jp/articles/trip_eat/entry-5521.html",
+    "https://www.liftup-yoichi.com/about/",
+    "https://www.liftup-yoichi.com/supplier/",
+    "https://www.liftup-yoichi.com/news-release/"
+   ],
+   "en": "Shota Shiratori",
+   "quote": {
+    "text": "自分がずっと探していたものが見つかった。",
+    "src": "PR TIMES「Lift Up 余市」開業リリース（2026 年 6 月）",
+    "url": "https://prtimes.jp/main/html/rd/p/000000002.000181612.html"
+   },
+   "pending": "写真は本人提供のものを待っています（PR TIMES・poroco に掲載写真あり）。"
+  },
+  {
+   "slug": "sakamoto",
+   "session": 2,
+   "name": "坂本 純科",
+   "kana": "さかもと じゅんか",
+   "org": "NPO 法人 北海道エコビレッジ推進プロジェクト（余市エコビレッジ）",
+   "title": "理事長",
+   "summary": "余市町登町の丘、約 6ha に農場・果樹園・ワインぶどう畑・道産材の学び舎・シェアハウスをつくり、年間およそ 1,000 人が学びに訪れる「余市エコビレッジ」を 2012 年から率いています。",
+   "desc": "坂本純科（余市エコビレッジ 理事長）の紹介。札幌市の公園設計から欧州のエコビレッジ行脚を経て、2013 年から余市に拠点を建設。シャコタニアンサミット 3 セッション 2 ゲスト。",
+   "now": [
+    "NPO 法人 北海道エコビレッジ推進プロジェクトの理事長・発起人。余市町登町の丘陵地約 6ha に、農場、果樹園、ワインぶどう畑、道産材のパッシブデザインの「学び舎」（2014 年完成）、シェアハウス MiCasa、タイニーハウス、コンポストトイレ、手作りの浄化槽、太陽光発電を少しずつ建ててきました。電気は再エネ 100% の会社から買っています。",
+    "2015 年から体験学習の場「余市エコカレッジ」を本格稼働。SDGs 研修ツアー、修学旅行の受け入れ、住み込みインターン、100 か国の参加を目指す「ピースワインプロジェクト」などを続け、2016 年以降は年間およそ 1,000 人が訪れます。近隣の農家 5 軒も運営に関わる「地域自給」の形です。収入はセミナー・ワイン販売・助成金で、補助金に頼らない経営を目指しています。",
+    "2026 年は開設 15 年。半生をまとめた『遊ぶように暮らし、暮らすように働く〜エコビレッジという生き方』（聞き手 飯田雄介）を出版し、各地で対話イベントを開いています。"
+   ],
+   "past": [
+    "東京生まれ、埼玉育ち。高校時代に知床の自然保護の記事を読んで北海道大学農学部へ。1991 年の卒業後は札幌市環境局で緑地計画・公園設計に 13 年携わり、並行して福祉・環境・国際分野の NPO 活動に約 10 年関わりました。",
+    "2004 年に退職。2007〜2008 年に英国ウェールズ大学大学院に籍を置きながら欧州各地のエコビレッジを訪ね歩き、帰国後の 2009 年に長沼町で「エコビレッジライフ体験塾」を開講。2012 年 1 月に NPO 法人を設立し、2013 年から余市に拠点を建て始めました。"
+   ],
+   "links": [
+    {
+     "label": "余市エコビレッジ",
+     "url": "https://ecovillage.site/",
+     "note": "公式サイト"
+    },
+    {
+     "label": "Instagram @hepp.y.ecocollege",
+     "url": "https://www.instagram.com/hepp.y.ecocollege/"
+    },
+    {
+     "label": "Facebook",
+     "url": "https://www.facebook.com/ecovillage.hokkaido"
+    },
+    {
+     "label": "YouTube",
+     "url": "https://www.youtube.com/@yoichi.ecovillage"
+    },
+    {
+     "label": "note",
+     "url": "https://note.com/yoich_ecovillage"
+    }
+   ],
+   "sources": [
+    "https://kurashigoto.hokkaido.jp/report/20210414100000.php",
+    "https://spaceshipearth.jp/ecovillage/",
+    "https://www.alterna.co.jp/77949/",
+    "https://greenz.jp/2015/04/13/yoichi_eco_college/",
+    "https://esdcenter.jp/kyoten_hokkaidoecovillage/",
+    "https://ecovillage.site/",
+    "https://ecovillage.site/2026/1644/",
+    "https://www.hokkaido-np.co.jp/article/1321573/"
+   ],
+   "en": "Junka Sakamoto",
+   "quote": {
+    "text": "できないかどうかは、やってみなくちゃわからない。",
+    "src": "greenz.jp「余市エコカレッジ」（2015 年 4 月）",
+    "url": "https://greenz.jp/2015/04/13/yoichi_eco_college/"
+   },
+   "pending": "写真は本人提供のものを待っています（くらしごと・Spaceship Earth に掲載写真あり）。"
+  },
+  {
+   "slug": "mizushima",
+   "session": 2,
+   "name": "水嶼 直滉",
+   "kana": "みずしま なおあき",
+   "org": "ミチタル株式会社（MICHITAL）",
+   "title": "代表取締役・古平町地域おこし協力隊（林業推進員）",
+   "summary": "積丹半島・古平町で、道産材からウイスキーやワインの洋酒樽をつくる人。職人の勘に頼らない工程で、シラカバなど「樽に向かない」とされてきた木も使い、北海道の森の価値を北海道の中で完結させようとしています。",
+   "desc": "水嶼直滉（ミチタル株式会社 代表取締役・古平町地域おこし協力隊）の紹介。道産材の洋酒樽づくり。シャコタニアンサミット 3 セッション 2 ゲスト。",
+   "now": [
+    "2024 年 8 月に古平町の地域おこし協力隊「林業推進員」として着任。地場の木材を使った洋酒樽の企画・開発・製造、木育・脱炭素、後志管内の観光の広域連携を担当しています。目標は「樽事業を自立した産業に育て、樽生産を通じて古平町に定住すること」。",
+    "北海道大学の学生が始めた「北海道洋酒樽プロジェクト」にプロデューサーとして加わり、2024 年 12 月に長沼町の馬追蒸溜所で初めての樽詰め式。2025 年 4 月、小島颯太さんとの共同代表でミチタル株式会社を設立しました。道産木材と新しい技術で洋酒樽をつくり、ワイナリー・蒸溜所に販売します。JAL が機体整備・品質管理のノウハウを提供し、森町・ハルキとはナラ枯れ前のミズナラを樽にする連携協定を結びました。",
+    "JAL×北大ビジネスコンテスト グランプリ（2024 年 12 月）、JA アクセラレーター第 7 期 優秀賞（2025 年 5 月）。"
+   ],
+   "past": [
+    "北海道置戸町出身。前職は北海道ブドウ苗木園（ぶどう苗農家）。林業の現場で感じた課題を北大生の小島さんと話し合ううちに、樽づくりに行き着きました。思い描くのは「森林循環と経済性が両立する林業」です。"
+   ],
+   "links": [
+    {
+     "label": "MICHITAL",
+     "url": "https://www.michital.com/",
+     "note": "会社サイト"
+    },
+    {
+     "label": "ニュースレター",
+     "url": "https://michital.theletter.jp/",
+     "note": "樽づくりの記録"
+    },
+    {
+     "label": "Instagram @mizushima_michital",
+     "url": "https://www.instagram.com/mizushima_michital/"
+    },
+    {
+     "label": "古平町地域おこし協力隊 紹介",
+     "url": "https://hokkaido-chiikiokoshi.jp/member_introduction/agriculture-forestry/5926/"
+    }
+   ],
+   "sources": [
+    "https://hokkaido-chiikiokoshi.jp/member_introduction/agriculture-forestry/5926/",
+    "https://www.hokkaido-np.co.jp/article/1204957/",
+    "https://www.hokkaido-np.co.jp/article/1186223/",
+    "https://www.town.hokkaido-mori.lg.jp/soshiki/norin/1_1/3242.html",
+    "https://www.hokudai.ac.jp/pr/webpamphlet/litterae_vol.75/pageindices/index13.html",
+    "https://michital.theletter.jp/",
+    "https://agventurelab.or.jp/news/ja-accelerator07_contest/",
+    "https://startup-db.com/companies/x8eqpwjUjY3Gg1mN",
+    "https://www.town.furubira.lg.jp/town/detail.php?id=363"
+   ],
+   "en": "Naoaki Mizushima",
+   "quote": {
+    "text": "北海道で樽作ってます。",
+    "src": "本人の Instagram プロフィール",
+    "url": "https://www.instagram.com/mizushima_michital/"
+   },
+   "pending": "お名前の読みは本人の Instagram の英字表記からで、ふりがな付きの資料は未確認です。開催概要の「Michitaru」は会社名「ミチタル（MICHITAL）」のことと判断しました。写真は本人提供のものを待っています。"
+  },
+  {
+   "slug": "igarashi",
+   "session": 2,
+   "name": "五十嵐 慎一郎",
+   "kana": "いがらし しんいちろう",
+   "org": "株式会社 SHAKOTAN GO",
+   "title": "代表取締役・シャコタニアンサミット 運営統括",
+   "summary": "閉館が決まっていた積丹町の温泉「岬の湯しゃこたん」を 2022 年に引き継ぎ、サウナ・食堂・宿を足して立て直した人。シャコタニアンサミットの言い出しっぺで、今回も運営統括です。",
+   "desc": "五十嵐慎一郎（株式会社 SHAKOTAN GO 代表取締役）の紹介。岬の湯しゃこたんの再生、積丹温泉芸術祭、NoMaps プロデューサー。シャコタニアンサミット 3 セッション 2 ゲスト・運営統括。",
+   "now": [
+    "株式会社 SHAKOTAN GO 代表取締役。年 3,000〜4,000 万円の赤字で 2022 年 1 月に閉館した積丹町営の温泉「岬の湯しゃこたん」を、隣でクラフトジンを造る積丹スピリットの岩井宏文さんと設立した会社で 2022 年 4 月に町から引き継ぎました。ジンの搾りかすのハーブを使う「ボタニカルサウナ」、崖っぷちのベンチ、地元食材の食堂、2024 年春の宿泊施設、2025 年のエストニア産バレルサウナと、少しずつ足しています。",
+    "2025 年 2 月、冬季休館中の施設で「積丹温泉芸術祭」を初開催（ピカソ 3 点、Chim↑Pom、雪中かくれんぼ）。その中で第 1 回シャコタニアンサミットを開き、第 2 回は岩内へ、第 3 回の今回は余市へ。実行委員会の運営統括です。",
+    "札幌では株式会社大人の代表として、カフェ＆バー「大人座」、北海道新聞社と共同運営の「SAPPORO Incubation Hub DRIVE」を運営。2022 年から NoMaps のプロデューサーも務めています。"
+   ],
+   "past": [
+    "1983 年小樽生まれ、札幌育ち。札幌南高校を出て上京し、国際基督教大学から東京大学建築学科へ入り直し（安藤忠雄事務所でインターン）。卒業後は不動産ベンチャーで店舗開発に携わり、銀座のコワーキングスペース「the SNACK」をプロデュースしました。",
+    "在職中から東京と北海道を往復して「札幌移住計画」「北海道移住ドラフト会議」を主宰。2016 年に独立して株式会社大人を設立、2018 年に拠点を札幌に移しました。"
+   ],
+   "links": [
+    {
+     "label": "岬の湯しゃこたん（SHAKOTAN GO）",
+     "url": "https://shakotango.jp/",
+     "note": "公式サイト"
+    },
+    {
+     "label": "株式会社大人",
+     "url": "https://otona.be/"
+    },
+    {
+     "label": "インタビュー「常に崖っぷちです」（LIFE MEDIA・2024 年 11 月）",
+     "url": "https://life-media.co.jp/short-story_shinichiroigarashi/?p=7452"
+    },
+    {
+     "label": "くらしごと「岬の湯しゃこたん」の記事（2022 年 11 月）",
+     "url": "https://kurashigoto.hokkaido.jp/report/20221103110000.php"
+    }
+   ],
+   "sources": [
+    "https://www.creators-station.jp/interview/legends/135604",
+    "https://www.city.sapporo.jp/kikaku/miraisousei/documents/h30y_30_guest.pdf",
+    "https://kurashigoto.hokkaido.jp/report/20221103110000.php",
+    "https://life-media.co.jp/short-story_shinichiroigarashi/?p=7452",
+    "https://www.nikkei.com/article/DGXZQOFC2747H0X20C23A2000000/",
+    "https://prtimes.jp/main/html/rd/p/000000001.000095917.html",
+    "https://prtimes.jp/main/html/rd/p/000000009.000095917.html",
+    "https://sg.wantedly.com/companies/SHAKOTAN_GO/about",
+    "https://no-maps.jp/2025/about/",
+    "https://actnow.jp/project/shakotan_art_fes/detail"
+   ],
+   "en": "Shinichiro Igarashi",
+   "quote": {
+    "text": "がけっぷちって、本音でしゃべれる、いい機会かも。",
+    "src": "くらしごと（2022 年 11 月）",
+    "url": "https://kurashigoto.hokkaido.jp/report/20221103110000.php"
+   },
+   "pending": "写真は本人提供のものを待っています。SNS は公開ページから確認できませんでした。"
+  },
+  {
+   "slug": "tachikawa",
+   "session": 3,
+   "name": "太刀川 英輔",
+   "kana": "たちかわ えいすけ",
+   "org": "NOSIGNER",
+   "title": "代表・デザインストラテジスト",
+   "summary": "創造性を「変異と選択」で学べる形にした『進化思考』の著者。東京防災、2025 年大阪・関西万博 日本館の基本構想など、社会の仕組みを組み替えるデザインを続けています。",
+   "desc": "太刀川英輔（NOSIGNER 代表・『進化思考』著者）の紹介。東京防災、万博日本館、ADAPTMENT、進化思考。シャコタニアンサミット 3 セッション 3 ゲスト。",
+   "now": [
+    "NOSIGNER 代表。2006 年に活動を始め、防災・地域・企業の立て直しを「関係のデザイン」として手がけてきました。慶應義塾大学大学院 システムデザイン・マネジメント研究科 特任教授（2024 年〜）、WDO（世界デザイン機構）理事、JIDA（日本インダストリアルデザイン協会）前会長（2021〜2025 年）。",
+    "2023 年からは環境省の「ADAPTMENT」で、都市を生命体、流域を生態系の単位として気候変動への適応を組み立て直す手法に取り組んでいます。「半島を一つの生態系として見る」というセッション 3 の問いに、いちばん近い仕事です。",
+    "『進化思考』は 2021 年の刊行後に山本七平賞を受け、2023 年 12 月に生物学者の監修を入れた増補改訂版（副題「変異と選択」）が出ました。韓国語・繁体字・インドネシア語に翻訳されています。"
+   ],
+   "past": [
+    "1981 年、横浜生まれ。法政大学で建築を学び、慶應義塾大学大学院に在学中の 2006 年に NOSIGNER を始めました。",
+    "東日本大震災の直後に防災の知恵を集めた「OLIVE」（2011 年）、東京都の防災ブック「東京防災」（2015 年・グッドデザイン金賞）、横浜 DeNA ベイスターズの街ぐるみのブランディング、山口県の有機農場・秋川牧園の立て直し（German Design Award Gold）など。",
+    "2025 年大阪・関西万博 日本館の基本構想クリエイター。2024 年には DFA Design for Asia Awards の初代「Designer of the Year」に選ばれました。"
+   ],
+   "links": [
+    {
+     "label": "NOSIGNER",
+     "url": "https://nosigner.com/",
+     "note": "公式サイト"
+    },
+    {
+     "label": "プロフィール",
+     "url": "https://nosigner.com/eisuke_tachikawa/",
+     "note": "NOSIGNER 内"
+    },
+    {
+     "label": "『進化思考』",
+     "url": "https://nosigner.com/projects/shinka",
+     "note": "本の紹介"
+    },
+    {
+     "label": "X @NOSIGNER",
+     "url": "https://x.com/NOSIGNER",
+     "note": "会社のアカウント"
+    },
+    {
+     "label": "Instagram @nosigner_design",
+     "url": "https://www.instagram.com/nosigner_design/",
+     "note": "会社のアカウント"
+    },
+    {
+     "label": "note",
+     "url": "https://note.com/nosigner",
+     "note": "NOSIGNER 名義"
+    }
+   ],
+   "sources": [
+    "https://nosigner.com/eisuke_tachikawa/",
+    "https://www.nosigner.com/en/eisuke_tachikawa/",
+    "https://www.keio.ac.jp/en/researcher/100017181/",
+    "https://nosigner.com/news/wdo_reappointed/",
+    "https://jida.or.jp/home/about/director",
+    "https://nosigner.com/projects/shinka",
+    "https://nosigner.com/news/shinka_202507/",
+    "https://www.nosigner.com/projects/adaptment",
+    "https://nosigner.com/projects/akikawa",
+    "https://www.designboom.com/design/dfa-awards-2024-visionaries-outstanding-achievements-asian-design-12-04-2024/",
+    "https://www.rieti.go.jp/jp/events/bbl/21091601.html",
+    "https://www.flierinc.com/interview/interview191"
+   ],
+   "en": "Eisuke Tachikawa",
+   "quote": {
+    "text": "創造性はほとんどの人がきちんと習ったことがないもの。",
+    "src": "flier インタビュー（2021 年 12 月）",
+    "url": "https://www.flierinc.com/interview/interview191"
+   },
+   "pending": "写真は本人提供のものを待っています。肩書は 2026 年 11 月時点の公開情報によります。"
+  }
+ ]
+}

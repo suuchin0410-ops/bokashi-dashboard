@@ -1,0 +1,4 @@
+# 生成物と控えは入れない（deploy/ は index.html・assets・js・speakers を写すだけ。vercel deploy --prod --yes）
+dist/
+deploy/
+*.bak.*

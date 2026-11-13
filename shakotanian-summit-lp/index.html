@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- ===============================================================
+     シャコタニアンサミット 3 in 余市 参加申込 LP（2026-11-13・BP）
+     元の資料: Google ドキュメント「第3回シャコタニアンサミット申込&開催概要」
+     決まり: Projects/design（00 道すじ・01・02・03 A/B/K/L・04・07 fontjoy の既定値・10・21 基本セット・23 ロゴから作る）
+     色: 積丹ブルーを 1 色（CTA・線・印）+ 無彩色。地は白寄り（昼にスマホで見る・10「明るい/暗いは見る場面で」）
+     書体: Shippori Mincho B1 700（見出し）/ Zen Kaku Gothic New 400・700（本文）/ Zalando Sans 700 幅 75（英字・数字）
+     印: 「半分、島。」（第一回の文から）＝ 半円を塗り・半円を線で描いた「半島マーク」。見出しの印・区切り・地の模様に使う
+     写真: 資料に埋め込まれていた 3 枚（Lift Up × 徳島屋のロゴ・Lift Up の料理・徳島屋の懐石）。WebP・1600px 以内
+     動き: js/motion.js（GSAP 3.15.0・21 の基本セット + showcase 水準に寄せた 2026-11-13 の見直し）
+     2026-11-13 ブラッシュアップ（鈴木さん「デザインが微妙・動きが少なくワクワクしない」）:
+       23-1 半島マークを積丹ブルーの塗りで画面からはみ出す大きさに / 23-4 「半」の 1 文字だけ青 / 23-5 冒頭 1 回だけの見せ場（h1 を 1 文字ずつ）
+       23-6 節ごとに英字の一言 / 12 React Bits の Split Flap（日付）・Scroll Velocity（帯の加速）・Scroll Expand（写真）を素の HTML で
+       面の段差: フィールドワーク＝青い面・フッター＝紺の面（10「段差は面の明るさの差で」）
+     =============================================================== -->
+<title>シャコタニアンサミット 3 in 余市</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="2026年11月21日（土）・22日（日）、余市駅前の徳島屋で開く、積丹半島に暮らす人・働く人・関わる人の 2 日間。参加費 11,000 円前後。申込はフォームから。">
+<meta property="og:title" content="シャコタニアンサミット 3 in 余市｜やべえ半島を、つくる。">
+<meta property="og:description" content="2026年11月21日（土）・22日（日）、余市・徳島屋。積丹半島の人が自治体の境界を越えて集まる 2 日間。">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230E6FA6'/%3E%3Cpath d='M32 14a18 18 0 0 0 0 36z' fill='%23fff'/%3E%3Cpath d='M32 14a18 18 0 0 1 0 36' fill='none' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zalando+Sans:wdth,wght@75,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<!-- impeccable-disable kicker-above-heading: 英字の飾りのラベルは 01_PRINCIPLES.md 9（2026-11-07 鈴木さん「英字の飾りも使って良い」）で歓迎。ブランドの英字書体で作っている -->
+<!-- impeccable-disable marquee: 流れる帯（半島の町の名前）は 01_PRINCIPLES.md 9 で歓迎。本文に重ねず、動きを減らす設定で止まる -->
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="hanto" viewBox="0 0 24 24">
+    <path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/>
+    <path d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  </symbol>
+</svg>
+
+<header class="header">
+  <div class="wrap">
+    <a class="wordmark" href="#top" aria-label="シャコタニアンサミット 3 in 余市 ページの先頭へ"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>SHAKOTANIAN SUMMIT 3</a>
+    <a class="btn btn-primary" href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener" data-cta-type="apply" data-cta-section="header">申し込む</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="h-title">
+    <div class="wrap">
+      <div class="hero-in">
+        <p class="one">One hell of a <span class="hi">peninsula.</span></p>
+        <p class="date"><span class="nb">2026.11.21 <span class="sub">SAT</span></span><span class="sep">–</span><span class="nb">11.22 <span class="sub">SUN</span></span></p>
+        <h1 id="h-title"><span class="nb">やべえ<span class="h">半</span>島を、</span><span class="nb">つくる。</span></h1>
+        <p class="lead">積丹半島に暮らす人、働く人、関わる人が、自治体や分野の境界を越えて集まる 2 日間。第 3 回は余市駅前の徳島屋が舞台です。</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener" data-cta-type="apply" data-cta-section="hero"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>参加を申し込む</a>
+          <a class="btn btn-ghost" href="#program" data-cta-type="program" data-cta-section="hero">2 日間の流れを見る</a>
+        </div>
+        <p class="btn-note">参加費 11,000 円前後（宿泊の有無・参加するプログラムで変わります）。申込フォーム（Google フォーム）が開きます。</p>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <svg class="hero-mark" viewBox="0 0 24 24"><path class="fill" d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path class="line" d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width=".5" pathLength="100"/></svg>
+        <div class="badge-spin"><svg class="badge" viewBox="0 0 100 100">
+          <defs><path id="ring" d="M50 50m-37 0a37 37 0 1 1 74 0a37 37 0 1 1-74 0"/></defs>
+          <text><textPath href="#ring">SHAKOTANIAN SUMMIT 3 · YOICHI ·</textPath></text>
+          <svg class="mark" x="34" y="34" width="32" height="32" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        </svg></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>余市<svg class="mark"><use href="#hanto"/></svg>古平<svg class="mark"><use href="#hanto"/></svg>積丹<svg class="mark"><use href="#hanto"/></svg>神恵内<svg class="mark"><use href="#hanto"/></svg>岩内<svg class="mark"><use href="#hanto"/></svg>共和<svg class="mark"><use href="#hanto"/></svg>泊<svg class="mark"><use href="#hanto"/></svg>仁木<svg class="mark"><use href="#hanto"/></svg></span>
+      <span>余市<svg class="mark"><use href="#hanto"/></svg>古平<svg class="mark"><use href="#hanto"/></svg>積丹<svg class="mark"><use href="#hanto"/></svg>神恵内<svg class="mark"><use href="#hanto"/></svg>岩内<svg class="mark"><use href="#hanto"/></svg>共和<svg class="mark"><use href="#hanto"/></svg>泊<svg class="mark"><use href="#hanto"/></svg>仁木<svg class="mark"><use href="#hanto"/></svg></span>
+    </div>
+  </div>
+
+  <section class="section" aria-labelledby="h-poem">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">01</b>Prologue</span>
+        <h2 id="h-poem"><span class="nb">シャコタニアンサミットに</span><span class="nb">寄せて</span></h2>
+        <p class="one">Half island, <span class="hi">half mainland.</span></p>
+      </div>
+      <div class="poem">
+        <p class="big"><span class="ln"><span class="nb">半島とは、読んで字の如く</span></span><br><span class="ln"><span class="nb">「<span class="h">半</span>分、島。」</span></span></p>
+        <p>「島」でも「陸地」でもない。<br>いや、「島」でもあり「陸地」でもある。</p>
+        <p>ものすごくポジティブに捉えると、<br>「島」と「陸地」の、<br>良いとこ取りができる場所と言えるかもしれない。</p>
+        <p>きっと、これからの時代、<br>リアルとバーチャル、資本主義とシェアエコノミー<br>もはや二元論では語れない<br>いろんな世界や価値観を行き来しながら、<br>私たちは生きていく。</p>
+        <p>正解のない時代とも言えるけど、<br>人生、自分なりのスタイルを、<br>オリジナルブレンドで作りあげていくには、<br>どんどんチャンスが開かれている時代でもある。</p>
+        <p>シャコタニアンは、<br>ただ、単に積丹に暮らす人という意味だけではなくて、<br>この地から生まれていくスタイルのこと。</p>
+        <p class="from">第一回シャコタニアンサミットより</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" aria-labelledby="h-about">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">02</b>About</span>
+        <h2 id="h-about"><span class="nb">積丹<span class="h">半</span>島民＝「シャコタニアン」の</span><span class="nb">共同のきっかけをつくる 2 日間</span></h2>
+        <p class="one">Eight towns. <span class="hi">One peninsula.</span></p>
+      </div>
+      <div class="numbered">
+        <div class="reveal">
+          <span class="no">1</span>
+          <h3>シャコタニアンサミットとは</h3>
+          <p>余市・古平・積丹・神恵内・岩内・共和、泊、仁木など、積丹半島に暮らす人、働く人、関わる人が、自治体や分野の境界を越えて出会い、半島の未来を一緒に考える場。積丹半島に関わる人々を、親しみを込めて「シャコタニアン」と呼びます。</p>
+          <p>第 1 回は積丹、第 2 回は岩内で開催（<a href="#last">前回の様子</a>）。第 3 回は余市を舞台に。</p>
+        </div>
+        <div class="reveal">
+          <span class="no">2</span>
+          <h3>なぜ「積丹<span class="h">半</span>島」なのか</h3>
+          <p>海、山、森、水、一次産業、食、文化、人の移動。これらは町境では切れません。人口減少、担い手、交通、教育、自然環境などの課題も、一つの自治体だけでは完結しません。</p>
+          <p>行政区域を否定するのではなく、それとは別に「積丹半島」という生活圏・文化圏・自然圏から地域を見る視点を持つ。そこから、人と人の新しい共同を生み出すことを目指します。</p>
+        </div>
+        <div class="reveal">
+          <span class="no">3</span>
+          <h3>第 3 回＠余市のテーマ</h3>
+          <p>DAY 1 は、足元の土地から始まり、人の共同、さらに縄文・宇宙へと視野を広げます。DAY 2 は実際に地域の現場を巡り、それぞれが得た発見や視点を持ち帰って全体で共有します。</p>
+          <p>目的は、最高の出会いと化学反応、コラボを生み出しまくること。多様な主体の連携で積丹半島を盛り上げます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="h-last" id="last">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">03</b>Last time</span>
+        <h2 id="h-last"><span class="nb">前回、岩内で</span><span class="nb">起きたこと。</span></h2>
+        <p class="one">Iwanai, <span class="hi">Nov. 2025.</span></p>
+      </div>
+      <p class="lead recap-lead reveal">第 2 回は 2025 年 11 月 29 日・30 日、岩内町。いわない高原ホテルを拠点に、話して、歩いて、飲んで、翌日には 10 年後の半島を描いた 1 泊 2 日でした。</p>
+      <a class="recap-hero curtain" href="iwanai.html" target="_blank" rel="noopener" aria-label="前回の 2 日間を写真で見る（別のタブで開きます）"><img src="assets/img/iwanai-talk.webp" alt="荒井記念美術館のホール。書の幕を背に、登壇者 5 人が並んで話すトークセッション" width="1600" height="1200" loading="lazy"><span class="recap-hero-tag"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>Iwanai, 2025</span></a>
+      <div class="btn-row reveal"><a class="btn btn-primary" href="iwanai.html" target="_blank" rel="noopener"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>前回の 2 日間を見る</a></div>
+      <p class="btn-note">写真と短い言葉で振り返る特設ページが、別のタブで開きます。</p>
+    </div>
+  </section>
+
+  <section class="section section-alt" aria-labelledby="h-spec" id="outline">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">04</b>Outline</span>
+        <h2 id="h-spec"><span class="nb">開催概要</span></h2>
+        <p class="one">Two days, <span class="hi">one table.</span></p>
+      </div>
+      <dl class="spec">
+        <div><dt>名称</dt><dd><span class="nb">シャコタニアンサミット 3</span> <span class="nb">in 余市</span></dd></div>
+        <div><dt>開催日</dt><dd><span class="nb">2026 年 11 月 21 日（土）・</span><span class="nb">22 日（日）</span></dd></div>
+        <div><dt>場所</dt><dd>余市町／徳島屋（余市駅前）<span class="sub">メイン会場は余市駅前。基本は現地集合・現地解散です。</span></dd></div>
+        <div><dt>参加費</dt><dd><span class="price"><span class="count" data-to="11000">11,000</span><small>円前後（予定）</small></span><span class="sub">宿泊の有無・参加するプログラムによって変わります。</span></dd></div>
+        <div><dt>宿泊</dt><dd>周辺の宿泊施設<span class="sub">会場近辺の宿を運営で押さえています。</span></dd></div>
+        <div><dt>申込</dt><dd><a href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener">参加申込フォーム（Google フォーム）</a><span class="sub">宿泊の有無と参加するプログラムを申込時に選びます。</span></dd></div>
+        <div><dt>主催</dt><dd><span class="nb">シャコタニアンサミット</span> <span class="nb">in 余市実行委員会</span><span class="sub">実行委員長 大倉準／運営統括 五十嵐慎一郎</span></dd></div>
+        <div><dt>協力</dt><dd class="sub-body">経済産業省北海道経済産業局、（株）キットブルー、かくと徳島屋、IWANAI BREWERY、タヌクラン、余市エコビレッジ、里山農園なかのさわ、sunny side farm</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="h-program" id="program">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">05</b>Program</span>
+        <h2 id="h-program"><span class="nb">2 日間の流れ</span></h2>
+        <p class="one">Widen the view, <span class="hi">then build.</span></p>
+      </div>
+      <p class="lead">DAY 1 で視座を広げ、DAY 2 で共同をつくる。</p>
+
+      <div class="day" id="day1">
+        <div class="day-head"><span class="en">DAY 1</span><h3>11 月 21 日（土）｜視座を広げる</h3><span class="sub">OPENING → SESSION 1 → 2 → 3 → 余市時間 → 酒トーク＋大宴会 → NIGHT</span></div>
+        <table class="sched">
+          <tbody>
+            <tr class="row"><td class="time">11:30–13:15</td><td class="what">受付・ランチ<span class="en">Check in / Lunch</span></td><td class="desc">かくと徳島屋。到着順に受付。希望者はランチ。順次合流できます。</td></tr>
+            <tr class="row"><td class="time">13:30–14:00</td><td class="what">オープニング<span class="en">Opening</span></td><td class="desc">シャコタニアンとは何者か。サミットの原点、開催地からの歓迎、今回の設計思想を共有します。</td></tr>
+            <tr class="row"><td class="time">14:00–17:00</td><td class="what">3 つのセッション<span class="en">3 Sessions</span></td><td class="desc">土地 → 人・共同 → 未来・進化へと、視点を段階的に広げる三幕構成。</td></tr>
+            <tr class="row"><td class="time">17:00–19:00</td><td class="what">余市時間<span class="en">Yoichi Free Time</span></td><td class="desc">風呂、宿、町歩き。</td></tr>
+            <tr class="row"><td class="time">19:00–</td><td class="what">酒トーク＋大シャコタニアン宴会</td><td class="desc">酒を、半島の土地・水・農業・植物・技術・文化をつなぐ媒体として扱い、そのまま宴会へ。</td></tr>
+            <tr class="row"><td class="time">21:00 頃–</td><td class="what">シャコタニアン・ナイト<span class="en">Shakotanian Night</span></td><td class="desc">余市町内の複数の店に分かれて。飲食・酒代は各自精算です。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="day" id="sessions">
+        <div class="day-head"><span class="en">Sessions</span><h3>14:00–17:00 の三幕</h3></div>
+        <div class="sessions">
+          <div class="reveal">
+            <span class="tag"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>Session 1</span>
+            <h3>この土地で、生きる。</h3>
+            <p class="theme">土地・生業・一次産業</p>
+            <p class="q">私たちは、この土地の何によって生きているのか。海、山、森、畑、水、農林水産業、食などから足元を見る。</p>
+            <p class="guests"><b>ゲスト</b> <a href="speakers/murata.html">村田均（じきの畑）</a>／<a href="speakers/otsuka.html">大塚英治（キットブルー）</a>／<a href="speakers/maruyama.html">丸山厚（里山農園なかのさわ）</a>／<a href="speakers/shiratori.html">白鳥翔大（Lift Up）</a>ほか、順次発表</p>
+          </div>
+          <div class="reveal">
+            <span class="tag"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>Session 2</span>
+            <h3>ここで、誰と生きる？</h3>
+            <p class="theme">人・移住・教育・共同</p>
+            <p class="q">誰が「この土地の人」なのか。どんな共同が生まれ得るのか。移住、教育、世代、地域コミュニティから人と人の関係を見る。</p>
+            <p class="guests"><b>ゲスト</b> <a href="speakers/sakamoto.html">坂本純科（余市エコビレッジ）</a>／<a href="speakers/mizushima.html">水嶼直滉（Michitaru）</a>／<a href="speakers/igarashi.html">五十嵐慎一郎（積丹GO）</a>ほか、順次発表</p>
+          </div>
+          <div class="reveal">
+            <span class="tag"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>Session 3</span>
+            <h3>この土地は、どう進化する？</h3>
+            <p class="theme">適応・創造・デザイン・未来</p>
+            <p class="q">人口減少、気候変動、産業変化、人の移動など環境が変わる中で、地域はどう適応し、関係性を組み替え、次の姿へ進めるか。「半島を一つの生態系として見る」視点を DAY 2 の共創プログラムへつなぎます。</p>
+            <p class="guests"><b>ゲスト</b> <a href="speakers/tachikawa.html">太刀川英輔氏（NOSIGNER 代表、『進化思考』著者）</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="day" id="dinner">
+        <div class="day-head"><span class="en">19:00–</span><h3>酒トーク × 大シャコタニアン宴会</h3></div>
+        <div class="dinner">
+          <div class="photo wide curtain"><img src="assets/img/liftup-x-tokushimaya.webp" alt="Lift Up 余市と、かくと徳島屋のロゴを並べたコラボディナーの案内" width="1600" height="901" loading="lazy"></div>
+          <div>
+            <p>DAY 1 の夜は、かくと徳島屋 × Lift Up 余市のコラボディナーで地域の食材を味わいます。そのあと、多様な地域の酒の作り手たちと、酒づくりと地域づくり、これからの可能性を語り合います。</p>
+            <div class="places">
+              <div class="place">
+                <div class="photo curtain"><img src="assets/img/tokushimaya-kaiseki.webp" alt="かくと徳島屋の懐石料理と余市ワインのボトル" width="1125" height="789" loading="lazy"></div>
+                <h3>かくと徳島屋</h3>
+                <p>大正十三年創業、余市駅前の老舗料理旅館。旬の味覚を丁寧に仕立てる京風懐石と、余市ワインの美しい調和。</p>
+              </div>
+              <div class="place">
+                <div class="photo curtain"><img src="assets/img/liftup-dishes.webp" alt="Lift Up 余市の料理と、皿を手にしたシェフ" width="1200" height="1200" loading="lazy"></div>
+                <h3>Lift Up 余市</h3>
+                <p>余市の海と山、畑の恵みを自由な感性で一皿に。土地の風土を深く味わい、食の余韻に浸る馳走オーベルジュ。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day" id="day2">
+        <div class="day-head"><span class="en">DAY 2</span><h3>11 月 22 日（日）｜共同をつくる</h3><span class="sub">FIELD WORK → IDEA CAMP → NEXT ACTION（時間は案）</span></div>
+        <table class="sched">
+          <tbody>
+            <tr class="row"><td class="time">08:30–12:00 頃</td><td class="what">フィールドワーク<span class="en">Circulation Field Work</span></td><td class="desc">各コースを複数の班でローテーション。フィールドを経験し、共通言語をつくります。</td></tr>
+            <tr class="row"><td class="time">12:30–13:00</td><td class="what">再集合・軽いランチ<span class="en">Return / Light Lunch</span></td><td class="desc">徳島屋エリアへ順次再集合。</td></tr>
+            <tr class="row"><td class="time">13:00–15:00</td><td class="what">アイデアキャンプ<span class="en">Idea Camp</span></td><td class="desc">人・資源・課題・場所・技術・文化・アイデアを解放し、集約し、遠い要素同士をつなぎます。</td></tr>
+            <tr class="row"><td class="time">15:00–15:30</td><td class="what">ネクストアクション<span class="en">Next Action</span></td><td class="desc">仲間募集、最初の一歩、次回日程まで具体化します。</td></tr>
+            <tr class="row"><td class="time">15:45</td><td class="what">クロージング<span class="en">Closing</span></td><td class="desc">全体共有・講評・集合写真。「また、半島のどこかで。」</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section section-accent" aria-labelledby="h-fieldwork" id="fieldwork">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">DAY 2</b>Field Work</span>
+        <h2 id="h-fieldwork"><span class="nb">4 つのコースで、</span><span class="nb"><span class="h">半</span>島を見る</span></h2>
+        <p class="one">Sea, forest, sake, <span class="hi">Jomon.</span></p>
+      </div>
+      <div class="fields">
+        <div class="reveal"><span class="en">A</span><h3>海・水産</h3><p>海から半島を見る</p></div>
+        <div class="reveal"><span class="en">B</span><h3>森・農</h3><p>山・森・畑から半島を見る</p></div>
+        <div class="reveal"><span class="en">C</span><h3>酒・食</h3><p>風土を味わう</p></div>
+        <div class="reveal"><span class="en">D</span><h3>縄文・土地の記憶</h3><p>時間軸から半島を見る</p></div>
+      </div>
+      <p class="sub" style="margin-top:var(--s-6)">各コースを複数の班でローテーション。08:30 から 12:00 頃まで。</p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="h-aims">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">06</b>Goals</span>
+        <h2 id="h-aims"><span class="nb">この 2 日間で</span><span class="nb">目指すもの</span></h2>
+        <p class="one">Meet across <span class="hi">the lines.</span></p>
+      </div>
+      <ul class="aims">
+        <li class="row"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><span>自治体や職業を越えた、新しい出会い</span></li>
+        <li class="row"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><span>積丹半島を一つの地域として見る視点</span></li>
+        <li class="row"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><span>地域にすでに存在する人・自然・文化・産業の再発見</span></li>
+        <li class="row"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><span>異なる現場・専門・世代の間に新しい関係が生まれること</span></li>
+        <li class="row"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><span>サミット後にも続くつながり</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section-alt apply" aria-labelledby="h-apply" id="apply">
+    <svg class="apply-bg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width=".45"/></svg>
+    <div class="wrap">
+      <div>
+        <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">07</b>Entry</span>
+        <h2 id="h-apply"><span class="nb">参加申込</span></h2>
+        <p class="one">See you <span class="hi">on the peninsula.</span></p>
+        <p class="flap" aria-label="11 月 21 日から 22 日"><span class="cell" data-ch="1">1</span><span class="cell" data-ch="1">1</span><span class="cell sym">.</span><span class="cell" data-ch="2">2</span><span class="cell" data-ch="1">1</span><span class="cell sym">–</span><span class="cell" data-ch="2">2</span><span class="cell" data-ch="2">2</span></p>
+        <p class="flap-note">2026 年 11 月 21 日（土）・22 日（日）、余市・徳島屋。</p>
+      </div>
+      <div>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener" data-cta-type="apply" data-cta-section="apply"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>参加を申し込む</a>
+        </div>
+        <p class="btn-note">申込フォーム（Google フォーム）が別のタブで開きます。参加費は 11,000 円前後の予定で、宿泊の有無・参加するプログラムによって変わります。宿は会場近辺を運営で押さえています。</p>
+      </div>
+      <p class="orgs"><b>主催</b> シャコタニアンサミット in 余市実行委員会（実行委員長 大倉準／運営統括 五十嵐慎一郎）<br><b>協力</b> 経済産業省北海道経済産業局、（株）キットブルー、かくと徳島屋、IWANAI BREWERY、タヌクラン、余市エコビレッジ、里山農園なかのさわ、sunny side farm</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div>
+      <a class="wordmark" href="#top"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>SHAKOTANIAN SUMMIT 3 / YOICHI</a>
+      <p class="tag"><span class="nb">やべえ<span class="h">半</span>島を、</span><span class="nb">つくる。</span></p>
+      <p class="one">Half island. <span class="hi">Whole life.</span></p>
+    </div>
+    <div class="meta">
+      <span>シャコタニアンサミット in 余市実行委員会</span>
+      <span>2026.11.21 SAT – 11.22 SUN</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/gsap.min.js" defer></script>
+<script src="js/ScrollTrigger.min.js" defer></script>
+<script src="js/ScrollToPlugin.min.js" defer></script>
+<script src="js/motion.js" defer></script>
+</body>
+</html>

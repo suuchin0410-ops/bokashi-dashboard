@@ -16,6 +16,9 @@
        23-1 半島マークを積丹ブルーの塗りで画面からはみ出す大きさに / 23-4 「半」の 1 文字だけ青 / 23-5 冒頭 1 回だけの見せ場（h1 を 1 文字ずつ）
        23-6 節ごとに英字の一言 / 12 React Bits の Split Flap（日付）・Scroll Velocity（帯の加速）・Scroll Expand（写真）を素の HTML で
        面の段差: フィールドワーク＝青い面・フッター＝紺の面（10「段差は面の明るさの差で」）
+     2026-11-13 ブラッシュアップ 2（鈴木さん「iwanai.html のタイポグラフィと写真がメインな感じを LP 本体にも」→ design/28_TYPO_PHOTO_LP.md）:
+       表紙・03 前回・07 申込の 3 か所を「写真いっぱいの暗い面 + 大きな言葉」に（.dark .photo-scene）。読む段（概要・流れ）は明るい面のまま
+       写真は第 2 回（岩内）の実物 3 枚（宴会・トーク・集合）。文字の段を全体に 1 段上げ、表紙の題は 1 文字ずつピントが合う（Blur Text）
      =============================================================== -->
 <title>シャコタニアンサミット 3 in 余市</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -23,6 +26,7 @@
 <meta property="og:title" content="シャコタニアンサミット 3 in 余市｜やべえ半島を、つくる。">
 <meta property="og:description" content="2026年11月21日（土）・22日（日）、余市・徳島屋。積丹半島の人が自治体の境界を越えて集まる 2 日間。">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://shakotanian-summit-3.vercel.app/assets/img/iwanai-party.webp">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230E6FA6'/%3E%3Cpath d='M32 14a18 18 0 0 0 0 36z' fill='%23fff'/%3E%3Cpath d='M32 14a18 18 0 0 1 0 36' fill='none' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +44,7 @@
   </symbol>
 </svg>
 
-<header class="header">
+<header class="header dark">
   <div class="wrap">
     <a class="wordmark" href="#top" aria-label="シャコタニアンサミット 3 in 余市 ページの先頭へ"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>SHAKOTANIAN SUMMIT 3</a>
     <a class="btn btn-primary" href="https://forms.gle/kHrXC5uL7YQUNuEFA" target="_blank" rel="noopener" data-cta-type="apply" data-cta-section="header">申し込む</a>
@@ -48,7 +52,8 @@
 </header>
 
 <main id="top">
-  <section class="hero" aria-labelledby="h-title">
+  <section class="hero dark" aria-labelledby="h-title">
+    <div class="hero-bg" aria-hidden="true"><img src="assets/img/iwanai-party.webp" alt="" width="1600" height="1200" fetchpriority="high" decoding="async"></div>
     <div class="wrap">
       <div class="hero-in">
         <p class="one">One hell of a <span class="hi">peninsula.</span></p>
@@ -61,15 +66,13 @@
         </div>
         <p class="btn-note">参加費 11,000 円前後（宿泊の有無・参加するプログラムで変わります）。申込フォーム（Google フォーム）が開きます。</p>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <svg class="hero-mark" viewBox="0 0 24 24"><path class="fill" d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path class="line" d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width=".5" pathLength="100"/></svg>
-        <div class="badge-spin"><svg class="badge" viewBox="0 0 100 100">
-          <defs><path id="ring" d="M50 50m-37 0a37 37 0 1 1 74 0a37 37 0 1 1-74 0"/></defs>
-          <text><textPath href="#ring">SHAKOTANIAN SUMMIT 3 · YOICHI ·</textPath></text>
-          <svg class="mark" x="34" y="34" width="32" height="32" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
-        </svg></div>
-      </div>
     </div>
+    <div class="badge-spin" aria-hidden="true"><svg class="badge" viewBox="0 0 100 100">
+      <defs><path id="ring" d="M50 50m-37 0a37 37 0 1 1 74 0a37 37 0 1 1-74 0"/></defs>
+      <text><textPath href="#ring">SHAKOTANIAN SUMMIT 3 · YOICHI ·</textPath></text>
+      <svg class="mark" x="34" y="34" width="32" height="32" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+    </svg></div>
+    <p class="credit">写真: 第 2 回 in 岩内（2025 年 11 月）の大宴会</p>
   </section>
 
   <div class="marquee" aria-hidden="true">
@@ -128,18 +131,19 @@
     </div>
   </section>
 
-  <section class="section" aria-labelledby="h-last" id="last">
+  <section class="section dark photo-scene" aria-labelledby="h-last" id="last">
+    <div class="scene-bg" aria-hidden="true"><img src="assets/img/iwanai-talk.webp" alt="" width="1600" height="1200" loading="lazy" decoding="async"></div>
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg><b class="no">03</b>Last time</span>
         <h2 id="h-last"><span class="nb">前回、岩内で</span><span class="nb">起きたこと。</span></h2>
         <p class="one">Iwanai, <span class="hi">Nov. 2025.</span></p>
       </div>
-      <p class="lead recap-lead reveal">第 2 回は 2025 年 11 月 29 日・30 日、岩内町。いわない高原ホテルを拠点に、話して、歩いて、飲んで、翌日には 10 年後の半島を描いた 1 泊 2 日でした。</p>
-      <a class="recap-hero curtain" href="iwanai.html" target="_blank" rel="noopener" aria-label="前回の 2 日間を写真で見る（別のタブで開きます）"><img src="assets/img/iwanai-talk.webp" alt="荒井記念美術館のホール。書の幕を背に、登壇者 5 人が並んで話すトークセッション" width="1600" height="1200" loading="lazy"><span class="recap-hero-tag"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>Iwanai, 2025</span></a>
+      <p class="lead reveal">2025 年 11 月 29 日・30 日、岩内町。話して、歩いて、飲んで、翌日には 10 年後の半島を描いた 1 泊 2 日でした。</p>
       <div class="btn-row reveal"><a class="btn btn-primary" href="iwanai.html" target="_blank" rel="noopener"><svg class="mark" aria-hidden="true"><use href="#hanto"/></svg>前回の 2 日間を見る</a></div>
       <p class="btn-note">写真と短い言葉で振り返る特設ページが、別のタブで開きます。</p>
     </div>
+    <p class="credit">荒井記念美術館でのトークセッション（2025 年 11 月 29 日）</p>
   </section>
 
   <section class="section section-alt" aria-labelledby="h-spec" id="outline">
@@ -284,7 +288,8 @@
     </div>
   </section>
 
-  <section class="section section-alt apply" aria-labelledby="h-apply" id="apply">
+  <section class="section dark photo-scene apply" aria-labelledby="h-apply" id="apply">
+    <div class="scene-bg" aria-hidden="true"><img src="assets/img/iwanai-group.webp" alt="" width="1600" height="1200" loading="lazy" decoding="async"></div>
     <svg class="apply-bg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/><path d="M12 2a10 10 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width=".45"/></svg>
     <div class="wrap">
       <div>
@@ -302,6 +307,7 @@
       </div>
       <p class="orgs"><b>主催</b> シャコタニアンサミット in 余市実行委員会（実行委員長 大倉準／運営統括 五十嵐慎一郎）<br><b>協力</b> 経済産業省北海道経済産業局、（株）キットブルー、かくと徳島屋、IWANAI BREWERY、タヌクラン、余市エコビレッジ、里山農園なかのさわ、sunny side farm</p>
     </div>
+    <p class="credit">写真: 第 2 回 in 岩内の集合写真（2025 年 11 月 30 日）</p>
   </section>
 </main>
 

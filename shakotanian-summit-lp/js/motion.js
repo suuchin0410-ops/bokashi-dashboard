@@ -1,7 +1,8 @@
 /* シャコタニアンサミット 3 in 余市 — 動き（GSAP 3.15.0）
    決まり: Projects/design/21_GSAP.md「動きの基本セット」+ 23_HUMAN_DESIGN.md 5（見せ場は最初の 1 か所）+ 12_REACT_BITS.md（素の HTML に書き直し）
-   1 最初の画面の登場（半島マークが塗られながら線が描かれる → 一言 → 日付 → 見出しを 1 文字ずつ【ページで唯一の大きな見せ場】→ リード → ボタン → 注記・合計 1.2 秒）
-   2 数字のカウントアップ 3 半島マークがスクロールで沈む（scrub）・丸いバッジがスクロールで回る
+   1 最初の画面の登場（写真が引いて収まる Scroll Expand → 一言 → 日付 → 題が 1 文字ずつピントが合う Blur Text【ページで唯一の大きな見せ場】→ リード → ボタン → 注記・合計 1.2 秒）
+   2 数字のカウントアップ 3 表紙と場面の写真がスクロールでゆっくり動く視差（scrub）・丸いバッジがスクロールで回る
+   （2026-11-13 ブラッシュアップ 2: design/28_TYPO_PHOTO_LP.md の型。前回・申込の大きな見出しも 1 文字ずつピントが合う）
    4 節の見出しが行ごとに下から現れる・英字の一言・表の行が順に 5 写真が幕のように開き、スクロールで枠いっぱいに広がる（Scroll Expand）
    6 ブランドの演出: 町の名前の帯がスクロールの速さで加速（Scroll Velocity）・日付のパタパタ板（Split Flap Text）・ボタンの印が反転（CSS）
    7 PC だけボタンが指先に寄る
@@ -50,22 +51,27 @@
     var ease = 'power3.out';
     var h1 = document.querySelector('.hero h1');
     var chars = h1 ? splitChars(h1) : [];
-    wrapLines('main .section h2, .footer .tag');
+    wrapLines('main .section:not(.photo-scene) h2, .footer .tag');
+    var blurIn = { opacity: 0, y: 36, filter: 'blur(14px)', duration: 0.8, ease: 'power4.out', stagger: 0.045 };
 
-    /* 1. 最初の画面（合計 1.2 秒）。見せ場: 見出しが 1 文字ずつ、少し大きく・少し傾いた状態から落ちて揃う */
+    /* 1. 最初の画面（合計 1.2 秒）。見せ場: 写真が引いて収まり、題が 1 文字ずつぼやけた状態からピントが合う（28） */
     var tl = gsap.timeline({ defaults: { ease: ease } });
-    tl.from('.hero-mark .fill', { scaleX: 0, transformOrigin: '100% 50%', duration: 1.0, ease: 'expo.out' }, 0)
-      .from('.hero-mark .line', { strokeDashoffset: 100, duration: 1.1, ease: 'power2.inOut' }, 0.05)
+    tl.from('.hero-bg img', { scale: 1.18, duration: 2.0, ease: 'expo.out' }, 0)
       .from('.hero .one', { opacity: 0, y: 16, duration: 0.5 }, 0.05)
       .from('.hero .date', { opacity: 0, y: 16, duration: 0.5 }, 0.12)
-      .from(chars, { opacity: 0, y: 56, scale: 1.35, rotation: -5, transformOrigin: '50% 100%', duration: 0.65, ease: 'power4.out', stagger: 0.04 }, 0.2)
+      .from(chars, blurIn, 0.2)
       .from('.hero .lead', { opacity: 0, y: 16, duration: 0.6 }, 0.55)
       .from('.hero .btn-row .btn', { opacity: 0, y: 16, duration: 0.5, stagger: 0.08 }, 0.65)
       .from('.hero .btn-note', { opacity: 0, duration: 0.5 }, 0.8)
       .from('.badge', { opacity: 0, rotation: -60, transformOrigin: '50% 50%', duration: 0.9, ease: 'expo.out' }, 0.45);
 
-    /* 3. 半島マークがスクロールで少し沈む（登場は scaleX、沈みは yPercent と別のプロパティ・別の要素） */
-    gsap.to('.hero-mark', { yPercent: 10, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    /* 3. 表紙の写真はスクロールでゆっくり沈み、文字は薄れる（登場は scale、視差は yPercent と別のプロパティ） */
+    gsap.to('.hero-bg img', { yPercent: 14, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.to('.hero-in', { opacity: 0, y: -24, ease: 'none', scrollTrigger: { trigger: '.hero', start: '45% top', end: 'bottom top', scrub: true } });
+    /* 場面（前回・申込）の写真の視差 */
+    gsap.utils.toArray('.scene-bg img').forEach(function (img) {
+      gsap.fromTo(img, { yPercent: -8 }, { yPercent: 8, ease: 'none', scrollTrigger: { trigger: img.closest('.photo-scene'), start: 'top bottom', end: 'bottom top', scrub: true } });
+    });
     /* バッジはページ全体のスクロールで 1 回転（登場の rotation は中の svg、回転は外の枡と分ける） */
     gsap.to('.badge-spin', { rotation: 360, ease: 'none', scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 0.4 } });
 
@@ -77,7 +83,8 @@
       var eyebrow = head.querySelector('.eyebrow');
       var t = gsap.timeline({ scrollTrigger: { trigger: h, start: 'top 86%', once: true } });
       if (eyebrow) t.from(eyebrow, { opacity: 0, x: -12, duration: 0.5, ease: ease }, 0);
-      t.from(lines, { yPercent: 115, duration: 0.9, ease: 'power4.out', stagger: 0.1 }, 0.05);
+      if (h.closest('.photo-scene')) t.from(splitChars(h), blurIn, 0.05); /* 写真の上の大きな見出しは 1 文字ずつピントが合う */
+      else t.from(lines, { yPercent: 115, duration: 0.9, ease: 'power4.out', stagger: 0.1 }, 0.05);
       if (one) t.from(one, { opacity: 0, y: 14, duration: 0.6, ease: ease }, 0.35);
     });
     /* フッターの合言葉も同じ出方 */
